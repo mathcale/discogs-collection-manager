@@ -15,6 +15,7 @@ func Up(dbPath, migrationsPath string) error {
 	if err != nil {
 		return fmt.Errorf("open db: %w", err)
 	}
+
 	defer db.Close()
 
 	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})
@@ -43,6 +44,7 @@ func Down(dbPath, migrationsPath string) error {
 	if err != nil {
 		return fmt.Errorf("open db: %w", err)
 	}
+
 	defer db.Close()
 
 	driver, err := sqlite3.WithInstance(db, &sqlite3.Config{})

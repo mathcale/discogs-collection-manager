@@ -14,6 +14,10 @@ type LandingHandlerTestSuite struct {
 	suite.Suite
 }
 
+func TestLandingHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(LandingHandlerTestSuite))
+}
+
 func (s *LandingHandlerTestSuite) TestLanding() {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rr := httptest.NewRecorder()
@@ -23,8 +27,4 @@ func (s *LandingHandlerTestSuite) TestLanding() {
 	s.Equal(http.StatusOK, rr.Code)
 	s.Contains(rr.Body.String(), "Discogs Collection Manager")
 	s.Contains(rr.Header().Get("Content-Type"), "text/html")
-}
-
-func TestLandingHandlerTestSuite(t *testing.T) {
-	suite.Run(t, new(LandingHandlerTestSuite))
 }

@@ -12,6 +12,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to initialise kernel: %v", err)
 	}
+
 	defer k.Close()
 
 	if err := web.NewServer(k).Run(); err != nil {

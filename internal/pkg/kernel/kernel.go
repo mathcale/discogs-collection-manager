@@ -27,6 +27,7 @@ func New() (*Kernel, error) {
 
 	if err := db.Ping(); err != nil {
 		db.Close()
+
 		return nil, fmt.Errorf("connect to database: %w", err)
 	}
 
@@ -37,10 +38,13 @@ func New() (*Kernel, error) {
 
 	if err := migrate.Up(dbPath, migrationsPath); err != nil {
 		db.Close()
+
 		return nil, fmt.Errorf("run migrations: %w", err)
 	}
 
-	return &Kernel{DB: db}, nil
+	return &Kernel{
+		DB: db,
+	}, nil
 }
 
 func (k *Kernel) Close() {
