@@ -1,0 +1,16 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_PATH=/app/data/discogs.db
+      - MIGRATIONS_PATH=/app/migrations
+      - PORT=8080
+    volumes:
+      - sqlite-data:/app/data
+    depends_on: []
+
+volumes:
+  sqlite-data:
+    driver: local
