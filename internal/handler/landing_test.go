@@ -3,29 +3,28 @@ package handler_test
 import (
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/suite"
 
 	"github.com/mathcale/discogs-collection-manager/internal/handler"
 )
 
-func TestLanding(t *testing.T) {
+type LandingHandlerTestSuite struct {
+	suite.Suite
+}
+
+func (s *LandingHandlerTestSuite) TestLanding() {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rr := httptest.NewRecorder()
 
 	handler.Landing(rr, req)
 
-	if rr.Code != http.StatusOK {
-		t.Errorf("expected status 200, got %d", rr.Code)
-	}
+	s.Equal(http.StatusOK, rr.Code)
+	s.Contains(rr.Body.String(), "Discogs Collection Manager")
+	s.Contains(rr.Header().Get("Content-Type"), "text/html")
+}
 
-	body := rr.Body.String()
-	if !strings.Contains(body, "Discogs Collection Manager") {
-		t.Errorf("expected body to contain 'Discogs Collection Manager', got: %s", body)
-	}
-
-	ct := rr.Header().Get("Content-Type")
-	if !strings.HasPrefix(ct, "text/html") {
-		t.Errorf("expected Content-Type text/html, got: %s", ct)
-	}
+func TestLandingHandlerTestSuite(t *testing.T) {
+	suite.Run(t, new(LandingHandlerTestSuite))
 }
