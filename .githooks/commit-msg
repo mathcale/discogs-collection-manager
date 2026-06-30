@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+# Enforces Conventional Commits: https://www.conventionalcommits.org
+# Format: type(optional-scope): description
+# Types: feat, fix, chore, docs, style, refactor, test, build, ci, perf, revert
+
+MSG=$(cat "$1")
+PATTERN='^(feat|fix|chore|docs|style|refactor|test|build|ci|perf|revert)(\([a-z0-9/_-]+\))?: .{1,100}$'
+
+if ! echo "$MSG" | grep -qE "$PATTERN"; then
+  echo ""
+  echo "  ✗ Commit message does not follow Conventional Commits."
+  echo ""
+  echo "  Format:  type(optional-scope): short description"
+  echo "  Example: feat(auth): add login with session cookie"
+  echo ""
+  echo "  Valid types: feat, fix, chore, docs, style, refactor, test, build, ci, perf, revert"
+  echo "  Your message: $MSG"
+  echo ""
+  exit 1
+fi

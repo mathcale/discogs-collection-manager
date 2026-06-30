@@ -1,0 +1,3 @@
+# Discogs Collection Manager
+
+WIP
