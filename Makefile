@@ -11,7 +11,7 @@ build: generate
 deps:
 	go mod download
 	go install github.com/a-h/templ/cmd/templ@latest
-	go install github.com/cosmtrek/air@latest
+	go install github.com/air-verse/air@latest
 	go install -tags 'sqlite3' github.com/golang-migrate/migrate/v4/cmd/migrate@latest
 
 generate:
