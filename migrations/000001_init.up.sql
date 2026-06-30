@@ -1,0 +1,1 @@
+-- Initial schema baseline (empty)
