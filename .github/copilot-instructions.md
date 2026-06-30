@@ -23,6 +23,23 @@ When filing issues, referencing work, or picking up tasks, always use the Linear
 - **Live reload:** `cosmtrek/air`
 - **Tests:** `testify/suite` against `net/http/httptest`
 
+## Code Style
+
+- **No comments** — names must be self-explanatory. Only add a comment when logic is genuinely non-obvious and cannot be clarified by renaming. Never add docstrings, type-description comments, or function-summary comments.
+- **No over-engineering** — only implement what is directly asked for. No speculative abstractions, helpers for one-off operations, or extra error handling for impossible cases.
+
+## Package Structure
+
+```
+internal/
+  web/       # HTTP layer: router (chi routes + middleware), Server (listen + graceful shutdown)
+  pkg/       # Infrastructure utilities with no business logic: kernel/, migrate/, ...
+  handler/   # HTTP handlers — one file per feature area
+  templates/ # a-h/templ components
+```
+
+`cmd/server/main.go` only orchestrates: `kernel.New()` → `web.NewServer(k).Run()`. Nothing else.
+
 ## Architecture Conventions
 
 - All database access is behind repository interfaces (`UserRepository`, `SessionRepository`, `OAuthTokenRepository`). Inject SQLite implementations at startup.
