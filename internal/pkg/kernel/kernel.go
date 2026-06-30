@@ -7,10 +7,10 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/mathcale/discogs-collection-manager/internal/migrate"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
 
-// Kernel holds all application dependencies and is passed to the router.
+// Kernel holds all application dependencies and is passed down to the router.
 type Kernel struct {
 	DB *sql.DB
 }

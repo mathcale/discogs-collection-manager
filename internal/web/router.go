@@ -1,4 +1,4 @@
-package router
+package web
 
 import (
 	"net/http"
@@ -7,15 +7,16 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/mathcale/discogs-collection-manager/internal/handler"
-	"github.com/mathcale/discogs-collection-manager/internal/kernel"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/kernel"
 )
 
-// New builds and returns the application router with all routes registered.
-func New(k *kernel.Kernel) http.Handler {
+// NewRouter builds and returns the application router.
+func NewRouter(k *kernel.Kernel) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	r.Use(middleware.RequestID)
 
 	r.Get("/", handler.Landing)
 
