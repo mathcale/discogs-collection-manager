@@ -13,9 +13,9 @@ import (
 )
 
 const (
-	sessionCookieName   = "session_token"
-	shortSessionExpiry  = 6 * time.Hour
-	longSessionExpiry   = 30 * 24 * time.Hour
+	sessionCookieName  = "session_token"
+	shortSessionExpiry = 6 * time.Hour
+	longSessionExpiry  = 30 * 24 * time.Hour
 )
 
 type AuthHandler struct {
