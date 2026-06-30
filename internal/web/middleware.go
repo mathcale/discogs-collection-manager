@@ -1,15 +1,13 @@
 package web
 
 import (
+	"context"
 	"net/http"
 	"time"
 
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/ctxkey"
 	"github.com/mathcale/discogs-collection-manager/internal/repository"
 )
-
-type contextKey string
-
-const ContextKeyUserID contextKey = "userID"
 
 func RequireAuth(sessions repository.SessionRepository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
@@ -26,7 +24,7 @@ func RequireAuth(sessions repository.SessionRepository) func(http.Handler) http.
 				return
 			}
 
-			ctx := r.Context()
+			ctx := context.WithValue(r.Context(), ctxkey.UserID, session.UserID)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
