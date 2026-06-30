@@ -8,10 +8,13 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
+	"github.com/mathcale/discogs-collection-manager/internal/repository"
 )
 
 type Kernel struct {
-	DB *sql.DB
+	DB       *sql.DB
+	Users    repository.UserRepository
+	Sessions repository.SessionRepository
 }
 
 func New() (*Kernel, error) {
@@ -43,7 +46,9 @@ func New() (*Kernel, error) {
 	}
 
 	return &Kernel{
-		DB: db,
+		DB:       db,
+		Users:    repository.NewSQLiteUserRepository(db),
+		Sessions: repository.NewSQLiteSessionRepository(db),
 	}, nil
 }
 

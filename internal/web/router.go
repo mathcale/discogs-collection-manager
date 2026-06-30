@@ -17,7 +17,18 @@ func NewRouter(k *kernel.Kernel) http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
 
+	authHandler := handler.NewAuthHandler(k.Users, k.Sessions)
+
 	r.Get("/", handler.Landing)
+	r.Get("/register", authHandler.RegisterPage)
+	r.Post("/register", authHandler.Register)
+	r.Get("/login", authHandler.LoginPage)
+	r.Post("/login", authHandler.Login)
+
+	r.Group(func(r chi.Router) {
+		r.Use(RequireAuth(k.Sessions))
+		r.Post("/logout", authHandler.Logout)
+	})
 
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 
