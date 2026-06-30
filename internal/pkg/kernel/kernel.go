@@ -10,13 +10,10 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
 
-// Kernel holds all application dependencies and is passed down to the router.
 type Kernel struct {
 	DB *sql.DB
 }
 
-// New initialises all dependencies: opens the database, runs pending migrations,
-// and returns a ready-to-use Kernel.
 func New() (*Kernel, error) {
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
@@ -46,7 +43,6 @@ func New() (*Kernel, error) {
 	return &Kernel{DB: db}, nil
 }
 
-// Close releases all resources held by the kernel.
 func (k *Kernel) Close() {
 	k.DB.Close()
 }

@@ -10,7 +10,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// Up runs all pending migrations.
 func Up(dbPath, migrationsPath string) error {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -39,7 +38,6 @@ func Up(dbPath, migrationsPath string) error {
 	return nil
 }
 
-// Down rolls back all migrations.
 func Down(dbPath, migrationsPath string) error {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {

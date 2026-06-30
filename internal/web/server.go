@@ -16,12 +16,10 @@ import (
 
 const shutdownTimeout = 30 * time.Second
 
-// Server wraps the HTTP server and handles startup and graceful shutdown.
 type Server struct {
 	http *http.Server
 }
 
-// NewServer creates a Server bound to the given kernel.
 func NewServer(k *kernel.Kernel) *Server {
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -36,8 +34,6 @@ func NewServer(k *kernel.Kernel) *Server {
 	}
 }
 
-// Run starts listening and blocks until a shutdown signal is received,
-// then drains in-flight requests before returning.
 func (s *Server) Run() error {
 	go func() {
 		log.Printf("server listening on %s", s.http.Addr)

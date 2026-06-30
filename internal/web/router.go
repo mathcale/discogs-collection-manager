@@ -10,7 +10,6 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/kernel"
 )
 
-// NewRouter builds and returns the application router.
 func NewRouter(k *kernel.Kernel) http.Handler {
 	r := chi.NewRouter()
 
