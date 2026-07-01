@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/dghubble/oauth1"
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
@@ -12,9 +13,11 @@ import (
 )
 
 type Kernel struct {
-	DB       *sql.DB
-	Users    repository.UserRepository
-	Sessions repository.SessionRepository
+	DB          *sql.DB
+	Users       repository.UserRepository
+	Sessions    repository.SessionRepository
+	OAuthTokens repository.OAuthTokenRepository
+	DiscogsOAuth *oauth1.Config
 }
 
 func New() (*Kernel, error) {
@@ -45,10 +48,23 @@ func New() (*Kernel, error) {
 		return nil, fmt.Errorf("run migrations: %w", err)
 	}
 
+	discogsOAuth := &oauth1.Config{
+		ConsumerKey:    os.Getenv("DISCOGS_CONSUMER_KEY"),
+		ConsumerSecret: os.Getenv("DISCOGS_CONSUMER_SECRET"),
+		CallbackURL:    os.Getenv("DISCOGS_CALLBACK_URL"),
+		Endpoint: oauth1.Endpoint{
+			RequestTokenURL: "https://api.discogs.com/oauth/request_token",
+			AuthorizeURL:    "https://www.discogs.com/oauth/authorize",
+			AccessTokenURL:  "https://api.discogs.com/oauth/access_token",
+		},
+	}
+
 	return &Kernel{
-		DB:       db,
-		Users:    repository.NewSQLiteUserRepository(db),
-		Sessions: repository.NewSQLiteSessionRepository(db),
+		DB:           db,
+		Users:        repository.NewSQLiteUserRepository(db),
+		Sessions:     repository.NewSQLiteSessionRepository(db),
+		OAuthTokens:  repository.NewSQLiteOAuthTokenRepository(db),
+		DiscogsOAuth: discogsOAuth,
 	}, nil
 }
 

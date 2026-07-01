@@ -18,6 +18,7 @@ func NewRouter(k *kernel.Kernel) http.Handler {
 	r.Use(middleware.RequestID)
 
 	authHandler := handler.NewAuthHandler(k.Users, k.Sessions)
+	discogsOAuthHandler := handler.NewDiscogsOAuthHandler(k.OAuthTokens, k.Sessions, k.Users, k.DiscogsOAuth)
 
 	r.Get("/", handler.Landing)
 	r.Get("/register", authHandler.RegisterPage)
@@ -28,6 +29,10 @@ func NewRouter(k *kernel.Kernel) http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(RequireAuth(k.Sessions))
 		r.Post("/logout", authHandler.Logout)
+		r.Get("/app/settings", discogsOAuthHandler.SettingsPage)
+		r.Get("/auth/discogs/connect", discogsOAuthHandler.Connect)
+		r.Get("/auth/discogs/callback", discogsOAuthHandler.Callback)
+		r.Post("/auth/discogs/disconnect", discogsOAuthHandler.Disconnect)
 	})
 
 	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
