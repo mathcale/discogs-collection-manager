@@ -1,0 +1,73 @@
+package templates
+
+templ ScannerPage() {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<title>Scanner — Discogs Collection Manager</title>
+			<script src="/static/htmx.min.js"></script>
+			<script src="/static/zxing.min.js"></script>
+		</head>
+		<body>
+			<main>
+				<h1>Barcode Scanner</h1>
+				<video id="scanner-video" autoplay playsinline style="width:100%;max-width:400px"></video>
+				<div id="scan-result"></div>
+			</main>
+			<script>
+				(function () {
+					var video = document.getElementById('scanner-video');
+					var resultEl = document.getElementById('scan-result');
+					var submitted = false;
+
+					function postBarcode(barcode) {
+						if (submitted) return;
+						submitted = true;
+						htmx.ajax('POST', '/app/scan', {
+							target: '#scan-result',
+							swap: 'innerHTML',
+							values: { barcode: barcode }
+						}).catch(function () { submitted = false; });
+					}
+
+					if (typeof BarcodeDetector !== 'undefined') {
+						navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+							.then(function (stream) {
+								video.srcObject = stream;
+								var detector = new BarcodeDetector();
+								var interval = setInterval(function () {
+									detector.detect(video).then(function (codes) {
+										if (codes.length > 0) {
+											clearInterval(interval);
+											stream.getTracks().forEach(function (t) { t.stop(); });
+											postBarcode(codes[0].rawValue);
+										}
+									}).catch(function () {});
+								}, 300);
+							});
+					} else {
+						var ZXing = window.ZXing;
+						var hints = new Map();
+						var codeReader = new ZXing.BrowserMultiFormatReader(hints);
+						codeReader.decodeFromConstraints(
+							{ video: { facingMode: 'environment' } },
+							video,
+							function (result, err, controls) {
+								if (result) {
+									controls.stop();
+									postBarcode(result.getText());
+								}
+							}
+						);
+					}
+				})();
+			</script>
+		</body>
+	</html>
+}
+
+templ ScanResultPartial(barcode string) {
+	<p>Scanned: { barcode }</p>
+}
