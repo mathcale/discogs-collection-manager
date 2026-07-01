@@ -46,6 +46,12 @@ func (h *ScanHandler) Scan(w http.ResponseWriter, r *http.Request) {
 			templates.ScanErrorPartial("Discogs rate limit reached. Please wait a moment and try again.").Render(r.Context(), w)
 			return
 		}
+		var dae *discogs.DiscogsAuthError
+		if errors.As(err, &dae) {
+			w.WriteHeader(http.StatusUnauthorized)
+			templates.ScanReconnectPartial().Render(r.Context(), w)
+			return
+		}
 		w.WriteHeader(http.StatusBadGateway)
 		templates.ScanErrorPartial("Could not search Discogs. Please try again.").Render(r.Context(), w)
 		return
@@ -97,6 +103,12 @@ func (h *ScanHandler) Confirm(w http.ResponseWriter, r *http.Request) {
 		if errors.As(err, &rle) {
 			w.WriteHeader(http.StatusTooManyRequests)
 			templates.ScanErrorPartial("Discogs rate limit reached. Please wait a moment and try again.").Render(r.Context(), w)
+			return
+		}
+		var dae *discogs.DiscogsAuthError
+		if errors.As(err, &dae) {
+			w.WriteHeader(http.StatusUnauthorized)
+			templates.ScanReconnectPartial().Render(r.Context(), w)
 			return
 		}
 		w.WriteHeader(http.StatusBadGateway)

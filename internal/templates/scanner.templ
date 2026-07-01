@@ -145,3 +145,10 @@ templ ScanErrorPartial(message string) {
 		<a href="/app/scanner">Try again</a>
 	</div>
 }
+
+templ ScanReconnectPartial() {
+	<div role="alert">
+		<p>Your Discogs account is no longer connected. Please reconnect to continue.</p>
+		<a href="/auth/discogs/connect">Reconnect Discogs</a>
+	</div>
+}

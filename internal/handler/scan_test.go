@@ -218,6 +218,41 @@ func (s *ScanSuite) TestScanConfirm_POST_NoSelection_RendersErrorPartial() {
 	s.Contains(rr.Body.String(), "select")
 }
 
+func (s *ScanSuite) TestScan_POST_DiscogsAuthError_RendersReconnectPartial() {
+	token := s.createSession("user-auth-error-search", time.Now().Add(time.Hour))
+	s.mockDiscogs.searchErr = &discogs.DiscogsAuthError{}
+
+	form := url.Values{"barcode": {"1234567890"}}
+	req := httptest.NewRequest(http.MethodPost, "/app/scan", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusUnauthorized, rr.Code)
+	s.Contains(rr.Body.String(), "reconnect")
+	s.Contains(rr.Body.String(), "/auth/discogs/connect")
+}
+
+func (s *ScanSuite) TestScanConfirm_POST_DiscogsAuthError_RendersReconnectPartial() {
+	token := s.createSession("user-auth-error-confirm", time.Now().Add(time.Hour))
+	s.createOAuthToken("user-auth-error-confirm", "discogs-user")
+	s.mockDiscogs.addToCollectionErr = &discogs.DiscogsAuthError{}
+
+	form := url.Values{"release_id": {"12345"}}
+	req := httptest.NewRequest(http.MethodPost, "/app/scan/confirm", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusUnauthorized, rr.Code)
+	s.Contains(rr.Body.String(), "reconnect")
+	s.Contains(rr.Body.String(), "/auth/discogs/connect")
+}
+
 func (s *ScanSuite) TestScanCancel_GET_DoesNotCallAddToCollection() {
 	token := s.createSession("user-cancel", time.Now().Add(time.Hour))
 

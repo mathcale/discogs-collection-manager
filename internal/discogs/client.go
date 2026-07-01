@@ -34,6 +34,12 @@ func (e *RateLimitError) Error() string {
 	return "discogs rate limit exceeded"
 }
 
+type DiscogsAuthError struct{}
+
+func (e *DiscogsAuthError) Error() string {
+	return "discogs token revoked or unauthorised"
+}
+
 type DiscogsClient interface {
 	SearchByBarcode(ctx context.Context, barcode string) ([]Release, error)
 	AddToCollection(ctx context.Context, username string, releaseID int) error
@@ -86,6 +92,9 @@ func (c *HTTPDiscogsClient) SearchByBarcode(ctx context.Context, barcode string)
 
 	if resp.StatusCode == http.StatusTooManyRequests {
 		return nil, &RateLimitError{}
+	}
+	if resp.StatusCode == http.StatusUnauthorized {
+		return nil, &DiscogsAuthError{}
 	}
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("discogs search failed with status %d", resp.StatusCode)
@@ -146,6 +155,9 @@ func (c *HTTPDiscogsClient) AddToCollection(ctx context.Context, username string
 
 	if resp.StatusCode == http.StatusTooManyRequests {
 		return &RateLimitError{}
+	}
+	if resp.StatusCode == http.StatusUnauthorized {
+		return &DiscogsAuthError{}
 	}
 	if resp.StatusCode != http.StatusCreated {
 		return fmt.Errorf("discogs add to collection failed with status %d", resp.StatusCode)
