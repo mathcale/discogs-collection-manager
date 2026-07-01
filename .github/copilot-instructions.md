@@ -10,6 +10,16 @@ This project is tracked in Linear. See [.agents/linear.md](.agents/linear.md) fo
 
 When filing issues, referencing work, or picking up tasks, always use the Linear project above.
 
+## Tooling
+
+- **Git / GitHub:** Use the terminal only. Do not use the GitKraken MCP tools for any git or GitHub operations.
+
+## Branching
+
+- All implementation work must happen on a feature branch — never commit directly to `main`.
+- Branch naming: `feat/<short-description>` for features, `fix/<short-description>` for bug fixes, `chore/<short-description>` for maintenance tasks.
+- On finishing implementing a task, open a PR to `main` and assign it to the task in Linear. The PR title should match the Linear issue title.
+
 ## Tech Stack
 
 - **Language:** Go

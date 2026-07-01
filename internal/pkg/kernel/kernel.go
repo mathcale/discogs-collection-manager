@@ -8,16 +8,18 @@ import (
 	"github.com/dghubble/oauth1"
 	_ "github.com/mattn/go-sqlite3"
 
+	"github.com/mathcale/discogs-collection-manager/internal/discogs"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 	"github.com/mathcale/discogs-collection-manager/internal/repository"
 )
 
 type Kernel struct {
-	DB          *sql.DB
-	Users       repository.UserRepository
-	Sessions    repository.SessionRepository
-	OAuthTokens repository.OAuthTokenRepository
+	DB           *sql.DB
+	Users        repository.UserRepository
+	Sessions     repository.SessionRepository
+	OAuthTokens  repository.OAuthTokenRepository
 	DiscogsOAuth *oauth1.Config
+	Discogs      discogs.DiscogsClient
 }
 
 func New() (*Kernel, error) {
@@ -59,12 +61,15 @@ func New() (*Kernel, error) {
 		},
 	}
 
+	oauthTokens := repository.NewSQLiteOAuthTokenRepository(db)
+
 	return &Kernel{
 		DB:           db,
 		Users:        repository.NewSQLiteUserRepository(db),
 		Sessions:     repository.NewSQLiteSessionRepository(db),
-		OAuthTokens:  repository.NewSQLiteOAuthTokenRepository(db),
+		OAuthTokens:  oauthTokens,
 		DiscogsOAuth: discogsOAuth,
+		Discogs:      discogs.NewHTTPDiscogsClient(discogsOAuth, oauthTokens),
 	}, nil
 }
 

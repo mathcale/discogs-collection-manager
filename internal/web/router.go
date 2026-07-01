@@ -19,7 +19,7 @@ func NewRouter(k *kernel.Kernel) http.Handler {
 
 	authHandler := handler.NewAuthHandler(k.Users, k.Sessions)
 	discogsOAuthHandler := handler.NewDiscogsOAuthHandler(k.OAuthTokens, k.Sessions, k.Users, k.DiscogsOAuth)
-	scanHandler := handler.NewScanHandler()
+	scanHandler := handler.NewScanHandler(k.Discogs, k.OAuthTokens)
 
 	r.Get("/", handler.Landing)
 	r.Get("/register", authHandler.RegisterPage)
@@ -33,6 +33,8 @@ func NewRouter(k *kernel.Kernel) http.Handler {
 		r.Get("/app/settings", discogsOAuthHandler.SettingsPage)
 		r.Get("/app/scanner", scanHandler.ScanPage)
 		r.Post("/app/scan", scanHandler.Scan)
+		r.Post("/app/scan/confirm", scanHandler.Confirm)
+		r.Get("/app/scan/cancel", scanHandler.Cancel)
 		r.Get("/auth/discogs/connect", discogsOAuthHandler.Connect)
 		r.Get("/auth/discogs/callback", discogsOAuthHandler.Callback)
 		r.Post("/auth/discogs/disconnect", discogsOAuthHandler.Disconnect)
