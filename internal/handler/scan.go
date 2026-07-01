@@ -37,6 +37,19 @@ func (h *ScanHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID, _ := r.Context().Value(ctxkey.UserID).(string)
+	token, err := h.OAuthTokens.FindByUserID(r.Context(), userID)
+	if err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if token == nil {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusUnauthorized)
+		templates.ScanReconnectPartial().Render(r.Context(), w)
+		return
+	}
+
 	releases, err := h.Discogs.SearchByBarcode(r.Context(), barcode)
 	if err != nil {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -92,8 +105,14 @@ func (h *ScanHandler) Confirm(w http.ResponseWriter, r *http.Request) {
 
 	userID, _ := r.Context().Value(ctxkey.UserID).(string)
 	token, err := h.OAuthTokens.FindByUserID(r.Context(), userID)
-	if err != nil || token == nil {
+	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+	if token == nil {
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusUnauthorized)
+		templates.ScanReconnectPartial().Render(r.Context(), w)
 		return
 	}
 
