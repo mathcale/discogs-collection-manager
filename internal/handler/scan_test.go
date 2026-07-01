@@ -179,6 +179,45 @@ func (s *ScanSuite) TestScanConfirm_POST_CallsAddToCollection() {
 	s.Contains(rr.Body.String(), "collection")
 }
 
+func (s *ScanSuite) TestScan_POST_MultipleMatches_RendersConflictList() {
+	token := s.createSession("user-multi-match", time.Now().Add(time.Hour))
+	s.mockDiscogs.searchReturns = []discogs.Release{
+		{ID: 11111, Title: "Artist - Album (US)", Country: "US", Year: "1991", Label: "Label A", Thumb: "", URI: "https://www.discogs.com/release/11111"},
+		{ID: 22222, Title: "Artist - Album (UK)", Country: "UK", Year: "1992", Label: "Label B", Thumb: "", URI: "https://www.discogs.com/release/22222"},
+	}
+
+	form := url.Values{"barcode": {"1234567890"}}
+	req := httptest.NewRequest(http.MethodPost, "/app/scan", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusOK, rr.Code)
+	body := rr.Body.String()
+	s.Contains(body, "Artist - Album (US)")
+	s.Contains(body, "Artist - Album (UK)")
+	s.Contains(body, "11111")
+	s.Contains(body, "22222")
+}
+
+func (s *ScanSuite) TestScanConfirm_POST_NoSelection_RendersErrorPartial() {
+	token := s.createSession("user-no-selection", time.Now().Add(time.Hour))
+	s.createOAuthToken("user-no-selection", "discogs-user")
+
+	req := httptest.NewRequest(http.MethodPost, "/app/scan/confirm", strings.NewReader(""))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+	s.False(s.mockDiscogs.addToCollectionCalled)
+	s.Contains(rr.Body.String(), "select")
+}
+
 func (s *ScanSuite) TestScanCancel_GET_DoesNotCallAddToCollection() {
 	token := s.createSession("user-cancel", time.Now().Add(time.Hour))
 

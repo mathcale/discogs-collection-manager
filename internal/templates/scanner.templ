@@ -98,6 +98,40 @@ templ ScanConfirmPartial(release discogs.Release) {
 	</div>
 }
 
+templ ScanConflictListPartial(releases []discogs.Release) {
+	<div>
+		<h2>Multiple releases found</h2>
+		<p>Select the correct pressing:</p>
+		<form hx-post="/app/scan/confirm" hx-target="#scan-result" hx-swap="innerHTML">
+			<ul>
+				for _, r := range releases {
+					<li>
+						<label>
+							<input type="radio" name="release_id" value={ strconv.Itoa(r.ID) }/>
+							if r.Thumb != "" {
+								<img src={ r.Thumb } alt={ r.Title }/>
+							}
+							<strong>{ r.Title }</strong>
+							if r.Country != "" {
+								<span>{ r.Country }</span>
+							}
+							if r.Year != "" {
+								<span>{ r.Year }</span>
+							}
+							if r.Label != "" {
+								<span>{ r.Label }</span>
+							}
+							<a href={ templ.SafeURL(r.URI) } target="_blank" rel="noopener noreferrer">View on Discogs</a>
+						</label>
+					</li>
+				}
+			</ul>
+			<button type="submit">Confirm</button>
+		</form>
+		<a href="/app/scanner">Cancel</a>
+	</div>
+}
+
 templ ScanSuccessPartial() {
 	<div>
 		<p>Release added to your Discogs collection!</p>

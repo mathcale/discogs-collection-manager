@@ -57,7 +57,7 @@ func (h *ScanHandler) Scan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(releases) > 1 {
-		templates.ScanErrorPartial("Multiple releases found. Please search manually.").Render(r.Context(), w)
+		templates.ScanConflictListPartial(releases).Render(r.Context(), w)
 		return
 	}
 
@@ -72,7 +72,9 @@ func (h *ScanHandler) Confirm(w http.ResponseWriter, r *http.Request) {
 
 	releaseIDStr := r.FormValue("release_id")
 	if releaseIDStr == "" {
-		http.Error(w, "release_id is required", http.StatusBadRequest)
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		templates.ScanErrorPartial("Please select a release before confirming.").Render(r.Context(), w)
 		return
 	}
 
