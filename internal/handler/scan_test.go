@@ -130,6 +130,7 @@ func (s *ScanSuite) TestScan_POST_MissingBarcode() {
 
 func (s *ScanSuite) TestScan_POST_SingleMatch_RendersConfirmCard() {
 	token := s.createSession("user-single-match", time.Now().Add(time.Hour))
+	s.createOAuthToken("user-single-match", "discogs-user")
 	s.mockDiscogs.searchReturns = []discogs.Release{
 		{ID: 12345, Title: "Artist - Album", Country: "US", Year: "1991", Label: "Some Label", Thumb: "", URI: "https://www.discogs.com/release/12345"},
 	}
@@ -148,6 +149,7 @@ func (s *ScanSuite) TestScan_POST_SingleMatch_RendersConfirmCard() {
 
 func (s *ScanSuite) TestScan_POST_RateLimit_RendersErrorPartial() {
 	token := s.createSession("user-rate-limit", time.Now().Add(time.Hour))
+	s.createOAuthToken("user-rate-limit", "discogs-user")
 	s.mockDiscogs.searchErr = &discogs.RateLimitError{}
 
 	form := url.Values{"barcode": {"1234567890"}}
@@ -181,6 +183,7 @@ func (s *ScanSuite) TestScanConfirm_POST_CallsAddToCollection() {
 
 func (s *ScanSuite) TestScan_POST_MultipleMatches_RendersConflictList() {
 	token := s.createSession("user-multi-match", time.Now().Add(time.Hour))
+	s.createOAuthToken("user-multi-match", "discogs-user")
 	s.mockDiscogs.searchReturns = []discogs.Release{
 		{ID: 11111, Title: "Artist - Album (US)", Country: "US", Year: "1991", Label: "Label A", Thumb: "", URI: "https://www.discogs.com/release/11111"},
 		{ID: 22222, Title: "Artist - Album (UK)", Country: "UK", Year: "1992", Label: "Label B", Thumb: "", URI: "https://www.discogs.com/release/22222"},
@@ -220,6 +223,7 @@ func (s *ScanSuite) TestScanConfirm_POST_NoSelection_RendersErrorPartial() {
 
 func (s *ScanSuite) TestScan_POST_DiscogsAuthError_RendersReconnectPartial() {
 	token := s.createSession("user-auth-error-search", time.Now().Add(time.Hour))
+	s.createOAuthToken("user-auth-error-search", "discogs-user")
 	s.mockDiscogs.searchErr = &discogs.DiscogsAuthError{}
 
 	form := url.Values{"barcode": {"1234567890"}}
@@ -265,6 +269,40 @@ func (s *ScanSuite) TestScanCancel_GET_DoesNotCallAddToCollection() {
 	s.False(s.mockDiscogs.addToCollectionCalled)
 	s.Equal(http.StatusFound, rr.Code)
 	s.Equal("/app/scanner", rr.Header().Get("Location"))
+}
+
+func (s *ScanSuite) TestScan_POST_NoDiscogsToken_RendersReconnectPartial() {
+	token := s.createSession("user-no-oauth-scan", time.Now().Add(time.Hour))
+
+	form := url.Values{"barcode": {"1234567890"}}
+	req := httptest.NewRequest(http.MethodPost, "/app/scan", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusUnauthorized, rr.Code)
+	s.Contains(rr.Body.String(), "reconnect")
+	s.Contains(rr.Body.String(), "/auth/discogs/connect")
+	s.False(s.mockDiscogs.addToCollectionCalled)
+}
+
+func (s *ScanSuite) TestScanConfirm_POST_NoDiscogsToken_RendersReconnectPartial() {
+	token := s.createSession("user-no-oauth-confirm", time.Now().Add(time.Hour))
+
+	form := url.Values{"release_id": {"12345"}}
+	req := httptest.NewRequest(http.MethodPost, "/app/scan/confirm", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusUnauthorized, rr.Code)
+	s.Contains(rr.Body.String(), "reconnect")
+	s.Contains(rr.Body.String(), "/auth/discogs/connect")
+	s.False(s.mockDiscogs.addToCollectionCalled)
 }
 
 func (s *ScanSuite) createSession(userID string, expiresAt time.Time) string {
