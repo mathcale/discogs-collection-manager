@@ -1,5 +1,11 @@
 package templates
 
+import (
+	"strconv"
+
+	"github.com/mathcale/discogs-collection-manager/internal/discogs"
+)
+
 templ ScannerPage() {
 	<!DOCTYPE html>
 	<html lang="en">
@@ -68,6 +74,40 @@ templ ScannerPage() {
 	</html>
 }
 
-templ ScanResultPartial(barcode string) {
-	<p>Scanned: { barcode }</p>
+templ ScanConfirmPartial(release discogs.Release) {
+	<div>
+		<h2>{ release.Title }</h2>
+		if release.Thumb != "" {
+			<img src={ release.Thumb } alt={ release.Title }/>
+		}
+		if release.Country != "" {
+			<p>Country: { release.Country }</p>
+		}
+		if release.Year != "" {
+			<p>Year: { release.Year }</p>
+		}
+		if release.Label != "" {
+			<p>Label: { release.Label }</p>
+		}
+		<p><a href={ templ.SafeURL(release.URI) } target="_blank" rel="noopener noreferrer">View on Discogs</a></p>
+		<form hx-post="/app/scan/confirm" hx-target="#scan-result" hx-swap="innerHTML">
+			<input type="hidden" name="release_id" value={ strconv.Itoa(release.ID) }/>
+			<button type="submit">Add to Collection</button>
+		</form>
+		<a href="/app/scanner">Cancel</a>
+	</div>
+}
+
+templ ScanSuccessPartial() {
+	<div>
+		<p>Release added to your Discogs collection!</p>
+		<a href="/app/scanner">Scan another</a>
+	</div>
+}
+
+templ ScanErrorPartial(message string) {
+	<div role="alert">
+		<p>{ message }</p>
+		<a href="/app/scanner">Try again</a>
+	</div>
 }
