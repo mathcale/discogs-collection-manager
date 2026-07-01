@@ -19,6 +19,7 @@ type UserRepository interface {
 	Create(ctx context.Context, email, passwordHash string) (*User, error)
 	FindByEmail(ctx context.Context, email string) (*User, error)
 	FindByID(ctx context.Context, id string) (*User, error)
+	UpdatePassword(ctx context.Context, id, passwordHash string) error
 }
 
 type SQLiteUserRepository struct {
@@ -85,4 +86,12 @@ func (r *SQLiteUserRepository) FindByID(ctx context.Context, id string) (*User, 
 	u.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
 
 	return &u, nil
+}
+
+func (r *SQLiteUserRepository) UpdatePassword(ctx context.Context, id, passwordHash string) error {
+	_, err := r.db.ExecContext(ctx,
+		`UPDATE users SET password_hash = ? WHERE id = ?`,
+		passwordHash, id,
+	)
+	return err
 }

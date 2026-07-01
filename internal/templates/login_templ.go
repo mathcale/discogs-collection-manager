@@ -52,7 +52,7 @@ func LoginPage(errorMsg string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form method=\"POST\" action=\"/login\"><label for=\"email\">Email</label> <input type=\"email\" id=\"email\" name=\"email\" required> <label for=\"password\">Password</label> <input type=\"password\" id=\"password\" name=\"password\" required> <label><input type=\"checkbox\" name=\"stay_logged_in\" value=\"1\"> Stay logged in</label> <button type=\"submit\">Log in</button></form><p><a href=\"/register\">No account? Register</a></p></main></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<form method=\"POST\" action=\"/login\"><label for=\"email\">Email</label> <input type=\"email\" id=\"email\" name=\"email\" required> <label for=\"password\">Password</label> <input type=\"password\" id=\"password\" name=\"password\" required> <label><input type=\"checkbox\" name=\"stay_logged_in\" value=\"1\"> Stay logged in</label> <button type=\"submit\">Log in</button></form><p><a href=\"/forgot-password\">Forgot password?</a></p><p><a href=\"/register\">No account? Register</a></p></main></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

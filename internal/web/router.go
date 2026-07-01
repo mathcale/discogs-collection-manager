@@ -17,7 +17,7 @@ func NewRouter(k *kernel.Kernel) http.Handler {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
 
-	authHandler := handler.NewAuthHandler(k.Users, k.Sessions)
+	authHandler := handler.NewAuthHandler(k.Users, k.Sessions, k.OTPCodes, k.ResetTokens, k.Mailer, k.BaseURL)
 	discogsOAuthHandler := handler.NewDiscogsOAuthHandler(k.OAuthTokens, k.Sessions, k.Users, k.DiscogsOAuth)
 	scanHandler := handler.NewScanHandler(k.Discogs, k.OAuthTokens)
 
@@ -26,6 +26,12 @@ func NewRouter(k *kernel.Kernel) http.Handler {
 	r.Post("/register", authHandler.Register)
 	r.Get("/login", authHandler.LoginPage)
 	r.Post("/login", authHandler.Login)
+	r.Get("/login/otp", authHandler.OTPPage)
+	r.Post("/login/otp", authHandler.VerifyOTP)
+	r.Get("/forgot-password", authHandler.ForgotPasswordPage)
+	r.Post("/forgot-password", authHandler.ForgotPassword)
+	r.Get("/reset-password", authHandler.ResetPasswordPage)
+	r.Post("/reset-password", authHandler.ResetPassword)
 
 	r.Group(func(r chi.Router) {
 		r.Use(RequireAuth(k.Sessions))

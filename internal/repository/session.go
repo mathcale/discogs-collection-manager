@@ -21,6 +21,7 @@ type SessionRepository interface {
 	Create(ctx context.Context, userID, token string, expiresAt time.Time, persistent bool) (*Session, error)
 	FindByToken(ctx context.Context, token string) (*Session, error)
 	Delete(ctx context.Context, token string) error
+	DeleteAllForUser(ctx context.Context, userID string) error
 }
 
 type SQLiteSessionRepository struct {
@@ -82,5 +83,10 @@ func (r *SQLiteSessionRepository) FindByToken(ctx context.Context, token string)
 
 func (r *SQLiteSessionRepository) Delete(ctx context.Context, token string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM sessions WHERE token = ?`, token)
+	return err
+}
+
+func (r *SQLiteSessionRepository) DeleteAllForUser(ctx context.Context, userID string) error {
+	_, err := r.db.ExecContext(ctx, `DELETE FROM sessions WHERE user_id = ?`, userID)
 	return err
 }
