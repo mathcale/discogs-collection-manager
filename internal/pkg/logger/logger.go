@@ -39,6 +39,18 @@ func FromCtx(ctx context.Context) Logger {
 	return New(os.Getenv("ENVIRONMENT"))
 }
 
+func (l Logger) With(keysAndValues ...any) Logger {
+	ctx := l.zl.With()
+	for i := 0; i+1 < len(keysAndValues); i += 2 {
+		key, ok := keysAndValues[i].(string)
+		if !ok {
+			continue
+		}
+		ctx = ctx.Interface(key, keysAndValues[i+1])
+	}
+	return Logger{zl: ctx.Logger()}
+}
+
 func (l Logger) Info(msg string, keysAndValues ...any) {
 	l.logEvent(l.zl.Info(), msg, keysAndValues...)
 }
