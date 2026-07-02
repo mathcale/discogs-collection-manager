@@ -9,6 +9,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/mathcale/discogs-collection-manager/internal/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/logger"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/mailer"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 	"github.com/mathcale/discogs-collection-manager/internal/repository"
@@ -16,6 +17,7 @@ import (
 
 type Kernel struct {
 	DB           *sql.DB
+	Logger       logger.Logger
 	Users        repository.UserRepository
 	Sessions     repository.SessionRepository
 	OAuthTokens  repository.OAuthTokenRepository
@@ -28,6 +30,9 @@ type Kernel struct {
 }
 
 func New() (*Kernel, error) {
+	env := os.Getenv("ENVIRONMENT")
+	log := logger.New(env)
+
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
 		dbPath = "./data/discogs.db"
@@ -44,6 +49,8 @@ func New() (*Kernel, error) {
 		return nil, fmt.Errorf("connect to database: %w", err)
 	}
 
+	log.Info("database connected", "path", dbPath)
+
 	migrationsPath := os.Getenv("MIGRATIONS_PATH")
 	if migrationsPath == "" {
 		migrationsPath = "./migrations"
@@ -54,6 +61,8 @@ func New() (*Kernel, error) {
 
 		return nil, fmt.Errorf("run migrations: %w", err)
 	}
+
+	log.Info("migrations applied", "path", migrationsPath)
 
 	discogsOAuth := &oauth1.Config{
 		ConsumerKey:    os.Getenv("DISCOGS_CONSUMER_KEY"),
@@ -81,6 +90,7 @@ func New() (*Kernel, error) {
 
 	return &Kernel{
 		DB:           db,
+		Logger:       log,
 		Users:        repository.NewSQLiteUserRepository(db),
 		Sessions:     repository.NewSQLiteSessionRepository(db),
 		OAuthTokens:  oauthTokens,
