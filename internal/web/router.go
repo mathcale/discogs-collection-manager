@@ -13,9 +13,9 @@ import (
 func NewRouter(k *kernel.Kernel) http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
 	r.Use(middleware.RequestID)
+	r.Use(RequestLogger(k.Logger))
+	r.Use(middleware.Recoverer)
 
 	authHandler := handler.NewAuthHandler(k.Users, k.Sessions, k.OTPCodes, k.ResetTokens, k.Mailer, k.BaseURL)
 	discogsOAuthHandler := handler.NewDiscogsOAuthHandler(k.OAuthTokens, k.Sessions, k.Users, k.DiscogsOAuth)

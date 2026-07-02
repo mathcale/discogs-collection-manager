@@ -101,3 +101,18 @@ func TestNew_DefaultEnvIsJSON(t *testing.T) {
 	out := strings.TrimSpace(buf.String())
 	assert.True(t, strings.HasPrefix(out, "{"), "expected JSON output for non-development env")
 }
+
+func TestLogger_With_AttachesFields(t *testing.T) {
+	var buf bytes.Buffer
+	l := logger.NewWithWriter("production", &buf)
+	child := l.With("requestID", "abc123", "method", "GET")
+
+	child.Info("enriched")
+
+	var result map[string]any
+	require.NoError(t, json.Unmarshal(buf.Bytes(), &result))
+	assert.Equal(t, "abc123", result["requestID"])
+	assert.Equal(t, "GET", result["method"])
+	assert.Equal(t, "enriched", result["message"])
+}
+
