@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -17,7 +16,8 @@ import (
 const shutdownTimeout = 30 * time.Second
 
 type Server struct {
-	http *http.Server
+	http   *http.Server
+	kernel *kernel.Kernel
 }
 
 func NewServer(k *kernel.Kernel) *Server {
@@ -31,14 +31,15 @@ func NewServer(k *kernel.Kernel) *Server {
 			Addr:    fmt.Sprintf(":%s", port),
 			Handler: NewRouter(k),
 		},
+		kernel: k,
 	}
 }
 
 func (s *Server) Run() error {
 	go func() {
-		log.Printf("server listening on %s", s.http.Addr)
+		s.kernel.Logger.Info("server listening", "addr", s.http.Addr)
 		if err := s.http.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
-			log.Fatalf("server error: %v", err)
+			s.kernel.Logger.Error("server error", "error", err)
 		}
 	}()
 
@@ -46,7 +47,7 @@ func (s *Server) Run() error {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Println("shutting down server...")
+	s.kernel.Logger.Info("shutting down server")
 
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
@@ -55,6 +56,6 @@ func (s *Server) Run() error {
 		return fmt.Errorf("forced shutdown: %w", err)
 	}
 
-	log.Println("server stopped")
+	s.kernel.Logger.Info("server stopped")
 	return nil
 }
