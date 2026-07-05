@@ -29,3 +29,5 @@ Thumbs.db
 
 # Air
 build-errors.log
+
+*.pem

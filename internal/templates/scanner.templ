@@ -14,19 +14,22 @@ templ ScannerPage() {
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 			<title>Scanner — Discogs Collection Manager</title>
 			<script src="/static/htmx.min.js"></script>
-			<script src="/static/zxing.min.js"></script>
+			<script src="/static/html5-qrcode.min.js"></script>
 		</head>
 		<body>
 			<main>
 				<h1>Barcode Scanner</h1>
-				<video id="scanner-video" autoplay playsinline style="width:100%;max-width:400px"></video>
+				<div id="reader" style="width:100%;max-width:400px"></div>
+				<button id="start-btn" type="button" hidden>Start Scanner</button>
 				<div id="scan-result"></div>
 			</main>
 			<script>
 				(function () {
-					var video = document.getElementById('scanner-video');
-					var resultEl = document.getElementById('scan-result');
 					var submitted = false;
+					var resultEl = document.getElementById('scan-result');
+					var startBtn = document.getElementById('start-btn');
+					var scanner = new Html5Qrcode('reader');
+					var config = { fps: 10, qrbox: { width: 250, height: 150 } };
 
 					function postBarcode(barcode) {
 						if (submitted) return;
@@ -38,36 +41,24 @@ templ ScannerPage() {
 						}).catch(function () { submitted = false; });
 					}
 
-					if (typeof BarcodeDetector !== 'undefined') {
-						navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
-							.then(function (stream) {
-								video.srcObject = stream;
-								var detector = new BarcodeDetector();
-								var interval = setInterval(function () {
-									detector.detect(video).then(function (codes) {
-										if (codes.length > 0) {
-											clearInterval(interval);
-											stream.getTracks().forEach(function (t) { t.stop(); });
-											postBarcode(codes[0].rawValue);
-										}
-									}).catch(function () {});
-								}, 300);
-							});
-					} else {
-						var ZXing = window.ZXing;
-						var hints = new Map();
-						var codeReader = new ZXing.BrowserMultiFormatReader(hints);
-						codeReader.decodeFromConstraints(
-							{ video: { facingMode: 'environment' } },
-							video,
-							function (result, err, controls) {
-								if (result) {
-									controls.stop();
-									postBarcode(result.getText());
-								}
+					function startScanner() {
+						startBtn.hidden = true;
+						resultEl.textContent = '';
+						return scanner.start(
+							{ facingMode: 'environment' },
+							config,
+							function (decodedText) {
+								scanner.stop().catch(function () {});
+								postBarcode(decodedText);
 							}
-						);
+						).catch(function (err) {
+							startBtn.hidden = false;
+							resultEl.textContent = 'Could not start camera: ' + (err && err.message ? err.message : err);
+						});
 					}
+
+					startBtn.addEventListener('click', startScanner);
+					startScanner();
 				})();
 			</script>
 		</body>
