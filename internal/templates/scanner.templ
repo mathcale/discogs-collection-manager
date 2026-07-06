@@ -7,62 +7,53 @@ import (
 )
 
 templ ScannerPage() {
-	<!DOCTYPE html>
-	<html lang="en">
-		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>Scanner — Discogs Collection Manager</title>
-			<script src="/static/htmx.min.js"></script>
-			<script src="/static/html5-qrcode.min.js"></script>
-		</head>
-		<body>
-			<main>
-				<h1>Barcode Scanner</h1>
-				<div id="reader" style="width:100%;max-width:400px"></div>
-				<button id="start-btn" type="button" hidden>Start Scanner</button>
-				<div id="scan-result"></div>
-			</main>
-			<script>
-				(function () {
-					var submitted = false;
-					var resultEl = document.getElementById('scan-result');
-					var startBtn = document.getElementById('start-btn');
-					var scanner = new Html5Qrcode('reader');
-					var config = { fps: 10, qrbox: { width: 250, height: 150 } };
+	@BaseLayout("Scanner — Discogs Collection Manager") {
+		<script src="/static/html5-qrcode.min.js"></script>
+		<main>
+			<h1>Barcode Scanner</h1>
+			<div id="reader" style="width:100%;max-width:400px"></div>
+			<button id="start-btn" type="button" hidden>Start Scanner</button>
+			<div id="scan-result"></div>
+		</main>
+		<script>
+			(function () {
+				var submitted = false;
+				var resultEl = document.getElementById('scan-result');
+				var startBtn = document.getElementById('start-btn');
+				var scanner = new Html5Qrcode('reader');
+				var config = { fps: 10, qrbox: { width: 250, height: 150 } };
 
-					function postBarcode(barcode) {
-						if (submitted) return;
-						submitted = true;
-						htmx.ajax('POST', '/app/scan', {
-							target: '#scan-result',
-							swap: 'innerHTML',
-							values: { barcode: barcode }
-						}).catch(function () { submitted = false; });
-					}
+				function postBarcode(barcode) {
+					if (submitted) return;
+					submitted = true;
+					htmx.ajax('POST', '/app/scan', {
+						target: '#scan-result',
+						swap: 'innerHTML',
+						values: { barcode: barcode }
+					}).catch(function () { submitted = false; });
+				}
 
-					function startScanner() {
-						startBtn.hidden = true;
-						resultEl.textContent = '';
-						return scanner.start(
-							{ facingMode: 'environment' },
-							config,
-							function (decodedText) {
-								scanner.stop().catch(function () {});
-								postBarcode(decodedText);
-							}
-						).catch(function (err) {
-							startBtn.hidden = false;
-							resultEl.textContent = 'Could not start camera: ' + (err && err.message ? err.message : err);
-						});
-					}
+				function startScanner() {
+					startBtn.hidden = true;
+					resultEl.textContent = '';
+					return scanner.start(
+						{ facingMode: 'environment' },
+						config,
+						function (decodedText) {
+							scanner.stop().catch(function () {});
+							postBarcode(decodedText);
+						}
+					).catch(function (err) {
+						startBtn.hidden = false;
+						resultEl.textContent = 'Could not start camera: ' + (err && err.message ? err.message : err);
+					});
+				}
 
-					startBtn.addEventListener('click', startScanner);
-					startScanner();
-				})();
-			</script>
-		</body>
-	</html>
+				startBtn.addEventListener('click', startScanner);
+				startScanner();
+			})();
+		</script>
+	}
 }
 
 templ ScanConfirmPartial(release discogs.Release) {

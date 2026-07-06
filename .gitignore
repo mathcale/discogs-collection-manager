@@ -31,3 +31,6 @@ Thumbs.db
 build-errors.log
 
 *.pem
+
+# Generated CSS
+static/app.min.css
