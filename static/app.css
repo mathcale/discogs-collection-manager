@@ -330,6 +330,12 @@ a:hover {
   font-size: 0.9375rem;
 }
 
+.scan-result-catno,
+.scan-conflict-catno {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.875rem;
+}
+
 .scan-result-actions {
   display: flex;
   flex-direction: column;
@@ -361,7 +367,8 @@ a:hover {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem;
+  padding: 0.875rem 0.75rem;
+  min-height: 3.5rem;
   cursor: pointer;
 }
 
