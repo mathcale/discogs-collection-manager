@@ -91,13 +91,13 @@ templ ScanConfirmPartial(release discogs.Release) {
 				}
 				if release.Label != "" {
 					<dt>Label</dt>
-					<dd>{ release.Label }</dd>
+					<dd class="scan-result-catno">{ release.Label }</dd>
 				}
 			</dl>
 			<a href={ templ.SafeURL(release.URI) } target="_blank" rel="noopener noreferrer" class="scan-result-link">View on Discogs ↗</a>
 		</div>
 		<div class="scan-result-actions">
-			<form hx-post="/app/scan/confirm" hx-target="#scan-result" hx-swap="innerHTML">
+			<form hx-post="/app/scan/confirm" hx-target="#scan-result" hx-swap="innerHTML" hx-disabled-elt="find button[type='submit']">
 				<input type="hidden" name="release_id" value={ strconv.Itoa(release.ID) }/>
 				<button type="submit" class="btn btn-primary scan-result-action-btn">
 					<span class="spinner" aria-hidden="true"></span>
@@ -115,7 +115,7 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 			<h2 class="scan-result-title">Multiple releases found</h2>
 			<p class="scan-result-subtitle">Select the correct pressing:</p>
 		</div>
-		<form hx-post="/app/scan/confirm" hx-target="#scan-result" hx-swap="innerHTML">
+		<form hx-post="/app/scan/confirm" hx-target="#scan-result" hx-swap="innerHTML" hx-disabled-elt="find button[type='submit']">
 			<ul class="scan-conflict-list">
 				for _, r := range releases {
 					<li class="scan-conflict-item">
@@ -134,7 +134,7 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 										<span>{ r.Year }</span>
 									}
 									if r.Label != "" {
-										<span>{ r.Label }</span>
+										<span class="scan-conflict-catno">{ r.Label }</span>
 									}
 								</span>
 								<a href={ templ.SafeURL(r.URI) } target="_blank" rel="noopener noreferrer" class="scan-result-link">View on Discogs ↗</a>
@@ -155,7 +155,7 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 }
 
 templ ScanSuccessPartial() {
-	<div class="scan-result-card alert alert-success">
+	<div class="scan-result-card alert alert-success" role="status">
 		<p>Release added to your Discogs collection!</p>
 		<a href="/app/scanner" class="btn btn-primary scan-result-action-btn">Scan another</a>
 	</div>
