@@ -9,27 +9,44 @@ import (
 templ ScannerPage() {
 	@BaseLayout("Scanner — Discogs Collection Manager") {
 		<script src="/static/html5-qrcode.min.js"></script>
-		<main>
-			<h1>Barcode Scanner</h1>
-			<div id="reader" style="width:100%;max-width:400px"></div>
-			<button id="start-btn" type="button" hidden>Start Scanner</button>
-			<div id="scan-result"></div>
-		</main>
+		<div class="scanner-shell">
+			<div class="scanner-viewport">
+				<div id="reader"></div>
+			</div>
+			<div
+				id="scan-result"
+				class="scan-result"
+				aria-live="polite"
+				aria-atomic="true"
+			></div>
+			<div class="scanner-bar" role="toolbar" aria-label="Scanner controls">
+				<button id="start-btn" type="button" class="btn btn-primary scanner-bar-btn" hidden>
+					Start Scanner
+				</button>
+				<div id="scan-indicator" class="scan-indicator" aria-hidden="true">
+					<span class="spinner"></span>
+				</div>
+			</div>
+		</div>
 		<script>
 			(function () {
 				var submitted = false;
 				var resultEl = document.getElementById('scan-result');
 				var startBtn = document.getElementById('start-btn');
+				var indicator = document.getElementById('scan-indicator');
 				var scanner = new Html5Qrcode('reader');
 				var config = { fps: 10, qrbox: { width: 250, height: 150 } };
 
 				function postBarcode(barcode) {
 					if (submitted) return;
 					submitted = true;
+					indicator.classList.add('htmx-request');
 					htmx.ajax('POST', '/app/scan', {
 						target: '#scan-result',
 						swap: 'innerHTML',
 						values: { barcode: barcode }
+					}).finally(function () {
+						indicator.classList.remove('htmx-request');
 					}).catch(function () { submitted = false; });
 				}
 
@@ -57,80 +74,103 @@ templ ScannerPage() {
 }
 
 templ ScanConfirmPartial(release discogs.Release) {
-	<div>
-		<h2>{ release.Title }</h2>
+	<div class="scan-result-card card">
 		if release.Thumb != "" {
-			<img src={ release.Thumb } alt={ release.Title }/>
+			<img src={ release.Thumb } alt={ release.Title } class="scan-result-thumb"/>
 		}
-		if release.Country != "" {
-			<p>Country: { release.Country }</p>
-		}
-		if release.Year != "" {
-			<p>Year: { release.Year }</p>
-		}
-		if release.Label != "" {
-			<p>Label: { release.Label }</p>
-		}
-		<p><a href={ templ.SafeURL(release.URI) } target="_blank" rel="noopener noreferrer">View on Discogs</a></p>
-		<form hx-post="/app/scan/confirm" hx-target="#scan-result" hx-swap="innerHTML">
-			<input type="hidden" name="release_id" value={ strconv.Itoa(release.ID) }/>
-			<button type="submit">Add to Collection</button>
-		</form>
-		<a href="/app/scanner">Cancel</a>
+		<div class="scan-result-body">
+			<h2 class="scan-result-title">{ release.Title }</h2>
+			<dl class="scan-result-meta">
+				if release.Country != "" {
+					<dt>Country</dt>
+					<dd>{ release.Country }</dd>
+				}
+				if release.Year != "" {
+					<dt>Year</dt>
+					<dd>{ release.Year }</dd>
+				}
+				if release.Label != "" {
+					<dt>Label</dt>
+					<dd>{ release.Label }</dd>
+				}
+			</dl>
+			<a href={ templ.SafeURL(release.URI) } target="_blank" rel="noopener noreferrer" class="scan-result-link">View on Discogs ↗</a>
+		</div>
+		<div class="scan-result-actions">
+			<form hx-post="/app/scan/confirm" hx-target="#scan-result" hx-swap="innerHTML">
+				<input type="hidden" name="release_id" value={ strconv.Itoa(release.ID) }/>
+				<button type="submit" class="btn btn-primary scan-result-action-btn">
+					<span class="spinner" aria-hidden="true"></span>
+					Add to Collection
+				</button>
+			</form>
+			<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Cancel</a>
+		</div>
 	</div>
 }
 
 templ ScanConflictListPartial(releases []discogs.Release) {
-	<div>
-		<h2>Multiple releases found</h2>
-		<p>Select the correct pressing:</p>
+	<div class="scan-result-card card">
+		<div class="scan-result-body">
+			<h2 class="scan-result-title">Multiple releases found</h2>
+			<p class="scan-result-subtitle">Select the correct pressing:</p>
+		</div>
 		<form hx-post="/app/scan/confirm" hx-target="#scan-result" hx-swap="innerHTML">
-			<ul>
+			<ul class="scan-conflict-list">
 				for _, r := range releases {
-					<li>
-						<label>
-							<input type="radio" name="release_id" value={ strconv.Itoa(r.ID) }/>
+					<li class="scan-conflict-item">
+						<label class="scan-conflict-label">
+							<input type="radio" name="release_id" value={ strconv.Itoa(r.ID) } class="scan-conflict-radio"/>
 							if r.Thumb != "" {
-								<img src={ r.Thumb } alt={ r.Title }/>
+								<img src={ r.Thumb } alt={ r.Title } class="scan-conflict-thumb"/>
 							}
-							<strong>{ r.Title }</strong>
-							if r.Country != "" {
-								<span>{ r.Country }</span>
-							}
-							if r.Year != "" {
-								<span>{ r.Year }</span>
-							}
-							if r.Label != "" {
-								<span>{ r.Label }</span>
-							}
-							<a href={ templ.SafeURL(r.URI) } target="_blank" rel="noopener noreferrer">View on Discogs</a>
+							<span class="scan-conflict-info">
+								<strong>{ r.Title }</strong>
+								<span class="scan-conflict-meta">
+									if r.Country != "" {
+										<span>{ r.Country }</span>
+									}
+									if r.Year != "" {
+										<span>{ r.Year }</span>
+									}
+									if r.Label != "" {
+										<span>{ r.Label }</span>
+									}
+								</span>
+								<a href={ templ.SafeURL(r.URI) } target="_blank" rel="noopener noreferrer" class="scan-result-link">View on Discogs ↗</a>
+							</span>
 						</label>
 					</li>
 				}
 			</ul>
-			<button type="submit">Confirm</button>
+			<div class="scan-result-actions">
+				<button type="submit" class="btn btn-primary scan-result-action-btn">
+					<span class="spinner" aria-hidden="true"></span>
+					Confirm
+				</button>
+			</div>
 		</form>
-		<a href="/app/scanner">Cancel</a>
+		<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Cancel</a>
 	</div>
 }
 
 templ ScanSuccessPartial() {
-	<div>
+	<div class="scan-result-card alert alert-success">
 		<p>Release added to your Discogs collection!</p>
-		<a href="/app/scanner">Scan another</a>
+		<a href="/app/scanner" class="btn btn-primary scan-result-action-btn">Scan another</a>
 	</div>
 }
 
 templ ScanErrorPartial(message string) {
-	<div role="alert">
+	<div class="scan-result-card alert alert-error" role="alert">
 		<p>{ message }</p>
-		<a href="/app/scanner">Try again</a>
+		<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Try again</a>
 	</div>
 }
 
 templ ScanReconnectPartial() {
-	<div role="alert">
+	<div class="scan-result-card alert alert-error" role="alert">
 		<p>Your Discogs account is no longer connected. Please reconnect to continue.</p>
-		<a href="/auth/discogs/connect">Reconnect Discogs</a>
+		<a href="/auth/discogs/connect" class="btn btn-primary scan-result-action-btn">Reconnect Discogs</a>
 	</div>
 }
