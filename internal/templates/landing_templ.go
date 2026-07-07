@@ -41,7 +41,7 @@ func LandingPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main><h1>Discogs Collection Manager</h1><p>Welcome! Connect your Discogs account to start scanning.</p></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-screen flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm text-center\"><h1 class=\"text-3xl font-semibold tracking-tight mb-3\">Discogs Collection Manager</h1><p class=\"text-sm mb-8\" style=\"color: var(--color-muted)\">Connect your Discogs account to start scanning your vinyl collection.</p><div class=\"flex flex-col gap-3\"><a href=\"/login\" class=\"btn btn-primary\">Log in</a> <a href=\"/register\" class=\"btn btn-secondary\">Create account</a></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
