@@ -16,7 +16,7 @@ templ SettingsPage(email string, discogsUsername string) {
 				</section>
 				<section class="card">
 					<h2 class="text-base font-semibold mb-4">Discogs Connection</h2>
-					<div role="status" aria-live="polite" class="mb-4"></div>
+					<div id="discogs-status" role="status" aria-live="polite" class="mb-4 empty:mb-0"></div>
 					if discogsUsername != "" {
 						<div class="flex flex-col gap-4">
 							<div class="flex items-center gap-3">
@@ -31,6 +31,7 @@ templ SettingsPage(email string, discogsUsername string) {
 								hx-boost="true"
 								hx-disabled-elt="find button[type='submit']"
 								class="flex"
+								hx-on:htmx:response-error="document.getElementById('discogs-status').innerHTML='<div class=\'alert alert-error\'>Disconnection failed. Please try again.</div>'"
 							>
 								<button type="submit" class="btn btn-secondary">
 									<span class="spinner mr-1.5" aria-hidden="true"></span>

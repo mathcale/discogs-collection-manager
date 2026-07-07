@@ -54,7 +54,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</dd></div></dl></section><section class=\"card\"><h2 class=\"text-base font-semibold mb-4\">Discogs Connection</h2><div role=\"status\" aria-live=\"polite\" class=\"mb-4\"></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</dd></div></dl></section><section class=\"card\"><h2 class=\"text-base font-semibold mb-4\">Discogs Connection</h2><div id=\"discogs-status\" role=\"status\" aria-live=\"polite\" class=\"mb-4 empty:mb-0\"></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -72,7 +72,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</strong></p></div><form method=\"POST\" action=\"/auth/discogs/disconnect\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\" class=\"flex\"><button type=\"submit\" class=\"btn btn-secondary\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Disconnect</button></form></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</strong></p></div><form method=\"POST\" action=\"/auth/discogs/disconnect\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\" class=\"flex\" hx-on:htmx:response-error=\"document.getElementById('discogs-status').innerHTML='<div class=\\'alert alert-error\\'>Disconnection failed. Please try again.</div>'\"><button type=\"submit\" class=\"btn btn-secondary\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Disconnect</button></form></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -136,7 +136,7 @@ func DiscogsConnectError(message string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/settings.templ`, Line: 63, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/settings.templ`, Line: 64, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
