@@ -26,13 +26,13 @@ import (
 
 type DiscogsOAuthSuite struct {
 	suite.Suite
-	db          *sql.DB
-	dbPath      string
-	users       repository.UserRepository
-	sessions    repository.SessionRepository
-	oauthTokens repository.OAuthTokenRepository
-	router      http.Handler
-	mockDiscogs *httptest.Server
+	db           *sql.DB
+	dbPath       string
+	users        repository.UserRepository
+	sessions     repository.SessionRepository
+	oauthTokens  repository.OAuthTokenRepository
+	router       http.Handler
+	mockDiscogs  *httptest.Server
 	oauthHandler *handler.DiscogsOAuthHandler
 }
 
