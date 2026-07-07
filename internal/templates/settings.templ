@@ -1,50 +1,33 @@
 package templates
 
 templ SettingsPage(email string, discogsUsername string) {
-	<!DOCTYPE html>
-	<html lang="en">
-		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>Settings — Discogs Collection Manager</title>
-			<script src="/static/htmx.min.js"></script>
-		</head>
-		<body>
-			<main>
-				<h1>Settings</h1>
-				<p>{ email }</p>
-				<section>
-					<h2>Discogs Account</h2>
-					if discogsUsername != "" {
-						<p>Connected as <strong>{ discogsUsername }</strong></p>
-						<form method="POST" action="/auth/discogs/disconnect">
-							<button type="submit">Disconnect</button>
-						</form>
-					} else {
-						<p>Not connected</p>
-						<a href="/auth/discogs/connect">Connect your Discogs account</a>
-					}
-				</section>
-			</main>
-		</body>
-	</html>
+	@BaseLayout("Settings — Discogs Collection Manager") {
+		<main>
+			<h1>Settings</h1>
+			<p>{ email }</p>
+			<section>
+				<h2>Discogs Account</h2>
+				if discogsUsername != "" {
+					<p>Connected as <strong>{ discogsUsername }</strong></p>
+					<form method="POST" action="/auth/discogs/disconnect">
+						<button type="submit">Disconnect</button>
+					</form>
+				} else {
+					<p>Not connected</p>
+					<a href="/auth/discogs/connect">Connect your Discogs account</a>
+				}
+			</section>
+		</main>
+	}
 }
 
 templ DiscogsConnectError(message string) {
-	<!DOCTYPE html>
-	<html lang="en">
-		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<title>Discogs Connection — Discogs Collection Manager</title>
-		</head>
-		<body>
-			<main>
-				<h1>Discogs Connection Failed</h1>
-				<p role="alert">{ message }</p>
-				<p><a href="/app/settings">Back to Settings</a></p>
-				<p><a href="/auth/discogs/connect">Try reconnecting</a></p>
-			</main>
-		</body>
-	</html>
+	@BaseLayout("Discogs Connection — Discogs Collection Manager") {
+		<main>
+			<h1>Discogs Connection Failed</h1>
+			<p role="alert">{ message }</p>
+			<p><a href="/app/settings">Back to Settings</a></p>
+			<p><a href="/auth/discogs/connect">Try reconnecting</a></p>
+		</main>
+	}
 }
