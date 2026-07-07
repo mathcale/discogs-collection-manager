@@ -15,3 +15,13 @@ templ BaseLayout(title string) {
 		</body>
 	</html>
 }
+
+templ AppLayout(title string) {
+	@BaseLayout(title) {
+		<nav class="border-b px-4 py-3 flex gap-6 text-sm font-medium" style="border-color: var(--color-border);">
+			<a href="/app/settings" class="hover:underline">Settings</a>
+			<a href="/app/scanner" class="hover:underline">Scanner</a>
+		</nav>
+		{ children... }
+	}
+}

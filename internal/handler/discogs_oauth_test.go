@@ -265,6 +265,22 @@ func (s *DiscogsOAuthSuite) TestSettingsPage_ShowsDisconnectedStatus() {
 	s.Contains(rr.Body.String(), "Not connected")
 }
 
+func (s *DiscogsOAuthSuite) TestSettingsPage_ShowsNavigation() {
+	user := s.createUser("nav@example.com")
+	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
+
+	req := httptest.NewRequest(http.MethodGet, "/app/settings", nil)
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusOK, rr.Code)
+	body := rr.Body.String()
+	s.Contains(body, "/app/settings")
+	s.Contains(body, "/app/scanner")
+}
+
 func (s *DiscogsOAuthSuite) createUser(email string) *repository.User {
 	form := url.Values{"email": {email}, "password": {"password123"}}
 	user, err := s.users.Create(context.Background(), email, "hashed")

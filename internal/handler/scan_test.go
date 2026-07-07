@@ -305,6 +305,21 @@ func (s *ScanSuite) TestScanConfirm_POST_NoDiscogsToken_RendersReconnectPartial(
 	s.False(s.mockDiscogs.addToCollectionCalled)
 }
 
+func (s *ScanSuite) TestScanPage_ShowsNavigation() {
+	token := s.createSession("user-nav", time.Now().Add(time.Hour))
+
+	req := httptest.NewRequest(http.MethodGet, "/app/scanner", nil)
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusOK, rr.Code)
+	body := rr.Body.String()
+	s.Contains(body, "/app/settings")
+	s.Contains(body, "/app/scanner")
+}
+
 func (s *ScanSuite) createSession(userID string, expiresAt time.Time) string {
 	token := "scan-test-token-" + userID
 	_, err := s.sessions.Create(context.Background(), userID, token, expiresAt, false)
