@@ -91,7 +91,7 @@ func AppLayout(title string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<nav class=\"border-b px-4 py-3 flex gap-6 text-sm font-medium\" style=\"border-color: var(--color-border);\"><a href=\"/app/settings\" class=\"hover:underline\">Settings</a> <a href=\"/app/scanner\" class=\"hover:underline\">Scanner</a></nav>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<nav class=\"border-b px-4 py-3 flex gap-6 text-sm font-medium items-center\" style=\"border-color: var(--color-border);\"><a href=\"/app/settings\" class=\"hover:underline\">Settings</a> <a href=\"/app/scanner\" class=\"hover:underline\">Scanner</a><form method=\"POST\" action=\"/logout\" class=\"ml-auto\"><button type=\"submit\" class=\"hover:underline\">Log out</button></form></nav>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
