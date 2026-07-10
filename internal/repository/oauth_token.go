@@ -28,10 +28,15 @@ type SQLiteOAuthTokenRepository struct {
 }
 
 func NewSQLiteOAuthTokenRepository(db *sql.DB) *SQLiteOAuthTokenRepository {
-	return &SQLiteOAuthTokenRepository{db: db}
+	return &SQLiteOAuthTokenRepository{
+		db: db,
+	}
 }
 
-func (r *SQLiteOAuthTokenRepository) Upsert(ctx context.Context, userID, accessToken, accessTokenSecret, discogsUsername string) (*OAuthToken, error) {
+func (r *SQLiteOAuthTokenRepository) Upsert(
+	ctx context.Context,
+	userID, accessToken, accessTokenSecret, discogsUsername string,
+) (*OAuthToken, error) {
 	id := uuid.NewString()
 	now := time.Now().UTC()
 
@@ -58,7 +63,10 @@ func (r *SQLiteOAuthTokenRepository) Upsert(ctx context.Context, userID, accessT
 	}, nil
 }
 
-func (r *SQLiteOAuthTokenRepository) FindByUserID(ctx context.Context, userID string) (*OAuthToken, error) {
+func (r *SQLiteOAuthTokenRepository) FindByUserID(
+	ctx context.Context,
+	userID string,
+) (*OAuthToken, error) {
 	var t OAuthToken
 	var createdAt string
 
@@ -69,6 +77,7 @@ func (r *SQLiteOAuthTokenRepository) FindByUserID(ctx context.Context, userID st
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -80,5 +89,6 @@ func (r *SQLiteOAuthTokenRepository) FindByUserID(ctx context.Context, userID st
 
 func (r *SQLiteOAuthTokenRepository) DeleteByUserID(ctx context.Context, userID string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM oauth_tokens WHERE user_id = ?`, userID)
+
 	return err
 }

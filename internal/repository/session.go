@@ -29,14 +29,22 @@ type SQLiteSessionRepository struct {
 }
 
 func NewSQLiteSessionRepository(db *sql.DB) *SQLiteSessionRepository {
-	return &SQLiteSessionRepository{db: db}
+	return &SQLiteSessionRepository{
+		db: db,
+	}
 }
 
-func (r *SQLiteSessionRepository) Create(ctx context.Context, userID, token string, expiresAt time.Time, persistent bool) (*Session, error) {
+func (r *SQLiteSessionRepository) Create(
+	ctx context.Context,
+	userID, token string,
+	expiresAt time.Time,
+	persistent bool,
+) (*Session, error) {
 	id := uuid.NewString()
 	now := time.Now().UTC()
 
 	persistentInt := 0
+
 	if persistent {
 		persistentInt = 1
 	}
@@ -59,7 +67,10 @@ func (r *SQLiteSessionRepository) Create(ctx context.Context, userID, token stri
 	}, nil
 }
 
-func (r *SQLiteSessionRepository) FindByToken(ctx context.Context, token string) (*Session, error) {
+func (r *SQLiteSessionRepository) FindByToken(
+	ctx context.Context,
+	token string,
+) (*Session, error) {
 	var s Session
 	var expiresAt, createdAt string
 	var persistentInt int
@@ -70,6 +81,7 @@ func (r *SQLiteSessionRepository) FindByToken(ctx context.Context, token string)
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -83,10 +95,12 @@ func (r *SQLiteSessionRepository) FindByToken(ctx context.Context, token string)
 
 func (r *SQLiteSessionRepository) Delete(ctx context.Context, token string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM sessions WHERE token = ?`, token)
+
 	return err
 }
 
 func (r *SQLiteSessionRepository) DeleteAllForUser(ctx context.Context, userID string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM sessions WHERE user_id = ?`, userID)
+
 	return err
 }

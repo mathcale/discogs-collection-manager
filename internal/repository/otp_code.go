@@ -28,10 +28,16 @@ type SQLiteOTPRepository struct {
 }
 
 func NewSQLiteOTPRepository(db *sql.DB) *SQLiteOTPRepository {
-	return &SQLiteOTPRepository{db: db}
+	return &SQLiteOTPRepository{
+		db: db,
+	}
 }
 
-func (r *SQLiteOTPRepository) Create(ctx context.Context, userID, codeHash string, expiresAt time.Time) (*OTPCode, error) {
+func (r *SQLiteOTPRepository) Create(
+	ctx context.Context,
+	userID, codeHash string,
+	expiresAt time.Time,
+) (*OTPCode, error) {
 	id := uuid.NewString()
 	now := time.Now().UTC()
 
@@ -52,7 +58,10 @@ func (r *SQLiteOTPRepository) Create(ctx context.Context, userID, codeHash strin
 	}, nil
 }
 
-func (r *SQLiteOTPRepository) FindPendingByUserID(ctx context.Context, userID string) (*OTPCode, error) {
+func (r *SQLiteOTPRepository) FindPendingByUserID(
+	ctx context.Context,
+	userID string,
+) (*OTPCode, error) {
 	var otp OTPCode
 	var usedAt sql.NullTime
 
@@ -67,6 +76,7 @@ func (r *SQLiteOTPRepository) FindPendingByUserID(ctx context.Context, userID st
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -83,5 +93,6 @@ func (r *SQLiteOTPRepository) MarkUsed(ctx context.Context, id string) error {
 		`UPDATE otp_codes SET used_at = ? WHERE id = ?`,
 		time.Now().UTC().Format(time.DateTime), id,
 	)
+
 	return err
 }

@@ -136,6 +136,7 @@ func (h *ScanHandler) Confirm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("HX-Trigger", "scan-success")
 	templates.ScanSuccessPartial().Render(r.Context(), w)
 }
 

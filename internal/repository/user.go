@@ -27,10 +27,15 @@ type SQLiteUserRepository struct {
 }
 
 func NewSQLiteUserRepository(db *sql.DB) *SQLiteUserRepository {
-	return &SQLiteUserRepository{db: db}
+	return &SQLiteUserRepository{
+		db: db,
+	}
 }
 
-func (r *SQLiteUserRepository) Create(ctx context.Context, email, passwordHash string) (*User, error) {
+func (r *SQLiteUserRepository) Create(
+	ctx context.Context,
+	email, passwordHash string,
+) (*User, error) {
 	id := uuid.NewString()
 	now := time.Now().UTC()
 
@@ -60,6 +65,7 @@ func (r *SQLiteUserRepository) FindByEmail(ctx context.Context, email string) (*
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -79,6 +85,7 @@ func (r *SQLiteUserRepository) FindByID(ctx context.Context, id string) (*User, 
 	if err == sql.ErrNoRows {
 		return nil, nil
 	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -88,10 +95,14 @@ func (r *SQLiteUserRepository) FindByID(ctx context.Context, id string) (*User, 
 	return &u, nil
 }
 
-func (r *SQLiteUserRepository) UpdatePassword(ctx context.Context, id, passwordHash string) error {
+func (r *SQLiteUserRepository) UpdatePassword(
+	ctx context.Context,
+	id, passwordHash string,
+) error {
 	_, err := r.db.ExecContext(ctx,
 		`UPDATE users SET password_hash = ? WHERE id = ?`,
 		passwordHash, id,
 	)
+
 	return err
 }

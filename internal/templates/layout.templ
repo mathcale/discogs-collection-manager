@@ -9,6 +9,17 @@ templ BaseLayout(title string) {
 			<title>{ title }</title>
 			<link rel="stylesheet" href="/static/app.min.css"/>
 			<script src="/static/htmx.min.js"></script>
+			<script>
+				function showToast(message, type) {
+					var container = document.getElementById('toast-container');
+					if (!container) return;
+					var toast = document.createElement('div');
+					toast.className = 'toast toast-' + (type || 'success');
+					toast.textContent = message;
+					container.appendChild(toast);
+					setTimeout(function () { toast.remove(); }, 3500);
+				}
+			</script>
 		</head>
 		<body>
 			{ children... }
@@ -19,12 +30,13 @@ templ BaseLayout(title string) {
 templ AppLayout(title string) {
 	@BaseLayout(title) {
 		<nav class="border-b px-4 py-3 flex gap-6 text-sm font-medium items-center" style="border-color: var(--color-border);">
-			<a href="/app/settings" class="hover:underline">Settings</a>
 			<a href="/app/scanner" class="hover:underline">Scanner</a>
+			<a href="/app/settings" class="hover:underline">Settings</a>
 			<form method="POST" action="/logout" class="ml-auto">
 				<button type="submit" class="hover:underline">Log out</button>
 			</form>
 		</nav>
+		<div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="false"></div>
 		{ children... }
 	}
 }

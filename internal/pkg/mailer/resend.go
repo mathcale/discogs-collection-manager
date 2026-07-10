@@ -23,5 +23,6 @@ func (m *ResendMailer) Send(to, subject, body string) error {
 	}
 
 	_, err := m.client.Emails.Send(params)
+
 	return err
 }

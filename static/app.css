@@ -254,6 +254,8 @@ a:hover {
 }
 
 #reader {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   background: #000;
@@ -417,17 +419,25 @@ a:hover {
 }
 
 .scanner-bar {
-  flex-shrink: 0;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  padding: 1rem;
+  padding: 3rem 1rem 1rem;
   padding-bottom: max(1rem, env(safe-area-inset-bottom));
   padding-left: max(1rem, env(safe-area-inset-left));
   padding-right: max(1rem, env(safe-area-inset-right));
-  border-top: 1px solid var(--color-border);
-  background-color: var(--color-bg);
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.65) 0%, transparent 100%);
+  border-top: none;
+  z-index: 1;
+}
+
+.scanner-shell:has(#scan-result:not(:empty)) .scanner-bar {
+  display: none;
 }
 
 .scanner-bar-btn {
@@ -442,8 +452,146 @@ a:hover {
   width: 1.5rem;
   height: 1.5rem;
   border-width: 2.5px;
+  border-color: rgba(255, 255, 255, 0.8);
+  border-right-color: transparent;
 }
 
 .scan-indicator.htmx-request .spinner {
   display: inline-block;
+}
+
+/* ── Scanner manual button ───────────────────────────── */
+
+.scanner-manual-btn {
+  min-height: 2.75rem;
+  padding-inline: 1.25rem;
+  background-color: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #fff;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.scanner-manual-btn:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+}
+
+/* ── Manual entry modal ──────────────────────────────── */
+
+.modal-backdrop {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  z-index: 9999;
+  align-items: flex-start;
+  justify-content: center;
+  padding: max(2rem, 12dvh) 1rem 2rem;
+}
+
+.modal-backdrop.is-open {
+  display: flex;
+}
+
+.manual-modal-card {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--radius) * 2);
+  width: min(24rem, calc(100vw - 2rem));
+  max-height: calc(100dvh - max(2rem, 12dvh) - 4rem);
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
+  padding: 1.5rem;
+}
+
+.manual-modal-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.manual-modal-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.manual-modal-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.manual-modal-submit {
+  flex: 1;
+}
+
+/* ── Scan loading state ──────────────────────────────── */
+
+.scan-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  padding: 1.25rem 1rem;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+}
+
+.scan-loading-spinner {
+  display: inline-block !important;
+  width: 1rem;
+  height: 1rem;
+  border-width: 2px;
+  flex-shrink: 0;
+}
+
+/* ── Toast ───────────────────────────────────────────── */
+
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  z-index: 1000;
+  pointer-events: none;
+  width: max-content;
+  max-width: min(24rem, calc(100vw - 2rem));
+}
+
+.toast {
+  padding: 0.75rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  pointer-events: auto;
+  text-align: center;
+  animation: toast-in 0.2s ease forwards, toast-out 0.2s ease forwards;
+  animation-delay: 0s, 3.1s;
+}
+
+.toast-success {
+  background-color: var(--color-success-bg);
+  color: var(--color-success-fg);
+  border-color: var(--color-success-border);
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateY(0.5rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes toast-out {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-0.25rem); }
 }

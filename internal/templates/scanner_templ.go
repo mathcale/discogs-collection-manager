@@ -47,7 +47,7 @@ func ScannerPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script src=\"/static/html5-qrcode.min.js\"></script> <div class=\"scanner-shell\"><div class=\"scanner-viewport\"><div id=\"reader\"></div></div><div id=\"scan-result\" class=\"scan-result\" aria-live=\"polite\" aria-atomic=\"true\"></div><div class=\"scanner-bar\" role=\"toolbar\" aria-label=\"Scanner controls\"><button id=\"start-btn\" type=\"button\" class=\"btn btn-primary scanner-bar-btn\" hidden>Start Scanner</button><div id=\"scan-indicator\" class=\"scan-indicator\" aria-hidden=\"true\"><span class=\"spinner\"></span></div></div></div><script>\n\t\t\t(function () {\n\t\t\t\tvar submitted = false;\n\t\t\t\tvar resultEl = document.getElementById('scan-result');\n\t\t\t\tvar startBtn = document.getElementById('start-btn');\n\t\t\t\tvar indicator = document.getElementById('scan-indicator');\n\t\t\t\tvar scanner = new Html5Qrcode('reader');\n\t\t\t\tvar config = { fps: 10, qrbox: { width: 250, height: 150 } };\n\n\t\t\t\tfunction postBarcode(barcode) {\n\t\t\t\t\tif (submitted) return;\n\t\t\t\t\tsubmitted = true;\n\t\t\t\t\tindicator.classList.add('htmx-request');\n\t\t\t\t\thtmx.ajax('POST', '/app/scan', {\n\t\t\t\t\t\ttarget: '#scan-result',\n\t\t\t\t\t\tswap: 'innerHTML',\n\t\t\t\t\t\tvalues: { barcode: barcode }\n\t\t\t\t\t}).finally(function () {\n\t\t\t\t\t\tindicator.classList.remove('htmx-request');\n\t\t\t\t\t}).catch(function () { submitted = false; });\n\t\t\t\t}\n\n\t\t\t\tfunction startScanner() {\n\t\t\t\t\tstartBtn.hidden = true;\n\t\t\t\t\tresultEl.textContent = '';\n\t\t\t\t\treturn scanner.start(\n\t\t\t\t\t\t{ facingMode: 'environment' },\n\t\t\t\t\t\tconfig,\n\t\t\t\t\t\tfunction (decodedText) {\n\t\t\t\t\t\t\tscanner.stop().catch(function () {});\n\t\t\t\t\t\t\tpostBarcode(decodedText);\n\t\t\t\t\t\t}\n\t\t\t\t\t).catch(function (err) {\n\t\t\t\t\t\tstartBtn.hidden = false;\n\t\t\t\t\t\tresultEl.textContent = 'Could not start camera: ' + (err && err.message ? err.message : err);\n\t\t\t\t\t});\n\t\t\t\t}\n\n\t\t\t\tstartBtn.addEventListener('click', startScanner);\n\t\t\t\tstartScanner();\n\t\t\t})();\n\t\t</script>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<script src=\"/static/html5-qrcode.min.js\"></script> <div class=\"scanner-shell\"><div class=\"scanner-viewport\"><div id=\"reader\"></div></div><div id=\"scan-result\" class=\"scan-result\" aria-live=\"polite\" aria-atomic=\"true\"></div><div class=\"scanner-bar\" role=\"toolbar\" aria-label=\"Scanner controls\"><button id=\"start-btn\" type=\"button\" class=\"btn btn-primary scanner-bar-btn\" hidden>Start Scanner</button><div id=\"scan-indicator\" class=\"scan-indicator\" aria-hidden=\"true\"><span class=\"spinner\"></span></div><button id=\"manual-btn\" type=\"button\" class=\"btn scanner-manual-btn\">Enter manually</button></div></div><div id=\"manual-modal\" class=\"modal-backdrop\" role=\"dialog\" aria-modal=\"true\" aria-label=\"Enter barcode\"><div class=\"manual-modal-card\"><h2 class=\"manual-modal-title\">Enter barcode</h2><form id=\"manual-form\" class=\"manual-modal-form\" novalidate><input type=\"text\" id=\"manual-input\" name=\"barcode\" placeholder=\"e.g. 5099750442029\" class=\"input\" autocomplete=\"off\" inputmode=\"numeric\" aria-label=\"Barcode\"><div class=\"manual-modal-actions\"><button type=\"submit\" class=\"btn btn-primary manual-modal-submit\">Search</button> <button type=\"button\" id=\"modal-close-btn\" class=\"btn btn-secondary\">Cancel</button></div></form></div></div><script>\n\t\t\t(function () {\n\t\t\t\tvar submitted = false;\n\t\t\t\tvar resultEl = document.getElementById('scan-result');\n\t\t\t\tvar startBtn = document.getElementById('start-btn');\n\t\t\t\tvar manualBtn = document.getElementById('manual-btn');\n\t\t\t\tvar indicator = document.getElementById('scan-indicator');\n\t\t\t\tvar manualForm = document.getElementById('manual-form');\n\t\t\t\tvar manualInput = document.getElementById('manual-input');\n\t\t\t\tvar modal = document.getElementById('manual-modal');\n\t\t\t\tvar modalCloseBtn = document.getElementById('modal-close-btn');\n\t\t\t\tvar scanner = new Html5Qrcode('reader');\n\t\t\t\tvar config = { fps: 10, qrbox: { width: 250, height: 150 } };\n\n\t\t\t\tfunction postBarcode(barcode) {\n\t\t\t\t\tif (submitted) return;\n\t\t\t\t\tsubmitted = true;\n\t\t\t\t\tresultEl.innerHTML = '<div class=\"scan-loading\"><span class=\"spinner scan-loading-spinner\"></span><span>Searching\\u2026</span></div>';\n\t\t\t\t\tindicator.classList.add('htmx-request');\n\t\t\t\t\thtmx.ajax('POST', '/app/scan', {\n\t\t\t\t\t\ttarget: '#scan-result',\n\t\t\t\t\t\tswap: 'innerHTML',\n\t\t\t\t\t\tvalues: { barcode: barcode }\n\t\t\t\t\t}).finally(function () {\n\t\t\t\t\t\tindicator.classList.remove('htmx-request');\n\t\t\t\t\t}).catch(function () { submitted = false; });\n\t\t\t\t}\n\n\t\t\t\tfunction startScanner() {\n\t\t\t\t\tstartBtn.hidden = true;\n\t\t\t\t\tresultEl.innerHTML = '';\n\t\t\t\t\treturn scanner.start(\n\t\t\t\t\t\t{ facingMode: 'environment' },\n\t\t\t\t\t\tconfig,\n\t\t\t\t\t\tfunction (decodedText) {\n\t\t\t\t\t\t\tscanner.stop().catch(function () {});\n\t\t\t\t\t\t\tpostBarcode(decodedText);\n\t\t\t\t\t\t}\n\t\t\t\t\t).catch(function (err) {\n\t\t\t\t\t\tstartBtn.hidden = false;\n\t\t\t\t\t\tresultEl.textContent = 'Could not start camera: ' + (err && err.message ? err.message : err);\n\t\t\t\t\t});\n\t\t\t\t}\n\n\t\t\t\tmanualBtn.addEventListener('click', function () {\n\t\t\t\t\tmodal.classList.add('is-open');\n\t\t\t\t\tmanualInput.focus();\n\t\t\t\t});\n\n\t\t\t\tmodalCloseBtn.addEventListener('click', function () {\n\t\t\t\t\tmodal.classList.remove('is-open');\n\t\t\t\t});\n\n\t\t\t\tmodal.addEventListener('click', function (e) {\n\t\t\t\t\tif (e.target === modal) modal.classList.remove('is-open');\n\t\t\t\t});\n\n\t\t\t\tmanualForm.addEventListener('submit', function (e) {\n\t\t\t\t\te.preventDefault();\n\t\t\t\t\tvar barcode = manualInput.value.trim();\n\t\t\t\t\tif (!barcode) return;\n\t\t\t\t\tmodal.classList.remove('is-open');\n\t\t\t\t\tscanner.stop().catch(function () {});\n\t\t\t\t\tpostBarcode(barcode);\n\t\t\t\t\tmanualInput.value = '';\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener('scan-success', function () {\n\t\t\t\t\tsubmitted = false;\n\t\t\t\t\tresultEl.innerHTML = '';\n\t\t\t\t\tmanualInput.value = '';\n\t\t\t\t\tshowToast('Release added to your Discogs collection!', 'success');\n\t\t\t\t\tstartScanner();\n\t\t\t\t});\n\n\t\t\t\tstartBtn.addEventListener('click', startScanner);\n\t\t\t\tstartScanner();\n\t\t\t})();\n\t\t</script>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -94,7 +94,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(release.Thumb)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 79, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 140, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -107,7 +107,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(release.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 79, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 140, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -125,7 +125,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(release.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 82, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 143, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -143,7 +143,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(release.Country)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 86, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 147, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -162,7 +162,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(release.Year)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 90, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 151, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -181,7 +181,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(release.Label)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 94, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 155, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -199,7 +199,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 		var templ_7745c5c3_Var10 templ.SafeURL
 		templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(release.URI))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 97, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 158, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 		if templ_7745c5c3_Err != nil {
@@ -212,7 +212,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 		var templ_7745c5c3_Var11 string
 		templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(release.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 101, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 162, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var11)
 		if templ_7745c5c3_Err != nil {
@@ -259,7 +259,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 			var templ_7745c5c3_Var13 string
 			templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(r.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 123, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 184, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var13)
 			if templ_7745c5c3_Err != nil {
@@ -277,7 +277,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var14 string
 				templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(r.Thumb)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 125, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 186, Col: 26}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 				if templ_7745c5c3_Err != nil {
@@ -290,7 +290,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var15 string
 				templ_7745c5c3_Var15, templ_7745c5c3_Err = templ.ResolveAttributeValue(r.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 125, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 186, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var15)
 				if templ_7745c5c3_Err != nil {
@@ -308,7 +308,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.JoinStringErrs(r.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 128, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 189, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var16))
 			if templ_7745c5c3_Err != nil {
@@ -326,7 +326,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.JoinStringErrs(r.Country)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 131, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 192, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var17))
 				if templ_7745c5c3_Err != nil {
@@ -345,7 +345,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.JoinStringErrs(r.Year)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 134, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 195, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var18))
 				if templ_7745c5c3_Err != nil {
@@ -364,7 +364,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var19 string
 				templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(r.Label)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 137, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 198, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 				if templ_7745c5c3_Err != nil {
@@ -382,7 +382,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 			var templ_7745c5c3_Var20 templ.SafeURL
 			templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(r.URI))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 140, Col: 38}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 201, Col: 38}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 			if templ_7745c5c3_Err != nil {
@@ -422,10 +422,6 @@ func ScanSuccessPartial() templ.Component {
 			templ_7745c5c3_Var21 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<div class=\"scan-result-card alert alert-success\" role=\"status\"><p>Release added to your Discogs collection!</p><a href=\"/app/scanner\" class=\"btn btn-primary scan-result-action-btn\">Scan another</a></div>")
-		if templ_7745c5c3_Err != nil {
-			return templ_7745c5c3_Err
-		}
 		return nil
 	})
 }
@@ -451,20 +447,20 @@ func ScanErrorPartial(message string) templ.Component {
 			templ_7745c5c3_Var22 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "<div class=\"scan-result-card alert alert-error\" role=\"alert\"><p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 34, "<div class=\"scan-result-card alert alert-error\" role=\"alert\"><p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var23 string
 		templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 166, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/scanner.templ`, Line: 222, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "</p><a href=\"/app/scanner\" class=\"btn btn-secondary scan-result-action-btn\">Try again</a></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 35, "</p><a href=\"/app/scanner\" class=\"btn btn-secondary scan-result-action-btn\">Try again</a></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -493,7 +489,7 @@ func ScanReconnectPartial() templ.Component {
 			templ_7745c5c3_Var24 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 37, "<div class=\"scan-result-card alert alert-error\" role=\"alert\"><p>Your Discogs account is no longer connected. Please reconnect to continue.</p><a href=\"/auth/discogs/connect\" class=\"btn btn-primary scan-result-action-btn\">Reconnect Discogs</a></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 36, "<div class=\"scan-result-card alert alert-error\" role=\"alert\"><p>Your Discogs account is no longer connected. Please reconnect to continue.</p><a href=\"/auth/discogs/connect\" class=\"btn btn-primary scan-result-action-btn\">Reconnect Discogs</a></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

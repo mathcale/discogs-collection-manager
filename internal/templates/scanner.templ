@@ -26,6 +26,30 @@ templ ScannerPage() {
 				<div id="scan-indicator" class="scan-indicator" aria-hidden="true">
 					<span class="spinner"></span>
 				</div>
+				<button id="manual-btn" type="button" class="btn scanner-manual-btn">
+					Enter manually
+				</button>
+			</div>
+		</div>
+		<div id="manual-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Enter barcode">
+			<div class="manual-modal-card">
+				<h2 class="manual-modal-title">Enter barcode</h2>
+				<form id="manual-form" class="manual-modal-form" novalidate>
+					<input
+						type="text"
+						id="manual-input"
+						name="barcode"
+						placeholder="e.g. 5099750442029"
+						class="input"
+						autocomplete="off"
+						inputmode="numeric"
+						aria-label="Barcode"
+					/>
+					<div class="manual-modal-actions">
+						<button type="submit" class="btn btn-primary manual-modal-submit">Search</button>
+						<button type="button" id="modal-close-btn" class="btn btn-secondary">Cancel</button>
+					</div>
+				</form>
 			</div>
 		</div>
 		<script>
@@ -33,13 +57,19 @@ templ ScannerPage() {
 				var submitted = false;
 				var resultEl = document.getElementById('scan-result');
 				var startBtn = document.getElementById('start-btn');
+				var manualBtn = document.getElementById('manual-btn');
 				var indicator = document.getElementById('scan-indicator');
+				var manualForm = document.getElementById('manual-form');
+				var manualInput = document.getElementById('manual-input');
+				var modal = document.getElementById('manual-modal');
+				var modalCloseBtn = document.getElementById('modal-close-btn');
 				var scanner = new Html5Qrcode('reader');
 				var config = { fps: 10, qrbox: { width: 250, height: 150 } };
 
 				function postBarcode(barcode) {
 					if (submitted) return;
 					submitted = true;
+					resultEl.innerHTML = '<div class="scan-loading"><span class="spinner scan-loading-spinner"></span><span>Searching\u2026</span></div>';
 					indicator.classList.add('htmx-request');
 					htmx.ajax('POST', '/app/scan', {
 						target: '#scan-result',
@@ -52,7 +82,7 @@ templ ScannerPage() {
 
 				function startScanner() {
 					startBtn.hidden = true;
-					resultEl.textContent = '';
+					resultEl.innerHTML = '';
 					return scanner.start(
 						{ facingMode: 'environment' },
 						config,
@@ -65,6 +95,37 @@ templ ScannerPage() {
 						resultEl.textContent = 'Could not start camera: ' + (err && err.message ? err.message : err);
 					});
 				}
+
+				manualBtn.addEventListener('click', function () {
+					modal.classList.add('is-open');
+					manualInput.focus();
+				});
+
+				modalCloseBtn.addEventListener('click', function () {
+					modal.classList.remove('is-open');
+				});
+
+				modal.addEventListener('click', function (e) {
+					if (e.target === modal) modal.classList.remove('is-open');
+				});
+
+				manualForm.addEventListener('submit', function (e) {
+					e.preventDefault();
+					var barcode = manualInput.value.trim();
+					if (!barcode) return;
+					modal.classList.remove('is-open');
+					scanner.stop().catch(function () {});
+					postBarcode(barcode);
+					manualInput.value = '';
+				});
+
+				document.addEventListener('scan-success', function () {
+					submitted = false;
+					resultEl.innerHTML = '';
+					manualInput.value = '';
+					showToast('Release added to your Discogs collection!', 'success');
+					startScanner();
+				});
 
 				startBtn.addEventListener('click', startScanner);
 				startScanner();
@@ -154,12 +215,7 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 	</div>
 }
 
-templ ScanSuccessPartial() {
-	<div class="scan-result-card alert alert-success" role="status">
-		<p>Release added to your Discogs collection!</p>
-		<a href="/app/scanner" class="btn btn-primary scan-result-action-btn">Scan another</a>
-	</div>
-}
+templ ScanSuccessPartial() {}
 
 templ ScanErrorPartial(message string) {
 	<div class="scan-result-card alert alert-error" role="alert">

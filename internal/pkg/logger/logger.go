@@ -20,11 +20,18 @@ func New(env string) Logger {
 
 func NewWithWriter(env string, w io.Writer) Logger {
 	if env == "development" {
-		console := zerolog.ConsoleWriter{Out: w}
-		return Logger{zl: zerolog.New(console).With().Timestamp().Logger()}
+		console := zerolog.ConsoleWriter{
+			Out: w,
+		}
+
+		return Logger{
+			zl: zerolog.New(console).With().Timestamp().Logger(),
+		}
 	}
 
-	return Logger{zl: zerolog.New(w).With().Timestamp().Logger()}
+	return Logger{
+		zl: zerolog.New(w).With().Timestamp().Logger(),
+	}
 }
 
 func WithCtx(ctx context.Context, l Logger) context.Context {
@@ -41,14 +48,19 @@ func FromCtx(ctx context.Context) Logger {
 
 func (l Logger) With(keysAndValues ...any) Logger {
 	ctx := l.zl.With()
+
 	for i := 0; i+1 < len(keysAndValues); i += 2 {
 		key, ok := keysAndValues[i].(string)
 		if !ok {
 			continue
 		}
+
 		ctx = ctx.Interface(key, keysAndValues[i+1])
 	}
-	return Logger{zl: ctx.Logger()}
+
+	return Logger{
+		zl: ctx.Logger(),
+	}
 }
 
 func (l Logger) Info(msg string, keysAndValues ...any) {

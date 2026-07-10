@@ -42,7 +42,7 @@ func BaseLayout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/app.min.css\"><script src=\"/static/htmx.min.js\"></script></head><body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/app.min.css\"><script src=\"/static/htmx.min.js\"></script><script>\n\t\t\t\tfunction showToast(message, type) {\n\t\t\t\t\tvar container = document.getElementById('toast-container');\n\t\t\t\t\tif (!container) return;\n\t\t\t\t\tvar toast = document.createElement('div');\n\t\t\t\t\ttoast.className = 'toast toast-' + (type || 'success');\n\t\t\t\t\ttoast.textContent = message;\n\t\t\t\t\tcontainer.appendChild(toast);\n\t\t\t\t\tsetTimeout(function () { toast.remove(); }, 3500);\n\t\t\t\t}\n\t\t\t</script></head><body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -91,7 +91,7 @@ func AppLayout(title string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<nav class=\"border-b px-4 py-3 flex gap-6 text-sm font-medium items-center\" style=\"border-color: var(--color-border);\"><a href=\"/app/settings\" class=\"hover:underline\">Settings</a> <a href=\"/app/scanner\" class=\"hover:underline\">Scanner</a><form method=\"POST\" action=\"/logout\" class=\"ml-auto\"><button type=\"submit\" class=\"hover:underline\">Log out</button></form></nav>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<nav class=\"border-b px-4 py-3 flex gap-6 text-sm font-medium items-center\" style=\"border-color: var(--color-border);\"><a href=\"/app/scanner\" class=\"hover:underline\">Scanner</a> <a href=\"/app/settings\" class=\"hover:underline\">Settings</a><form method=\"POST\" action=\"/logout\" class=\"ml-auto\"><button type=\"submit\" class=\"hover:underline\">Log out</button></form></nav><div id=\"toast-container\" class=\"toast-container\" aria-live=\"polite\" aria-atomic=\"false\"></div>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

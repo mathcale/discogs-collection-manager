@@ -39,9 +39,10 @@ func NewServer(k *kernel.Kernel) *Server {
 func (s *Server) Run() error {
 	certFile := os.Getenv("TLS_CERT_FILE")
 	keyFile := os.Getenv("TLS_KEY_FILE")
-	tls := certFile != "" && keyFile != ""
 
+	tls := certFile != "" && keyFile != ""
 	scheme := "http"
+
 	if tls {
 		scheme = "https"
 	}
@@ -50,7 +51,12 @@ func (s *Server) Run() error {
 		if os.Getenv("ENVIRONMENT") == "development" {
 			if ip := localIP(); ip != "" {
 				port := s.http.Addr[1:]
-				s.kernel.Logger.Info("server listening", "addr", s.http.Addr, "network", fmt.Sprintf("%s://%s:%s", scheme, ip, port))
+
+				s.kernel.Logger.Info(
+					"server listening",
+					"addr", s.http.Addr,
+					"network", fmt.Sprintf("%s://%s:%s", scheme, ip, port),
+				)
 			} else {
 				s.kernel.Logger.Info("server listening", "addr", s.http.Addr)
 			}
@@ -84,6 +90,7 @@ func (s *Server) Run() error {
 	}
 
 	s.kernel.Logger.Info("server stopped")
+
 	return nil
 }
 
@@ -98,5 +105,6 @@ func localIP() string {
 			return ipnet.IP.String()
 		}
 	}
+
 	return ""
 }
