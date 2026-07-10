@@ -8,6 +8,9 @@ DB_PATH=./data/discogs.db
 TAILWIND_VERSION=v4.3.2
 TAILWIND_BINARY=bin/tailwindcss
 CSS_INPUT=static/app.css
+
+GOBIN=$(shell go env GOPATH)/bin
+MIGRATE=$(GOBIN)/migrate
 CSS_OUTPUT=static/app.min.css
 
 UNAME_S := $(shell uname -s)
@@ -28,6 +31,7 @@ else
 endif
 
 tailwind:
+	mkdir -p bin
 	curl -fsSL "https://github.com/tailwindlabs/tailwindcss/releases/download/$(TAILWIND_VERSION)/tailwindcss-$(TAILWIND_OS)-$(TAILWIND_ARCH)" -o $(TAILWIND_BINARY)
 	chmod +x $(TAILWIND_BINARY)
 
@@ -57,10 +61,10 @@ dev:
 	air
 
 migrate:
-	migrate -path $(MIGRATIONS_DIR) -database "sqlite3://$(DB_PATH)" up
+	$(MIGRATE) -path $(MIGRATIONS_DIR) -database "sqlite3://$(DB_PATH)" up
 
 migrate-down:
-	migrate -path $(MIGRATIONS_DIR) -database "sqlite3://$(DB_PATH)" down
+	$(MIGRATE) -path $(MIGRATIONS_DIR) -database "sqlite3://$(DB_PATH)" down
 
 test:
 	go test ./...
