@@ -41,7 +41,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"px-4 py-8 max-w-2xl mx-auto\"><h1 class=\"text-2xl font-semibold tracking-tight mb-8\">Settings</h1><div class=\"flex flex-col gap-6\"><section class=\"card\"><h2 class=\"text-base font-semibold mb-4\">Account</h2><dl class=\"flex flex-col gap-2 text-sm\"><div class=\"flex flex-col gap-0.5\"><dt class=\"font-medium\" style=\"color: var(--color-muted)\">Email</dt><dd>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"px-4 py-8 pb-20 sm:pb-8 max-w-2xl mx-auto\"><h1 class=\"text-2xl font-semibold tracking-tight mb-8\">Settings</h1><div class=\"flex flex-col gap-6\"><section class=\"card\"><h2 class=\"text-base font-semibold mb-4\">Account</h2><dl class=\"flex flex-col gap-2 text-sm\"><div class=\"flex flex-col gap-0.5\"><dt class=\"font-medium\" style=\"color: var(--color-muted)\">Email</dt><dd>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
