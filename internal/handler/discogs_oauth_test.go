@@ -70,7 +70,7 @@ func (s *DiscogsOAuthSuite) SetupTest() {
 	oauthCfg := &oauth1.Config{
 		ConsumerKey:    "test-key",
 		ConsumerSecret: "test-secret",
-		CallbackURL:    "http://localhost/auth/discogs/callback",
+		CallbackURL:    "http://localhost/discogs/callback",
 		Endpoint: oauth1.Endpoint{
 			RequestTokenURL: s.mockDiscogs.URL + "/oauth/request_token",
 			AuthorizeURL:    s.mockDiscogs.URL + "/oauth/authorize",
@@ -86,9 +86,9 @@ func (s *DiscogsOAuthSuite) SetupTest() {
 	r.Group(func(r chi.Router) {
 		r.Use(web.RequireAuth(s.sessions))
 		r.Get("/app/settings", s.oauthHandler.SettingsPage)
-		r.Get("/auth/discogs/connect", s.oauthHandler.Connect)
-		r.Get("/auth/discogs/callback", s.oauthHandler.Callback)
-		r.Post("/auth/discogs/disconnect", s.oauthHandler.Disconnect)
+		r.Get("/discogs/connect", s.oauthHandler.Connect)
+		r.Get("/discogs/callback", s.oauthHandler.Callback)
+		r.Post("/discogs/disconnect", s.oauthHandler.Disconnect)
 	})
 
 	s.router = r
@@ -131,7 +131,7 @@ func (s *DiscogsOAuthSuite) TestConnect_RedirectsToDiscogsAuthorize() {
 	user := s.createUser("connect@example.com")
 	token := s.createSession(user.ID, time.Now().Add(6*time.Hour))
 
-	req := httptest.NewRequest(http.MethodGet, "/auth/discogs/connect", nil)
+	req := httptest.NewRequest(http.MethodGet, "/discogs/connect", nil)
 	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
 	rr := httptest.NewRecorder()
 
@@ -148,11 +148,11 @@ func (s *DiscogsOAuthSuite) TestCallback_StoresAccessToken() {
 	user := s.createUser("callback@example.com")
 	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
 
-	connectReq := httptest.NewRequest(http.MethodGet, "/auth/discogs/connect", nil)
+	connectReq := httptest.NewRequest(http.MethodGet, "/discogs/connect", nil)
 	connectReq.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
 	s.router.ServeHTTP(httptest.NewRecorder(), connectReq)
 
-	callbackReq := httptest.NewRequest(http.MethodGet, "/auth/discogs/callback?oauth_token=mock-request-token&oauth_verifier=mock-verifier", nil)
+	callbackReq := httptest.NewRequest(http.MethodGet, "/discogs/callback?oauth_token=mock-request-token&oauth_verifier=mock-verifier", nil)
 	callbackReq.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
 	rr := httptest.NewRecorder()
 
@@ -176,7 +176,7 @@ func (s *DiscogsOAuthSuite) TestDisconnect_RemovesToken() {
 	_, err := s.oauthTokens.Upsert(context.Background(), user.ID, "tok", "sec", "discogsman")
 	s.Require().NoError(err)
 
-	req := httptest.NewRequest(http.MethodPost, "/auth/discogs/disconnect", nil)
+	req := httptest.NewRequest(http.MethodPost, "/discogs/disconnect", nil)
 	req.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
 	rr := httptest.NewRecorder()
 
@@ -207,7 +207,7 @@ func (s *DiscogsOAuthSuite) TestCallback_401FromDiscogs_ShowsReconnectPrompt() {
 	oauthCfg := &oauth1.Config{
 		ConsumerKey:    "bad-key",
 		ConsumerSecret: "bad-secret",
-		CallbackURL:    "http://localhost/auth/discogs/callback",
+		CallbackURL:    "http://localhost/discogs/callback",
 		Endpoint: oauth1.Endpoint{
 			RequestTokenURL: unauthorizedServer.URL + "/oauth/request_token",
 			AuthorizeURL:    unauthorizedServer.URL + "/oauth/authorize",
@@ -219,11 +219,11 @@ func (s *DiscogsOAuthSuite) TestCallback_401FromDiscogs_ShowsReconnectPrompt() {
 	user := s.createUser("unauthorized@example.com")
 	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
 
-	connectReq := httptest.NewRequest(http.MethodGet, "/auth/discogs/connect", nil)
+	connectReq := httptest.NewRequest(http.MethodGet, "/discogs/connect", nil)
 	connectReq.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
 	s.router.ServeHTTP(httptest.NewRecorder(), connectReq)
 
-	callbackReq := httptest.NewRequest(http.MethodGet, "/auth/discogs/callback?oauth_token=bad-request-token&oauth_verifier=bad-verifier", nil)
+	callbackReq := httptest.NewRequest(http.MethodGet, "/discogs/callback?oauth_token=bad-request-token&oauth_verifier=bad-verifier", nil)
 	callbackReq.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
 	rr := httptest.NewRecorder()
 

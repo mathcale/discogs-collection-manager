@@ -45,13 +45,13 @@ func RequireAuth(sessions repository.SessionRepository) func(http.Handler) http.
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			cookie, err := r.Cookie("session_token")
 			if err != nil {
-				http.Redirect(w, r, "/login", http.StatusFound)
+				http.Redirect(w, r, "/auth/login", http.StatusFound)
 				return
 			}
 
 			session, err := sessions.FindByToken(r.Context(), cookie.Value)
 			if err != nil || session == nil || time.Now().After(session.ExpiresAt) {
-				http.Redirect(w, r, "/login", http.StatusFound)
+				http.Redirect(w, r, "/auth/login", http.StatusFound)
 				return
 			}
 

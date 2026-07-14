@@ -4,27 +4,55 @@ templ BaseLayout(title string) {
 	<!DOCTYPE html>
 	<html lang="en">
 		<head>
-			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+			<meta charset="UTF-8" />
+			<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
 			<title>{ title }</title>
-			<link rel="stylesheet" href="/static/app.min.css"/>
+
+			<link rel="stylesheet" href="/static/app.min.css" />
+
 			<script src="/static/htmx.min.js"></script>
 			<script>
 				function showToast(message, type) {
 					var container = document.getElementById('toast-container');
+
 					if (!container) return;
+
 					var toast = document.createElement('div');
 					toast.className = 'toast toast-' + (type || 'success');
 					toast.textContent = message;
+
 					container.appendChild(toast);
-					setTimeout(function () { toast.remove(); }, 3500);
+
+					setTimeout(function() {
+						toast.remove();
+					}, 3500);
 				}
 			</script>
 		</head>
+
 		<body>
 			{ children... }
 		</body>
 	</html>
+}
+
+templ AlertError(msg string) {
+	<div class="alert alert-error alert-dismissible mb-4">
+		<span>{ msg }</span>
+
+		<button
+			type="button"
+			class="alert-close"
+			aria-label="Dismiss"
+			onclick="this.closest('.alert-dismissible').remove()"
+		>
+			<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<line x1="18" y1="6" x2="6" y2="18"></line>
+				<line x1="6" y1="6" x2="18" y2="18"></line>
+			</svg>
+		</button>
+	</div>
 }
 
 templ AppLayout(title string) {
@@ -32,11 +60,14 @@ templ AppLayout(title string) {
 		<nav class="border-b px-4 py-3 flex gap-6 text-sm font-medium items-center" style="border-color: var(--color-border);">
 			<a href="/app/scanner" class="hover:underline">Scanner</a>
 			<a href="/app/settings" class="hover:underline">Settings</a>
-			<form method="POST" action="/logout" class="ml-auto">
+
+			<form method="POST" action="/auth/logout" class="ml-auto">
 				<button type="submit" class="hover:underline">Log out</button>
 			</form>
 		</nav>
+
 		<div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="false"></div>
+
 		{ children... }
 	}
 }

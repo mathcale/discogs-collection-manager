@@ -46,25 +46,12 @@ func LoginPage(errorMsg string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if errorMsg != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"alert alert-error mb-4\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(errorMsg)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/login.templ`, Line: 11, Col: 53}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div>")
+				templ_7745c5c3_Err = AlertError(errorMsg).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div><form method=\"POST\" action=\"/login\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><div class=\"flex flex-col gap-4\"><div><label class=\"block text-sm font-medium mb-1.5\" for=\"email\">Email</label> <input class=\"input\" type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"email\"></div><div><label class=\"block text-sm font-medium mb-1.5\" for=\"password\">Password</label> <input class=\"input\" type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"current-password\"></div><label class=\"flex items-center gap-2 text-sm select-none cursor-pointer\"><input type=\"checkbox\" name=\"stay_logged_in\" value=\"1\" class=\"w-4 h-4 rounded\"> Stay logged in</label> <button type=\"submit\" class=\"btn btn-primary w-full mt-2\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Log in</button></div></form></div><div class=\"flex flex-col items-center gap-2 mt-4 text-sm\"><a href=\"/forgot-password\">Forgot password?</a> <a href=\"/register\">No account? Register</a></div></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><form method=\"POST\" action=\"/auth/login\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><div class=\"flex flex-col gap-4\"><div><label class=\"block text-sm font-medium mb-1.5\" for=\"email\">Email</label> <input class=\"input\" type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"email\"></div><div><label class=\"block text-sm font-medium mb-1.5\" for=\"password\">Password</label> <input class=\"input\" type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"current-password\"></div><label class=\"flex items-center gap-2 text-sm select-none cursor-pointer\"><input type=\"checkbox\" name=\"stay_logged_in\" value=\"1\" class=\"w-4 h-4 rounded\"> Stay logged in</label> <button type=\"submit\" class=\"btn btn-primary w-full mt-2\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Log in</button></div></form></div><div class=\"flex flex-col items-center gap-2 mt-4 text-sm\"><a href=\"/forgot-password\">Forgot password?</a> <a href=\"/register\">No account? Register</a></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

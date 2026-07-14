@@ -46,25 +46,12 @@ func OTPPage(errorMsg string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if errorMsg != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"alert alert-error mb-4\">")
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				var templ_7745c5c3_Var3 string
-				templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(errorMsg)
-				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/otp.templ`, Line: 12, Col: 53}
-				}
-				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
-				if templ_7745c5c3_Err != nil {
-					return templ_7745c5c3_Err
-				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div>")
+				templ_7745c5c3_Err = AlertError(errorMsg).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div><form method=\"POST\" action=\"/login/otp\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><div class=\"flex flex-col gap-4\"><div><label class=\"block text-sm font-medium mb-1.5\" for=\"code\">Verification code</label> <input class=\"input font-mono text-center text-lg tracking-widest\" type=\"text\" id=\"code\" name=\"code\" inputmode=\"numeric\" pattern=\"[0-9]{6}\" maxlength=\"6\" autocomplete=\"one-time-code\" required></div><button type=\"submit\" class=\"btn btn-primary w-full mt-2\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Verify</button></div></form></div></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><form method=\"POST\" action=\"/auth/login/otp\" id=\"otp-form\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><input type=\"hidden\" name=\"code\" id=\"otp-hidden\"><div class=\"flex flex-col gap-4\"><div><label class=\"block text-sm font-medium mb-3 text-center\" for=\"otp-0\">Verification code</label><div class=\"otp-inputs\" id=\"otp-inputs\"><input type=\"text\" class=\"otp-digit\" id=\"otp-0\" inputmode=\"numeric\" pattern=\"[0-9]\" maxlength=\"1\" autocomplete=\"one-time-code\" required> <input type=\"text\" class=\"otp-digit\" id=\"otp-1\" inputmode=\"numeric\" pattern=\"[0-9]\" maxlength=\"1\" required> <input type=\"text\" class=\"otp-digit\" id=\"otp-2\" inputmode=\"numeric\" pattern=\"[0-9]\" maxlength=\"1\" required> <input type=\"text\" class=\"otp-digit\" id=\"otp-3\" inputmode=\"numeric\" pattern=\"[0-9]\" maxlength=\"1\" required> <input type=\"text\" class=\"otp-digit\" id=\"otp-4\" inputmode=\"numeric\" pattern=\"[0-9]\" maxlength=\"1\" required> <input class=\"otp-digit\" id=\"otp-5\" type=\"text\" inputmode=\"numeric\" pattern=\"[0-9]\" maxlength=\"1\" required></div></div><button type=\"submit\" class=\"btn btn-primary w-full mt-2\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Verify</button></div></form><script>\n\t\t\t\t\t\t(function () {\n\t\t\t\t\t\t\tvar digits = document.querySelectorAll('.otp-digit');\n\t\t\t\t\t\t\tvar hidden = document.getElementById('otp-hidden');\n\t\t\t\t\t\t\tvar form = document.getElementById('otp-form');\n\n\t\t\t\t\t\t\tfunction collectValue() {\n\t\t\t\t\t\t\t\thidden.value = Array.from(digits).map(function(d) {\n\t\t\t\t\t\t\t\t\treturn d.value;\n\t\t\t\t\t\t\t\t}).join('');\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\tdigits.forEach(function (input, i) {\n\t\t\t\t\t\t\t\tinput.addEventListener('input', function() {\n\t\t\t\t\t\t\t\t\tvar val = input.value.replace(/\\D/g, '');\n\t\t\t\t\t\t\t\t\tinput.value = val.slice(-1);\n\n\t\t\t\t\t\t\t\t\tif (input.value && i < digits.length - 1) {\n\t\t\t\t\t\t\t\t\t\tdigits[i + 1].focus();\n\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\tcollectValue();\n\t\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t\t\tinput.addEventListener('keydown', function(e) {\n\t\t\t\t\t\t\t\t\tif (e.key === 'Backspace' && !input.value && i > 0) {\n\t\t\t\t\t\t\t\t\t\tdigits[i - 1].focus();\n\t\t\t\t\t\t\t\t\t\tdigits[i - 1].value = '';\n\n\t\t\t\t\t\t\t\t\t\tcollectValue();\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t\t\tinput.addEventListener('paste', function(e) {\n\t\t\t\t\t\t\t\t\te.preventDefault();\n\n\t\t\t\t\t\t\t\t\tvar pasted = (e.clipboardData || window.clipboardData)\n\t\t\t\t\t\t\t\t\t\t.getData('text')\n\t\t\t\t\t\t\t\t\t\t.replace(/\\D/g, '')\n\t\t\t\t\t\t\t\t\t\t.slice(0, 6);\n\n\t\t\t\t\t\t\t\t\tpasted.split('').forEach(function(ch, j) {\n\t\t\t\t\t\t\t\t\t\tif (digits[j]) digits[j].value = ch;\n\t\t\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t\t\t\tvar next = Math.min(pasted.length, digits.length - 1);\n\t\t\t\t\t\t\t\t\tdigits[next].focus();\n\n\t\t\t\t\t\t\t\t\tcollectValue();\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t\tform.addEventListener('htmx:configRequest', collectValue);\n\t\t\t\t\t\t\tform.addEventListener('submit', collectValue);\n\t\t\t\t\t\t})();\n\t\t\t\t\t</script></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

@@ -91,20 +91,26 @@ func (s *AuthSuite) SetupTest() {
 	authHandler := handler.NewAuthHandler(s.users, s.sessions, s.otpCodes, s.resetTokens, s.mailer, "http://localhost")
 
 	r := chi.NewRouter()
-	r.Get("/register", authHandler.RegisterPage)
-	r.Post("/register", authHandler.Register)
-	r.Get("/login", authHandler.LoginPage)
-	r.Post("/login", authHandler.Login)
-	r.Get("/login/otp", authHandler.OTPPage)
-	r.Post("/login/otp", authHandler.VerifyOTP)
-	r.Get("/forgot-password", authHandler.ForgotPasswordPage)
-	r.Post("/forgot-password", authHandler.ForgotPassword)
-	r.Get("/reset-password", authHandler.ResetPasswordPage)
-	r.Post("/reset-password", authHandler.ResetPassword)
+	r.Route("/auth", func(r chi.Router) {
+		r.Get("/register", authHandler.RegisterPage)
+		r.Post("/register", authHandler.Register)
+		r.Get("/login", authHandler.LoginPage)
+		r.Post("/login", authHandler.Login)
+		r.Get("/login/otp", authHandler.OTPPage)
+		r.Post("/login/otp", authHandler.VerifyOTP)
+		r.Get("/forgot-password", authHandler.ForgotPasswordPage)
+		r.Post("/forgot-password", authHandler.ForgotPassword)
+		r.Get("/reset-password", authHandler.ResetPasswordPage)
+		r.Post("/reset-password", authHandler.ResetPassword)
+
+		r.Group(func(r chi.Router) {
+			r.Use(web.RequireAuth(s.sessions))
+			r.Post("/logout", authHandler.Logout)
+		})
+	})
 
 	r.Group(func(r chi.Router) {
 		r.Use(web.RequireAuth(s.sessions))
-		r.Post("/logout", authHandler.Logout)
 		r.Get("/app", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		})
@@ -119,7 +125,7 @@ func (s *AuthSuite) TearDownSuite() {
 }
 
 func (s *AuthSuite) TestRegisterPage_GET() {
-	req := httptest.NewRequest(http.MethodGet, "/register", nil)
+	req := httptest.NewRequest(http.MethodGet, "/auth/register", nil)
 	rr := httptest.NewRecorder()
 
 	s.router.ServeHTTP(rr, req)
@@ -130,14 +136,14 @@ func (s *AuthSuite) TestRegisterPage_GET() {
 
 func (s *AuthSuite) TestRegister_POST_Success() {
 	form := url.Values{"email": {"test@example.com"}, "password": {"password123"}}
-	req := httptest.NewRequest(http.MethodPost, "/register", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/register", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusFound, rr.Code)
-	s.Equal("/login", rr.Header().Get("Location"))
+	s.Equal("/auth/login", rr.Header().Get("Location"))
 
 	user, err := s.users.FindByEmail(req.Context(), "test@example.com")
 	s.Require().NoError(err)
@@ -147,13 +153,13 @@ func (s *AuthSuite) TestRegister_POST_Success() {
 
 func (s *AuthSuite) TestRegister_POST_DuplicateEmail() {
 	form := url.Values{"email": {"dup@example.com"}, "password": {"password123"}}
-	req := httptest.NewRequest(http.MethodPost, "/register", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/register", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 	s.router.ServeHTTP(rr, req)
 	s.Equal(http.StatusFound, rr.Code)
 
-	req2 := httptest.NewRequest(http.MethodPost, "/register", strings.NewReader(form.Encode()))
+	req2 := httptest.NewRequest(http.MethodPost, "/auth/register", strings.NewReader(form.Encode()))
 	req2.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr2 := httptest.NewRecorder()
 	s.router.ServeHTTP(rr2, req2)
@@ -163,7 +169,7 @@ func (s *AuthSuite) TestRegister_POST_DuplicateEmail() {
 }
 
 func (s *AuthSuite) TestLoginPage_GET() {
-	req := httptest.NewRequest(http.MethodGet, "/login", nil)
+	req := httptest.NewRequest(http.MethodGet, "/auth/login", nil)
 	rr := httptest.NewRecorder()
 
 	s.router.ServeHTTP(rr, req)
@@ -177,14 +183,14 @@ func (s *AuthSuite) TestLogin_POST_ValidCredentials_RedirectsToOTP() {
 	s.registerUser("login@example.com", "password123")
 
 	form := url.Values{"email": {"login@example.com"}, "password": {"password123"}}
-	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusFound, rr.Code)
-	s.Equal("/login/otp", rr.Header().Get("Location"))
+	s.Equal("/auth/login/otp", rr.Header().Get("Location"))
 
 	s.Require().Len(s.mailer.Sent, 1)
 	s.Equal("login@example.com", s.mailer.Sent[0].To)
@@ -205,7 +211,7 @@ func (s *AuthSuite) TestLogin_POST_StayLoggedIn_PersistFlagInCookie() {
 	s.registerUser("persist@example.com", "password123")
 
 	form := url.Values{"email": {"persist@example.com"}, "password": {"password123"}, "stay_logged_in": {"1"}}
-	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
@@ -228,7 +234,7 @@ func (s *AuthSuite) TestLogin_POST_InvalidCredentials() {
 	s.registerUser("badpass@example.com", "correctpass")
 
 	form := url.Values{"email": {"badpass@example.com"}, "password": {"wrongpass"}}
-	req := httptest.NewRequest(http.MethodPost, "/login", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
@@ -240,17 +246,17 @@ func (s *AuthSuite) TestLogin_POST_InvalidCredentials() {
 }
 
 func (s *AuthSuite) TestOTPPage_NoPendingCookie_RedirectsToLogin() {
-	req := httptest.NewRequest(http.MethodGet, "/login/otp", nil)
+	req := httptest.NewRequest(http.MethodGet, "/auth/login/otp", nil)
 	rr := httptest.NewRecorder()
 
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusFound, rr.Code)
-	s.Equal("/login", rr.Header().Get("Location"))
+	s.Equal("/auth/login", rr.Header().Get("Location"))
 }
 
 func (s *AuthSuite) TestOTPPage_WithPendingCookie_ShowsForm() {
-	req := httptest.NewRequest(http.MethodGet, "/login/otp", nil)
+	req := httptest.NewRequest(http.MethodGet, "/auth/login/otp", nil)
 	req.AddCookie(&http.Cookie{Name: "pending_login", Value: "some-user-id:0"})
 	rr := httptest.NewRecorder()
 
@@ -269,7 +275,7 @@ func (s *AuthSuite) TestVerifyOTP_ValidCode_IssuesSession() {
 	s.Require().NoError(err)
 
 	form := url.Values{"code": {code}}
-	req := httptest.NewRequest(http.MethodPost, "/login/otp", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.AddCookie(&http.Cookie{Name: "pending_login", Value: user.ID + ":0"})
 	rr := httptest.NewRecorder()
@@ -299,7 +305,7 @@ func (s *AuthSuite) TestVerifyOTP_ValidCode_StayLoggedIn_PersistentSession() {
 	s.Require().NoError(err)
 
 	form := url.Values{"code": {code}}
-	req := httptest.NewRequest(http.MethodPost, "/login/otp", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.AddCookie(&http.Cookie{Name: "pending_login", Value: user.ID + ":1"})
 	rr := httptest.NewRecorder()
@@ -328,7 +334,7 @@ func (s *AuthSuite) TestVerifyOTP_InvalidCode_Returns422() {
 	s.Require().NoError(err)
 
 	form := url.Values{"code": {"000000"}}
-	req := httptest.NewRequest(http.MethodPost, "/login/otp", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.AddCookie(&http.Cookie{Name: "pending_login", Value: user.ID + ":0"})
 	rr := httptest.NewRecorder()
@@ -348,7 +354,7 @@ func (s *AuthSuite) TestVerifyOTP_ExpiredCode_Returns422() {
 	s.Require().NoError(err)
 
 	form := url.Values{"code": {code}}
-	req := httptest.NewRequest(http.MethodPost, "/login/otp", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.AddCookie(&http.Cookie{Name: "pending_login", Value: user.ID + ":0"})
 	rr := httptest.NewRecorder()
@@ -361,14 +367,14 @@ func (s *AuthSuite) TestVerifyOTP_ExpiredCode_Returns422() {
 
 func (s *AuthSuite) TestVerifyOTP_NoPendingCookie_RedirectsToLogin() {
 	form := url.Values{"code": {"123456"}}
-	req := httptest.NewRequest(http.MethodPost, "/login/otp", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusFound, rr.Code)
-	s.Equal("/login", rr.Header().Get("Location"))
+	s.Equal("/auth/login", rr.Header().Get("Location"))
 }
 
 func (s *AuthSuite) TestProtectedRoute_Unauthenticated() {
@@ -378,7 +384,7 @@ func (s *AuthSuite) TestProtectedRoute_Unauthenticated() {
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusFound, rr.Code)
-	s.Equal("/login", rr.Header().Get("Location"))
+	s.Equal("/auth/login", rr.Header().Get("Location"))
 }
 
 func (s *AuthSuite) TestProtectedRoute_WithValidSession() {
@@ -405,21 +411,21 @@ func (s *AuthSuite) TestProtectedRoute_ExpiredSession() {
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusFound, rr.Code)
-	s.Equal("/login", rr.Header().Get("Location"))
+	s.Equal("/auth/login", rr.Header().Get("Location"))
 }
 
 func (s *AuthSuite) TestLogout() {
 	user := s.registerUser("logout@example.com", "password123")
 	token := s.createSession(user.ID, time.Now().Add(6*time.Hour), false)
 
-	req := httptest.NewRequest(http.MethodPost, "/logout", nil)
+	req := httptest.NewRequest(http.MethodPost, "/auth/logout", nil)
 	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
 	rr := httptest.NewRecorder()
 
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusFound, rr.Code)
-	s.Equal("/login", rr.Header().Get("Location"))
+	s.Equal("/auth/login", rr.Header().Get("Location"))
 
 	session, err := s.sessions.FindByToken(req.Context(), token)
 	s.Require().NoError(err)
@@ -427,7 +433,7 @@ func (s *AuthSuite) TestLogout() {
 }
 
 func (s *AuthSuite) TestForgotPasswordPage_GET() {
-	req := httptest.NewRequest(http.MethodGet, "/forgot-password", nil)
+	req := httptest.NewRequest(http.MethodGet, "/auth/forgot-password", nil)
 	rr := httptest.NewRecorder()
 
 	s.router.ServeHTTP(rr, req)
@@ -440,7 +446,7 @@ func (s *AuthSuite) TestForgotPassword_POST_KnownEmail_SendsEmail() {
 	s.registerUser("reset@example.com", "password123")
 
 	form := url.Values{"email": {"reset@example.com"}}
-	req := httptest.NewRequest(http.MethodPost, "/forgot-password", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/forgot-password", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
@@ -450,12 +456,12 @@ func (s *AuthSuite) TestForgotPassword_POST_KnownEmail_SendsEmail() {
 	s.Contains(rr.Body.String(), "you'll receive")
 	s.Require().Len(s.mailer.Sent, 1)
 	s.Equal("reset@example.com", s.mailer.Sent[0].To)
-	s.Contains(s.mailer.Sent[0].Body, "reset-password?token=")
+	s.Contains(s.mailer.Sent[0].Body, "auth/reset-password?token=")
 }
 
 func (s *AuthSuite) TestForgotPassword_POST_UnknownEmail_SilentSuccess() {
 	form := url.Values{"email": {"nobody@example.com"}}
-	req := httptest.NewRequest(http.MethodPost, "/forgot-password", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/forgot-password", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
@@ -474,7 +480,7 @@ func (s *AuthSuite) TestResetPasswordPage_ValidToken_ShowsForm() {
 	_, err := s.resetTokens.Create(context.Background(), user.ID, tokenHash, time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
-	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/reset-password?token=%s", rawToken), nil)
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/auth/reset-password?token=%s", rawToken), nil)
 	rr := httptest.NewRecorder()
 
 	s.router.ServeHTTP(rr, req)
@@ -485,7 +491,7 @@ func (s *AuthSuite) TestResetPasswordPage_ValidToken_ShowsForm() {
 }
 
 func (s *AuthSuite) TestResetPasswordPage_InvalidToken_ShowsError() {
-	req := httptest.NewRequest(http.MethodGet, "/reset-password?token=nonexistent", nil)
+	req := httptest.NewRequest(http.MethodGet, "/auth/reset-password?token=nonexistent", nil)
 	rr := httptest.NewRecorder()
 
 	s.router.ServeHTTP(rr, req)
@@ -508,14 +514,14 @@ func (s *AuthSuite) TestResetPassword_POST_Success_UpdatesPasswordAndInvalidates
 		"password":         {"newpassword123"},
 		"password_confirm": {"newpassword123"},
 	}
-	req := httptest.NewRequest(http.MethodPost, "/reset-password", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/reset-password", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusFound, rr.Code)
-	s.Equal("/login", rr.Header().Get("Location"))
+	s.Equal("/auth/login", rr.Header().Get("Location"))
 
 	session, err := s.sessions.FindByToken(req.Context(), existingToken)
 	s.Require().NoError(err)
@@ -540,7 +546,7 @@ func (s *AuthSuite) TestResetPassword_POST_UsedToken_Rejected() {
 		"password":         {"newpassword"},
 		"password_confirm": {"newpassword"},
 	}
-	req := httptest.NewRequest(http.MethodPost, "/reset-password", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/reset-password", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
@@ -563,7 +569,7 @@ func (s *AuthSuite) TestResetPassword_POST_PasswordMismatch_Returns422() {
 		"password":         {"newpassword"},
 		"password_confirm": {"differentpassword"},
 	}
-	req := httptest.NewRequest(http.MethodPost, "/reset-password", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/reset-password", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 
@@ -575,7 +581,7 @@ func (s *AuthSuite) TestResetPassword_POST_PasswordMismatch_Returns422() {
 
 func (s *AuthSuite) registerUser(email, password string) *repository.User {
 	form := url.Values{"email": {email}, "password": {password}}
-	req := httptest.NewRequest(http.MethodPost, "/register", strings.NewReader(form.Encode()))
+	req := httptest.NewRequest(http.MethodPost, "/auth/register", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	rr := httptest.NewRecorder()
 	s.router.ServeHTTP(rr, req)

@@ -90,7 +90,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/login", http.StatusFound)
+	http.Redirect(w, r, "/auth/login", http.StatusFound)
 }
 
 func (h *AuthHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
@@ -151,12 +151,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   int(otpExpiry.Seconds()),
 	})
 
-	http.Redirect(w, r, "/login/otp", http.StatusFound)
+	http.Redirect(w, r, "/auth/login/otp", http.StatusFound)
 }
 
 func (h *AuthHandler) OTPPage(w http.ResponseWriter, r *http.Request) {
 	if _, err := r.Cookie(pendingLoginCookieName); err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
+		http.Redirect(w, r, "/auth/login", http.StatusFound)
 		return
 	}
 
@@ -167,13 +167,13 @@ func (h *AuthHandler) OTPPage(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	pendingCookie, err := r.Cookie(pendingLoginCookieName)
 	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusFound)
+		http.Redirect(w, r, "/auth/login", http.StatusFound)
 		return
 	}
 
 	parts := strings.SplitN(pendingCookie.Value, ":", 2)
 	if len(parts) != 2 {
-		http.Redirect(w, r, "/login", http.StatusFound)
+		http.Redirect(w, r, "/auth/login", http.StatusFound)
 		return
 	}
 	userID := parts[0]
@@ -272,7 +272,7 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 	})
 
-	http.Redirect(w, r, "/login", http.StatusFound)
+	http.Redirect(w, r, "/auth/login", http.StatusFound)
 }
 
 func (h *AuthHandler) ForgotPasswordPage(w http.ResponseWriter, r *http.Request) {
@@ -307,7 +307,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		resetLink := h.BaseURL + "/reset-password?token=" + rawToken
+		resetLink := h.BaseURL + "/auth/reset-password?token=" + rawToken
 		body := fmt.Sprintf("Click the link below to reset your password:<br><a href=\"%s\">%s</a><br>This link expires in 1 hour.", resetLink, resetLink)
 		if err := h.Mailer.Send(user.Email, "Reset your password", body); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
@@ -322,7 +322,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 func (h *AuthHandler) ResetPasswordPage(w http.ResponseWriter, r *http.Request) {
 	rawToken := r.URL.Query().Get("token")
 	if rawToken == "" {
-		http.Redirect(w, r, "/login", http.StatusFound)
+		http.Redirect(w, r, "/auth/login", http.StatusFound)
 		return
 	}
 
@@ -395,7 +395,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	http.Redirect(w, r, "/login", http.StatusFound)
+	http.Redirect(w, r, "/auth/login", http.StatusFound)
 }
 
 func generateToken() (string, error) {

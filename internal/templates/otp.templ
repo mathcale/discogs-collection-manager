@@ -4,26 +4,159 @@ templ OTPPage(errorMsg string) {
 	@BaseLayout("Verify code — Discogs Collection Manager") {
 		<main class="min-h-screen flex items-center justify-center px-4 py-12">
 			<div class="w-full max-w-sm">
-				<h1 class="text-2xl font-semibold tracking-tight mb-2 text-center">Check your email</h1>
-				<p class="text-sm text-center mb-8" style="color: var(--color-muted)">We sent a 6-digit code to your email address. Enter it below to continue.</p>
+				<h1 class="text-2xl font-semibold tracking-tight mb-2 text-center">
+					Check your email
+				</h1>
+
+				<p class="text-sm text-center mb-8" style="color: var(--color-muted)">
+					We sent a 6-digit code to your email address. Enter it below to continue.
+				</p>
+
 				<div class="card">
 					<div role="alert" aria-live="polite">
 						if errorMsg != "" {
-							<div class="alert alert-error mb-4">{ errorMsg }</div>
+							@AlertError(errorMsg)
 						}
 					</div>
-					<form method="POST" action="/login/otp" hx-boost="true" hx-disabled-elt="find button[type='submit']">
+
+					<form
+						method="POST"
+						action="/auth/login/otp"
+						id="otp-form"
+						hx-boost="true"
+						hx-disabled-elt="find button[type='submit']"
+					>
+						<input type="hidden" name="code" id="otp-hidden"/>
+
 						<div class="flex flex-col gap-4">
 							<div>
-								<label class="block text-sm font-medium mb-1.5" for="code">Verification code</label>
-								<input class="input font-mono text-center text-lg tracking-widest" type="text" id="code" name="code" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" autocomplete="one-time-code" required/>
+								<label class="block text-sm font-medium mb-3 text-center" for="otp-0">Verification code</label>
+								<div class="otp-inputs" id="otp-inputs">
+									<input
+										type="text"
+										class="otp-digit"
+										id="otp-0"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										autocomplete="one-time-code" required
+									/>
+
+									<input
+										type="text"
+										class="otp-digit"
+										id="otp-1"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										required
+									/>
+
+									<input
+										type="text"
+										class="otp-digit"
+										id="otp-2"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										required
+									/>
+
+									<input
+										type="text"
+										class="otp-digit"
+										id="otp-3"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										required
+									/>
+
+									<input
+										type="text"
+										class="otp-digit"
+										id="otp-4"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										required
+									/>
+
+									<input
+										class="otp-digit"
+										id="otp-5"
+										type="text"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										required
+									/>
+								</div>
 							</div>
+
 							<button type="submit" class="btn btn-primary w-full mt-2">
 								<span class="spinner mr-1.5" aria-hidden="true"></span>
 								Verify
 							</button>
 						</div>
 					</form>
+
+					<script>
+						(function () {
+							var digits = document.querySelectorAll('.otp-digit');
+							var hidden = document.getElementById('otp-hidden');
+							var form = document.getElementById('otp-form');
+
+							function collectValue() {
+								hidden.value = Array.from(digits).map(function(d) {
+									return d.value;
+								}).join('');
+							}
+
+							digits.forEach(function (input, i) {
+								input.addEventListener('input', function() {
+									var val = input.value.replace(/\D/g, '');
+									input.value = val.slice(-1);
+
+									if (input.value && i < digits.length - 1) {
+										digits[i + 1].focus();
+									}
+
+									collectValue();
+								});
+
+								input.addEventListener('keydown', function(e) {
+									if (e.key === 'Backspace' && !input.value && i > 0) {
+										digits[i - 1].focus();
+										digits[i - 1].value = '';
+
+										collectValue();
+									}
+								});
+
+								input.addEventListener('paste', function(e) {
+									e.preventDefault();
+
+									var pasted = (e.clipboardData || window.clipboardData)
+										.getData('text')
+										.replace(/\D/g, '')
+										.slice(0, 6);
+
+									pasted.split('').forEach(function(ch, j) {
+										if (digits[j]) digits[j].value = ch;
+									});
+
+									var next = Math.min(pasted.length, digits.length - 1);
+									digits[next].focus();
+
+									collectValue();
+								});
+							});
+
+							form.addEventListener('htmx:configRequest', collectValue);
+							form.addEventListener('submit', collectValue);
+						})();
+					</script>
 				</div>
 			</div>
 		</main>

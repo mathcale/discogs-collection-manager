@@ -48,7 +48,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/settings.templ`, Line: 13, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/settings.templ`, Line: 15, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -66,7 +66,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(discogsUsername)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/settings.templ`, Line: 25, Col: 69}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/settings.templ`, Line: 31, Col: 69}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -77,7 +77,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex flex-col gap-4\"><div class=\"flex items-center gap-3\"><span class=\"inline-flex items-center justify-center w-2.5 h-2.5 rounded-full flex-shrink-0\" style=\"background-color: var(--color-muted);\" aria-hidden=\"true\"></span><p class=\"text-sm\" style=\"color: var(--color-muted)\">Not connected</p></div><a href=\"/auth/discogs/connect\" class=\"btn btn-primary self-start\">Connect Discogs account</a></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex flex-col gap-4\"><div class=\"flex items-center gap-3\"><span class=\"inline-flex items-center justify-center w-2.5 h-2.5 rounded-full flex-shrink-0\" style=\"background-color: var(--color-muted);\" aria-hidden=\"true\"></span><p class=\"text-sm\" style=\"color: var(--color-muted)\">Not connected</p></div><a href=\"/discogs/connect\" class=\"btn btn-primary self-start\">Connect Discogs account</a></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -136,13 +136,13 @@ func DiscogsConnectError(message string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/settings.templ`, Line: 64, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/templates/settings.templ`, Line: 76, Col: 46}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div><div class=\"flex flex-col gap-2\"><a href=\"/auth/discogs/connect\" class=\"btn btn-primary w-full\">Try reconnecting</a> <a href=\"/app/settings\" class=\"btn btn-secondary w-full\">Back to Settings</a></div></div></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div><div class=\"flex flex-col gap-2\"><a href=\"/discogs/connect\" class=\"btn btn-primary w-full\">Try reconnecting</a> <a href=\"/app/settings\" class=\"btn btn-secondary w-full\">Back to Settings</a></div></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

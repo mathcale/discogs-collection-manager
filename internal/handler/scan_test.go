@@ -100,7 +100,7 @@ func (s *ScanSuite) TestScanPage_RequiresAuth() {
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusFound, rr.Code)
-	s.Equal("/login", rr.Header().Get("Location"))
+	s.Equal("/auth/login", rr.Header().Get("Location"))
 }
 
 func (s *ScanSuite) TestScanEndpoint_RequiresAuth() {
@@ -112,7 +112,7 @@ func (s *ScanSuite) TestScanEndpoint_RequiresAuth() {
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusFound, rr.Code)
-	s.Equal("/login", rr.Header().Get("Location"))
+	s.Equal("/auth/login", rr.Header().Get("Location"))
 }
 
 func (s *ScanSuite) TestScan_POST_MissingBarcode() {
@@ -236,7 +236,7 @@ func (s *ScanSuite) TestScan_POST_DiscogsAuthError_RendersReconnectPartial() {
 
 	s.Equal(http.StatusUnauthorized, rr.Code)
 	s.Contains(rr.Body.String(), "reconnect")
-	s.Contains(rr.Body.String(), "/auth/discogs/connect")
+	s.Contains(rr.Body.String(), "/discogs/connect")
 }
 
 func (s *ScanSuite) TestScanConfirm_POST_DiscogsAuthError_RendersReconnectPartial() {
@@ -254,7 +254,7 @@ func (s *ScanSuite) TestScanConfirm_POST_DiscogsAuthError_RendersReconnectPartia
 
 	s.Equal(http.StatusUnauthorized, rr.Code)
 	s.Contains(rr.Body.String(), "reconnect")
-	s.Contains(rr.Body.String(), "/auth/discogs/connect")
+	s.Contains(rr.Body.String(), "/discogs/connect")
 }
 
 func (s *ScanSuite) TestScanCancel_GET_DoesNotCallAddToCollection() {
@@ -284,7 +284,7 @@ func (s *ScanSuite) TestScan_POST_NoDiscogsToken_RendersReconnectPartial() {
 
 	s.Equal(http.StatusUnauthorized, rr.Code)
 	s.Contains(rr.Body.String(), "reconnect")
-	s.Contains(rr.Body.String(), "/auth/discogs/connect")
+	s.Contains(rr.Body.String(), "/discogs/connect")
 	s.False(s.mockDiscogs.addToCollectionCalled)
 }
 
@@ -301,7 +301,7 @@ func (s *ScanSuite) TestScanConfirm_POST_NoDiscogsToken_RendersReconnectPartial(
 
 	s.Equal(http.StatusUnauthorized, rr.Code)
 	s.Contains(rr.Body.String(), "reconnect")
-	s.Contains(rr.Body.String(), "/auth/discogs/connect")
+	s.Contains(rr.Body.String(), "/discogs/connect")
 	s.False(s.mockDiscogs.addToCollectionCalled)
 }
 
