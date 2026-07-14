@@ -55,19 +55,28 @@ templ AlertError(msg string) {
 	</div>
 }
 
-templ AppLayout(title string) {
+templ AppLayout(title string, activePage string) {
 	@BaseLayout(title) {
-		<nav class="border-b px-4 py-3 flex gap-6 text-sm font-medium items-center" style="border-color: var(--color-border);">
+		<nav class="hidden sm:flex border-b px-4 py-3 gap-6 text-sm font-medium items-center" style="border-color: var(--color-border);">
 			<a href="/app/scanner" class="hover:underline">Scanner</a>
 			<a href="/app/settings" class="hover:underline">Settings</a>
+		</nav>
 
-			<form method="POST" action="/auth/logout" class="ml-auto">
-				<button type="submit" class="hover:underline">Log out</button>
-			</form>
+		<nav class="tab-bar sm:hidden" aria-label="Main navigation">
+			<a href="/app/scanner" class={ "tab-bar-item", templ.KV("is-active", activePage == "scanner") } aria-label="Scanner">
+				@IconScanner("w-5 h-5")
+				<span>Scanner</span>
+			</a>
+			<a href="/app/settings" class={ "tab-bar-item", templ.KV("is-active", activePage == "settings") } aria-label="Settings">
+				@IconSettings("w-5 h-5")
+				<span>Settings</span>
+			</a>
 		</nav>
 
 		<div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="false"></div>
 
-		{ children... }
+		<div class="pb-16 sm:pb-0">
+			{ children... }
+		</div>
 	}
 }

@@ -1,7 +1,7 @@
 package templates
 
 templ SettingsPage(email string, discogsUsername string) {
-	@AppLayout("Settings — Discogs Collection Manager") {
+	@AppLayout("Settings — Discogs Collection Manager", "settings") {
 		<main class="px-4 py-8 max-w-2xl mx-auto">
 			<h1 class="text-2xl font-semibold tracking-tight mb-8">Settings</h1>
 
@@ -57,6 +57,16 @@ templ SettingsPage(email string, discogsUsername string) {
 							<a href="/discogs/connect" class="btn btn-primary self-start">Connect Discogs account</a>
 						</div>
 					}
+				</section>
+
+				<section class="card">
+					<h2 class="text-base font-semibold mb-4">Session</h2>
+					<form method="POST" action="/auth/logout" hx-boost="true" hx-disabled-elt="find button[type='submit']">
+						<button type="submit" class="btn btn-secondary">
+							<span class="spinner mr-1.5" aria-hidden="true"></span>
+							Log out
+						</button>
+					</form>
 				</section>
 			</div>
 		</main>
