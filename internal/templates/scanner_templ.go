@@ -82,7 +82,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"scan-result-card card\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"scan-result-card\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -247,7 +247,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 			templ_7745c5c3_Var12 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"scan-result-card card\"><div class=\"scan-result-body\"><h2 class=\"scan-result-title\">Multiple releases found</h2><p class=\"scan-result-subtitle\">Select the correct pressing:</p></div><form hx-post=\"/app/scan/confirm\" hx-target=\"#scan-result\" hx-swap=\"innerHTML\" hx-disabled-elt=\"find button[type='submit']\"><ul class=\"scan-conflict-list\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 17, "<div class=\"scan-result-card\"><div class=\"scan-result-body\"><h2 class=\"scan-result-title\">Multiple releases found</h2><p class=\"scan-result-subtitle\">Select the correct pressing:</p></div><form hx-post=\"/app/scan/confirm\" hx-target=\"#scan-result\" hx-swap=\"innerHTML\" hx-disabled-elt=\"find button[type='submit']\"><ul class=\"scan-conflict-list\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

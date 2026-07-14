@@ -221,7 +221,7 @@ templ ScannerPage() {
 }
 
 templ ScanConfirmPartial(release discogs.Release) {
-	<div class="scan-result-card card">
+	<div class="scan-result-card">
 		if release.Thumb != "" {
 			<img src={ release.Thumb } alt={ release.Title } class="scan-result-thumb"/>
 		}
@@ -277,7 +277,7 @@ templ ScanConfirmPartial(release discogs.Release) {
 }
 
 templ ScanConflictListPartial(releases []discogs.Release) {
-	<div class="scan-result-card card">
+	<div class="scan-result-card">
 		<div class="scan-result-body">
 			<h2 class="scan-result-title">Multiple releases found</h2>
 			<p class="scan-result-subtitle">Select the correct pressing:</p>
