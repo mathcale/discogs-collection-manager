@@ -313,17 +313,12 @@ a:hover {
   }
 
   .sheet-full {
-    max-height: 100vh;
-    height: 100vh;
-    border-radius: 0;
+    max-height: 85dvh;
   }
 
   @media (min-width: 640px) {
     .sheet-full {
-      border-top-left-radius: var(--radius-sheet);
-      border-top-right-radius: var(--radius-sheet);
       max-height: 90vh;
-      height: auto;
     }
   }
 
