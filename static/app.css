@@ -367,6 +367,8 @@ a:hover {
 
   .tab-bar-item.is-active {
     color: var(--color-fg);
+    font-weight: 600;
+    box-shadow: inset 0 2px 0 currentColor;
   }
 
   /* ── Modal ──────────────────────────────────────────── */
