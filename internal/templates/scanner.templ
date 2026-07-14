@@ -15,33 +15,35 @@ templ ScannerPage() {
 				<div id="reader"></div>
 			</div>
 
-			<div
-				id="scan-result"
-				class="scan-result"
-				aria-live="polite"
-				aria-atomic="true"
-			></div>
-
 			<div class="scanner-bar" role="toolbar" aria-label="Scanner controls">
-				<button id="start-btn" type="button" class="btn btn-primary scanner-bar-btn" hidden>
-					Start Scanner
-				</button>
-
-				<div id="scan-indicator" class="scan-indicator" aria-hidden="true">
-					<span class="spinner"></span>
-				</div>
-
-				<button id="manual-btn" type="button" class="btn scanner-manual-btn">
+				<button id="manual-btn" type="button" class="btn btn-secondary scanner-bar-btn">
 					Enter manually
 				</button>
 			</div>
 		</div>
 
-		<div id="manual-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Enter barcode">
-			<div class="manual-modal-card">
-				<h2 class="manual-modal-title">Enter barcode</h2>
+		<!-- Result sheet (half-height, single match) -->
+		<div id="result-backdrop" class="sheet-backdrop" role="dialog" aria-modal="true" aria-label="Scan result">
+			<div class="sheet" id="result-sheet">
+				<div class="sheet-handle"></div>
+				<div id="scan-result" aria-live="polite" aria-atomic="true"></div>
+			</div>
+		</div>
 
-				<form id="manual-form" class="manual-modal-form" novalidate>
+		<!-- Conflict sheet (full-screen, multiple matches) -->
+		<div id="conflict-backdrop" class="sheet-backdrop" role="dialog" aria-modal="true" aria-label="Choose release">
+			<div class="sheet sheet-full" id="conflict-sheet">
+				<div class="sheet-handle"></div>
+				<div id="scan-conflict" aria-live="polite" aria-atomic="true"></div>
+			</div>
+		</div>
+
+		<!-- Manual entry sheet -->
+		<div id="manual-backdrop" class="sheet-backdrop" role="dialog" aria-modal="true" aria-label="Enter barcode">
+			<div class="sheet" id="manual-sheet">
+				<div class="sheet-handle"></div>
+				<h2 class="sheet-title">Enter barcode</h2>
+				<form id="manual-form" novalidate>
 					<input
 						type="text"
 						id="manual-input"
@@ -52,17 +54,23 @@ templ ScannerPage() {
 						inputmode="numeric"
 						aria-label="Barcode"
 					/>
-
-					<div class="manual-modal-actions">
-						<button type="submit" class="btn btn-primary manual-modal-submit">
-							Search
-						</button>
-
-						<button type="button" id="modal-close-btn" class="btn btn-secondary">
-							Cancel
-						</button>
+					<div class="manual-form-actions">
+						<button type="submit" class="btn btn-primary">Search</button>
+						<button type="button" id="manual-close-btn" class="btn btn-secondary">Cancel</button>
 					</div>
 				</form>
+			</div>
+		</div>
+
+		<!-- Cancel confirmation modal -->
+		<div id="cancel-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Cancel scan">
+			<div class="modal">
+				<p class="modal-title">Cancel this scan?</p>
+				<p class="modal-body">Your scan result will be discarded.</p>
+				<div class="modal-actions">
+					<button type="button" id="keep-btn" class="btn btn-secondary">Keep reviewing</button>
+					<button type="button" id="confirm-cancel-btn" class="btn btn-primary">Yes, cancel</button>
+				</div>
 			</div>
 		</div>
 
@@ -70,105 +78,141 @@ templ ScannerPage() {
 			(function () {
 				var submitted = false;
 
-				var resultEl = document.getElementById('scan-result');
-				var startBtn = document.getElementById('start-btn');
+				var resultBackdrop = document.getElementById('result-backdrop');
+				var conflictBackdrop = document.getElementById('conflict-backdrop');
+				var manualBackdrop = document.getElementById('manual-backdrop');
+				var cancelBackdrop = document.getElementById('cancel-backdrop');
+				var scanResult = document.getElementById('scan-result');
+				var scanConflict = document.getElementById('scan-conflict');
 				var manualBtn = document.getElementById('manual-btn');
-				var indicator = document.getElementById('scan-indicator');
 				var manualForm = document.getElementById('manual-form');
 				var manualInput = document.getElementById('manual-input');
-				var modal = document.getElementById('manual-modal');
-				var modalCloseBtn = document.getElementById('modal-close-btn');
+				var manualCloseBtn = document.getElementById('manual-close-btn');
+				var keepBtn = document.getElementById('keep-btn');
+				var confirmCancelBtn = document.getElementById('confirm-cancel-btn');
 
 				var scanner = new Html5Qrcode('reader');
 				var config = {
 					fps: 10,
-					qrbox: {
-						width: 250,
-						height: 150,
-					},
+					qrbox: { width: 250, height: 150 },
 				};
 
-				function postBarcode(barcode) {
-					if (submitted) return;
+				function openBackdrop(el) {
+					el.classList.add('is-open');
+				}
 
-					submitted = true;
-
-					resultEl.innerHTML = '<div class="scan-loading"><span class="spinner scan-loading-spinner"></span><span>Searching\u2026</span></div>';
-
-					indicator.classList.add('htmx-request');
-
-					htmx.ajax('POST', '/app/scan', {
-						target: '#scan-result',
-						swap: 'innerHTML',
-						values: {
-							barcode,
-						}
-					}).finally(function() {
-						indicator.classList.remove('htmx-request');
-					}).catch(function() {
-						submitted = false;
-					});
+				function closeBackdrop(el) {
+					el.classList.remove('is-open');
 				}
 
 				function startScanner() {
-					startBtn.hidden = true;
-					resultEl.innerHTML = '';
-
 					return scanner.start(
 						{ facingMode: 'environment' },
 						config,
-						function(decodedText) {
+						function (decodedText) {
 							scanner.stop().catch(function () {});
 							postBarcode(decodedText);
 						}
 					).catch(function (err) {
-						startBtn.hidden = false;
-						resultEl.textContent = 'Could not start camera: ' + (err && err.message ? err.message : err);
+						showToast('Could not start camera: ' + (err && err.message ? err.message : err), 'error');
 					});
 				}
 
+				function postBarcode(barcode) {
+					if (submitted) return;
+					submitted = true;
+
+					scanResult.innerHTML = '<div class="scan-loading"><span class="spinner scan-loading-spinner"></span><span>Searching\u2026</span></div>';
+					openBackdrop(resultBackdrop);
+
+					htmx.ajax('POST', '/app/scan', {
+						target: '#scan-result',
+						swap: 'innerHTML',
+						values: { barcode },
+					}).then(function () {
+						if (scanResult.querySelector('.scan-conflict-list')) {
+							while (scanResult.firstChild) {
+								scanConflict.appendChild(scanResult.firstChild);
+							}
+							closeBackdrop(resultBackdrop);
+							openBackdrop(conflictBackdrop);
+						}
+					}).catch(function () {
+						submitted = false;
+						closeBackdrop(resultBackdrop);
+					});
+				}
+
+				// Backdrop tap → cancel confirmation
+				resultBackdrop.addEventListener('click', function (e) {
+					if (e.target === resultBackdrop) openBackdrop(cancelBackdrop);
+				});
+
+				conflictBackdrop.addEventListener('click', function (e) {
+					if (e.target === conflictBackdrop) openBackdrop(cancelBackdrop);
+				});
+
+				// Intercept Cancel / Try again links inside result and conflict sheets
+				document.addEventListener('click', function (e) {
+					var link = e.target.closest('a[href="/app/scanner"]');
+					if (link && (resultBackdrop.classList.contains('is-open') || conflictBackdrop.classList.contains('is-open'))) {
+						e.preventDefault();
+						openBackdrop(cancelBackdrop);
+					}
+				});
+
+				// Keep reviewing
+				keepBtn.addEventListener('click', function () {
+					closeBackdrop(cancelBackdrop);
+				});
+
+				// Yes, cancel
+				confirmCancelBtn.addEventListener('click', function () {
+					closeBackdrop(cancelBackdrop);
+					closeBackdrop(resultBackdrop);
+					closeBackdrop(conflictBackdrop);
+					scanResult.innerHTML = '';
+					scanConflict.innerHTML = '';
+					submitted = false;
+					startScanner();
+				});
+
+				// Manual entry
 				manualBtn.addEventListener('click', function () {
-					modal.classList.add('is-open');
+					openBackdrop(manualBackdrop);
 					manualInput.focus();
 				});
 
-				modalCloseBtn.addEventListener('click', function () {
-					modal.classList.remove('is-open');
+				manualCloseBtn.addEventListener('click', function () {
+					closeBackdrop(manualBackdrop);
 				});
 
-				modal.addEventListener('click', function (e) {
-					if (e.target === modal) {
-						modal.classList.remove('is-open');
-					}
+				manualBackdrop.addEventListener('click', function (e) {
+					if (e.target === manualBackdrop) closeBackdrop(manualBackdrop);
 				});
 
 				manualForm.addEventListener('submit', function (e) {
 					e.preventDefault();
-
 					var barcode = manualInput.value.trim();
-
 					if (!barcode) return;
 
-					modal.classList.remove('is-open');
+					closeBackdrop(manualBackdrop);
 					scanner.stop().catch(function () {});
+					manualInput.value = '';
 
 					postBarcode(barcode);
-
-					manualInput.value = '';
 				});
 
+				// scan-success event fired by HX-Trigger header from confirm response
 				document.addEventListener('scan-success', function () {
 					submitted = false;
-
-					resultEl.innerHTML = '';
-					manualInput.value = '';
-
+					closeBackdrop(resultBackdrop);
+					closeBackdrop(conflictBackdrop);
+					scanResult.innerHTML = '';
+					scanConflict.innerHTML = '';
 					showToast('Release added to your Discogs collection!', 'success');
-
 					startScanner();
 				});
-
-				startBtn.addEventListener('click', startScanner);
 
 				startScanner();
 			})();

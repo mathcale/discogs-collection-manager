@@ -432,10 +432,12 @@ a:hover {
   flex-direction: column;
   height: 100dvh;
   background-color: var(--color-bg);
+  padding-bottom: 4rem;
 }
 
 @media (min-width: 640px) {
   .scanner-shell {
+    padding-bottom: 0;
     max-width: 480px;
     margin-inline: auto;
     height: auto;
@@ -482,14 +484,6 @@ a:hover {
 
 #reader__dashboard {
   display: none !important;
-}
-
-.scan-result {
-  background-color: var(--color-bg);
-}
-
-.scan-result:empty {
-  display: none;
 }
 
 .scan-result-card {
@@ -625,25 +619,13 @@ a:hover {
 }
 
 .scanner-bar {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  padding: 3rem 1rem 1rem;
-  padding-bottom: max(1rem, env(safe-area-inset-bottom));
-  padding-left: max(1rem, env(safe-area-inset-left));
-  padding-right: max(1rem, env(safe-area-inset-right));
-  background: linear-gradient(to top, rgba(0, 0, 0, 0.65) 0%, transparent 100%);
-  border-top: none;
-  z-index: 1;
-}
-
-.scanner-shell:has(#scan-result:not(:empty)) .scanner-bar {
-  display: none;
+  padding: 0.75rem 1rem;
+  padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  background-color: var(--color-bg);
+  border-top: 1px solid var(--color-border);
 }
 
 .scanner-bar-btn {
@@ -653,45 +635,18 @@ a:hover {
   font-size: 1.0625rem;
 }
 
-.scan-indicator .spinner {
-  display: none;
-  width: 1.5rem;
-  height: 1.5rem;
-  border-width: 2.5px;
-  border-color: rgba(255, 255, 255, 0.8);
-  border-right-color: transparent;
+/* ── Sheet utilities ─────────────────────────────────── */
+
+.sheet-title {
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
 }
 
-.scan-indicator.htmx-request .spinner {
-  display: inline-block;
-}
-
-/* ── Scanner manual button ───────────────────────────── */
-
-.scanner-manual-btn {
-  min-height: 2.75rem;
-  padding-inline: 1.25rem;
-  background-color: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  color: #fff;
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-}
-
-.scanner-manual-btn:hover {
-  background-color: rgba(255, 255, 255, 0.25);
-}
-
-/* ── Manual entry modal ──────────────────────────────── */
-
-.manual-modal-form {
+.manual-form-actions {
   display: flex;
-  flex-direction: column;
   gap: 0.75rem;
-}
-
-.manual-modal-submit {
-  flex: 1;
+  margin-top: 0.75rem;
 }
 
 /* ── Scan loading state ──────────────────────────────── */
