@@ -44,7 +44,10 @@
   --color-link: oklch(35% 0.1 250);
   --color-link-hover: oklch(25% 0.12 250);
 
-  --radius: 0.375rem;
+  --radius: 0.625rem;
+  --radius-card: 1rem;
+  --radius-sheet: 1.25rem;
+  --radius-btn: 0.625rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -108,7 +111,7 @@ a:hover {
     align-items: center;
     justify-content: center;
     padding: 0.5rem 1.25rem;
-    border-radius: var(--radius);
+    border-radius: var(--radius-btn);
     font-size: 0.9375rem;
     font-weight: 500;
     line-height: 1.25;
@@ -199,7 +202,7 @@ a:hover {
   .card {
     background-color: var(--color-surface);
     border: 1px solid var(--color-border);
-    border-radius: calc(var(--radius) * 1.5);
+    border-radius: var(--radius-card);
     padding: 1.5rem;
   }
 
@@ -250,8 +253,8 @@ a:hover {
 
   .spinner {
     display: none;
-    width: 0.875em;
-    height: 0.875em;
+    width: 1em;
+    height: 1em;
     border: 2px solid currentColor;
     border-right-color: transparent;
     border-radius: 50%;
@@ -262,12 +265,164 @@ a:hover {
   form.htmx-request .spinner {
     display: inline-block;
   }
+
+  /* ── Sheet ─────────────────────────────────────────── */
+
+  .sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: flex-end;
+    transition: opacity 0.2s ease;
+  }
+
+  .sheet-backdrop.is-open {
+    display: flex;
+  }
+
+  @media (min-width: 640px) {
+    .sheet-backdrop.is-open {
+      align-items: center;
+      justify-content: center;
+    }
+  }
+
+  .sheet {
+    width: 100%;
+    background-color: var(--color-bg);
+    border-top-left-radius: var(--radius-sheet);
+    border-top-right-radius: var(--radius-sheet);
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 1.25rem 1rem;
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
+  }
+
+  .sheet-backdrop.is-open .sheet {
+    transform: translateY(0);
+  }
+
+  .sheet-full {
+    max-height: 100vh;
+    height: 100vh;
+    border-radius: 0;
+  }
+
+  @media (min-width: 640px) {
+    .sheet-full {
+      border-top-left-radius: var(--radius-sheet);
+      border-top-right-radius: var(--radius-sheet);
+      max-height: 90vh;
+      height: auto;
+    }
+  }
+
+  .sheet-handle {
+    width: 2.5rem;
+    height: 0.25rem;
+    background: var(--color-border);
+    border-radius: 999px;
+    margin: 0 auto 1rem;
+  }
+
+  /* ── Tab bar ────────────────────────────────────────── */
+
+  .tab-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    display: flex;
+    height: 4rem;
+    background-color: var(--color-bg);
+    border-top: 1px solid var(--color-border);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  @media (min-width: 640px) {
+    .tab-bar {
+      display: none;
+    }
+  }
+
+  .tab-bar-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--color-muted);
+    text-decoration: none;
+    transition: color 0.15s ease;
+  }
+
+  .tab-bar-item.is-active {
+    color: var(--color-fg);
+  }
+
+  /* ── Modal ──────────────────────────────────────────── */
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.5);
+  }
+
+  .modal-backdrop.is-open {
+    display: flex;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 22rem;
+    background: var(--color-bg);
+    border-radius: var(--radius-card);
+    padding: 1.5rem;
+    border: 1px solid var(--color-border);
+    animation: modal-in 0.2s ease;
+  }
+
+  .modal-title {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .modal-body {
+    font-size: 0.9375rem;
+    color: var(--color-muted);
+    margin-bottom: 1.25rem;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end;
+  }
 }
 
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
 }
 
 /* ── Scanner ─────────────────────────────────────────── */
@@ -529,53 +684,10 @@ a:hover {
 
 /* ── Manual entry modal ──────────────────────────────── */
 
-.modal-backdrop {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  z-index: 9999;
-  align-items: flex-start;
-  justify-content: center;
-  padding: max(2rem, 12dvh) 1rem 2rem;
-}
-
-.modal-backdrop.is-open {
-  display: flex;
-}
-
-.manual-modal-card {
-  background-color: var(--color-bg);
-  color: var(--color-fg);
-  border: 1px solid var(--color-border);
-  border-radius: calc(var(--radius) * 2);
-  width: min(24rem, calc(100vw - 2rem));
-  max-height: calc(100dvh - max(2rem, 12dvh) - 4rem);
-  overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.18);
-  padding: 1.5rem;
-}
-
-.manual-modal-title {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 1rem;
-}
-
 .manual-modal-form {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-}
-
-.manual-modal-actions {
-  display: flex;
-  gap: 0.5rem;
 }
 
 .manual-modal-submit {
@@ -606,7 +718,7 @@ a:hover {
 
 .toast-container {
   position: fixed;
-  bottom: 1.5rem;
+  bottom: calc(4rem + max(0.75rem, env(safe-area-inset-bottom)));
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -635,6 +747,12 @@ a:hover {
   background-color: var(--color-success-bg);
   color: var(--color-success-fg);
   border-color: var(--color-success-border);
+}
+
+@media (min-width: 640px) {
+  .toast-container {
+    bottom: 0.75rem;
+  }
 }
 
 @keyframes toast-in {
