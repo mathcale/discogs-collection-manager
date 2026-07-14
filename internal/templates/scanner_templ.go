@@ -393,7 +393,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</ul><div class=\"scan-result-actions\"><button type=\"submit\" class=\"btn btn-primary scan-result-action-btn\"><span class=\"spinner\" aria-hidden=\"true\"></span> Confirm</button></div></form><a href=\"/app/scanner\" class=\"btn btn-secondary scan-result-action-btn\">Cancel</a></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 33, "</ul><div class=\"scan-result-actions\"><button type=\"submit\" class=\"btn btn-primary scan-result-action-btn\"><span class=\"spinner\" aria-hidden=\"true\"></span> Confirm</button> <a href=\"/app/scanner\" class=\"btn btn-secondary scan-result-action-btn\">Cancel</a></div></form></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
