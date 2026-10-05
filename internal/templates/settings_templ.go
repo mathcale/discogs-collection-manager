@@ -72,7 +72,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</strong></p></div><form method=\"POST\" action=\"/auth/discogs/disconnect\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\" class=\"flex\" hx-on:htmx:response-error=\"document.getElementById('discogs-status').innerHTML='<div class=\\'alert alert-error\\'>Disconnection failed. Please try again.</div>'\"><button type=\"submit\" class=\"btn btn-secondary\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Disconnect</button></form></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</strong></p></div><form method=\"POST\" action=\"/discogs/disconnect\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\" class=\"flex\" hx-on:htmx:response-error=\"document.getElementById('discogs-status').innerHTML='<div class=\\'alert alert-error\\'>Disconnection failed. Please try again.</div>'\"><button type=\"submit\" class=\"btn btn-secondary\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Disconnect</button></form></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

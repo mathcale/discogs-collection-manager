@@ -44,7 +44,7 @@ cp .env.example .env
 | `MIGRATIONS_PATH` | Path to the migrations directory. |
 | `TLS_CERT_FILE` / `TLS_KEY_FILE` | Paths to TLS cert/key. Leave empty for plain HTTP. See [HTTPS](#https-for-camera-scanning). |
 | `DISCOGS_CONSUMER_KEY` / `DISCOGS_CONSUMER_SECRET` | Credentials from your [Discogs developer app](https://www.discogs.com/settings/developers). |
-| `DISCOGS_CALLBACK_URL` | OAuth callback, e.g. `http://localhost:8080/auth/discogs/callback`. |
+| `DISCOGS_CALLBACK_URL` | OAuth callback, e.g. `http://localhost:8080/discogs/callback`. |
 | `RESEND_API_KEY` / `RESEND_FROM` | [Resend](https://resend.com) credentials for sending email. |
 
 The `.env` file is loaded automatically by `air`.
@@ -93,7 +93,7 @@ In your `.env`:
 TLS_CERT_FILE="./certs/localhost.pem"
 TLS_KEY_FILE="./certs/localhost-key.pem"
 APP_BASE_URL="https://localhost:8080"
-DISCOGS_CALLBACK_URL="https://localhost:8080/auth/discogs/callback"
+DISCOGS_CALLBACK_URL="https://localhost:8080/discogs/callback"
 ```
 
 Restart `make dev`. The server now listens on HTTPS and logs its `https://<lan-ip>:8080` address, which you can open from other devices on the same network.
