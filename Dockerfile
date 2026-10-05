@@ -10,7 +10,7 @@ RUN go mod download
 COPY . .
 
 ARG TAILWIND_VERSION=v4.3.2
-RUN curl -fsSL "https://github.com/tailwindlabs/tailwindcss/releases/download/${TAILWIND_VERSION}/tailwindcss-linux-x64" -o /usr/local/bin/tailwindcss \
+RUN curl -fsSL "https://github.com/tailwindlabs/tailwindcss/releases/download/${TAILWIND_VERSION}/tailwindcss-linux-x64-musl" -o /usr/local/bin/tailwindcss \
     && chmod +x /usr/local/bin/tailwindcss
 
 RUN go install github.com/a-h/templ/cmd/templ@latest && templ generate
