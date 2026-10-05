@@ -53,7 +53,14 @@ func NewRouter(k *kernel.Kernel) http.Handler {
 		r.Post("/discogs/disconnect", discogsOAuthHandler.Disconnect)
 	})
 
-	r.Handle("/static/*", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	r.Handle("/static/*", staticCache(http.StripPrefix("/static/", http.FileServer(http.Dir("./static")))))
 
 	return r
+}
+
+func staticCache(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "public, max-age=300")
+		next.ServeHTTP(w, r)
+	})
 }
