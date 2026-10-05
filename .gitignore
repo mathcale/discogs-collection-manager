@@ -34,3 +34,6 @@ build-errors.log
 
 # Generated CSS
 static/app.min.css
+
+# Node (Railway IaC SDK)
+node_modules/
