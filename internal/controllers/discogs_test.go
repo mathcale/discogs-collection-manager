@@ -26,14 +26,14 @@ import (
 
 type DiscogsOAuthSuite struct {
 	suite.Suite
-	db           *sql.DB
-	dbPath       string
-	users        models.UserRepository
-	sessions     models.SessionRepository
-	oauthTokens  models.OAuthTokenRepository
-	router       http.Handler
-	mockDiscogs  *httptest.Server
-	oauthHandler *controllers.Controller
+	db          *sql.DB
+	dbPath      string
+	users       models.UserRepository
+	sessions    models.SessionRepository
+	oauthTokens models.OAuthTokenRepository
+	router      http.Handler
+	mockDiscogs *httptest.Server
+	controller  *controllers.Controller
 }
 
 func TestDiscogsOAuthSuite(t *testing.T) {
@@ -78,7 +78,7 @@ func (s *DiscogsOAuthSuite) SetupTest() {
 		},
 	}
 
-	s.oauthHandler = &controllers.Controller{
+	s.controller = &controllers.Controller{
 		OAuthTokens:  s.oauthTokens,
 		Sessions:     s.sessions,
 		Users:        s.users,
@@ -90,10 +90,10 @@ func (s *DiscogsOAuthSuite) SetupTest() {
 
 	r.Group(func(r chi.Router) {
 		r.Use(web.RequireAuth(s.sessions))
-		r.Get("/app/settings", s.oauthHandler.SettingsPage)
-		r.Get("/discogs/connect", s.oauthHandler.Connect)
-		r.Get("/discogs/callback", s.oauthHandler.Callback)
-		r.Post("/discogs/disconnect", s.oauthHandler.Disconnect)
+		r.Get("/app/settings", s.controller.SettingsPage)
+		r.Get("/discogs/connect", s.controller.Connect)
+		r.Get("/discogs/callback", s.controller.Callback)
+		r.Post("/discogs/disconnect", s.controller.Disconnect)
 	})
 
 	s.router = r
@@ -219,7 +219,7 @@ func (s *DiscogsOAuthSuite) TestCallback_401FromDiscogs_ShowsReconnectPrompt() {
 			AccessTokenURL:  unauthorizedServer.URL + "/oauth/access_token",
 		},
 	}
-	s.oauthHandler.DiscogsOAuth = oauthCfg
+	s.controller.DiscogsOAuth = oauthCfg
 
 	user := s.createUser("unauthorized@example.com")
 	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))

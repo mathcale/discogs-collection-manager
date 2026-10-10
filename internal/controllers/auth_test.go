@@ -81,7 +81,7 @@ func (s *AuthSuite) SetupTest() {
 
 	s.mailer = &MockMailer{}
 
-	authHandler := &controllers.Controller{
+	controller := &controllers.Controller{
 		Users:       s.users,
 		Sessions:    s.sessions,
 		OTPCodes:    s.otpCodes,
@@ -92,20 +92,20 @@ func (s *AuthSuite) SetupTest() {
 
 	r := chi.NewRouter()
 	r.Route("/auth", func(r chi.Router) {
-		r.Get("/register", authHandler.RegisterPage)
-		r.Post("/register", authHandler.Register)
-		r.Get("/login", authHandler.LoginPage)
-		r.Post("/login", authHandler.Login)
-		r.Get("/login/otp", authHandler.OTPPage)
-		r.Post("/login/otp", authHandler.VerifyOTP)
-		r.Get("/forgot-password", authHandler.ForgotPasswordPage)
-		r.Post("/forgot-password", authHandler.ForgotPassword)
-		r.Get("/reset-password", authHandler.ResetPasswordPage)
-		r.Post("/reset-password", authHandler.ResetPassword)
+		r.Get("/register", controller.RegisterPage)
+		r.Post("/register", controller.Register)
+		r.Get("/login", controller.LoginPage)
+		r.Post("/login", controller.Login)
+		r.Get("/login/otp", controller.OTPPage)
+		r.Post("/login/otp", controller.VerifyOTP)
+		r.Get("/forgot-password", controller.ForgotPasswordPage)
+		r.Post("/forgot-password", controller.ForgotPassword)
+		r.Get("/reset-password", controller.ResetPasswordPage)
+		r.Post("/reset-password", controller.ResetPassword)
 
 		r.Group(func(r chi.Router) {
 			r.Use(web.RequireAuth(s.sessions))
-			r.Post("/logout", authHandler.Logout)
+			r.Post("/logout", controller.Logout)
 		})
 	})
 

@@ -46,18 +46,24 @@ When filing issues, referencing work, or picking up tasks, always use that Linea
 
 ```plaintext
 internal/
-  web/       # HTTP layer: router (chi routes + middleware), Server (listen + graceful shutdown)
-  pkg/       # Infrastructure utilities with no business logic: kernel/, migrate/, ...
-  handler/   # HTTP handlers — one file per feature area
-  templates/ # a-h/templ components
+  app/           # Config + bootstrap: builds the App dependency container
+    clients/     # External service clients: discogs/, mailer/
+    web/         # HTTP layer: routes (chi + middleware), Server (listen + graceful shutdown)
+  models/        # Domain structs, repository interfaces + SQLite implementations, domain rules
+  controllers/   # Single Controller struct; one file per feature area
+  views/         # a-h/templ components
+  pkg/           # Infrastructure utilities with no business logic: ctxkey/, logger/, migrate/
 ```
 
-`cmd/server/main.go` only orchestrates: `kernel.New()` → `web.NewServer(k).Run()`. Nothing else.
+`cmd/server/main.go` only orchestrates: `app.New()` → `web.NewServer(a).Run()`. Nothing else.
+
+Import direction: `app/web` → `app`, `controllers` → `models`, `views`, `app/clients`. `app` and `controllers` never import `app/web`; `controllers` never imports `app`.
 
 ## Architecture Conventions
 
+- Controllers handle HTTP only (parsing, cookies, redirects, rendering). Domain rules (password hashing, token generation, expiry checks) live in `models`.
 - All database access is behind repository interfaces (`UserRepository`, `SessionRepository`, `OAuthTokenRepository`). Inject SQLite implementations at startup.
-- The Discogs HTTP client is hidden behind a `DiscogsClient` interface. Inject it — never instantiate it inside handlers.
+- The Discogs HTTP client is hidden behind a `DiscogsClient` interface. Inject it — never instantiate it inside controllers.
 - All email sending goes through a `Mailer` interface. Never call Resend directly from business logic.
 - Tests use the HTTP handler boundary as the primary seam: spin up the full handler tree with an in-memory SQLite DB and mock `DiscogsClient` + `Mailer`.
 - No specific file paths or code snippets in issue descriptions — they go stale.

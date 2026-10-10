@@ -74,15 +74,15 @@ func (s *ScanSuite) SetupTest() {
 
 	s.mockDiscogs = &mockDiscogsClient{}
 
-	scanHandler := &controllers.Controller{Discogs: s.mockDiscogs, OAuthTokens: s.oauthTokens}
+	controller := &controllers.Controller{Discogs: s.mockDiscogs, OAuthTokens: s.oauthTokens}
 
 	r := chi.NewRouter()
 	r.Group(func(r chi.Router) {
 		r.Use(web.RequireAuth(s.sessions))
-		r.Get("/app/scanner", scanHandler.ScanPage)
-		r.Post("/app/scan", scanHandler.Scan)
-		r.Post("/app/scan/confirm", scanHandler.Confirm)
-		r.Get("/app/scan/cancel", scanHandler.Cancel)
+		r.Get("/app/scanner", controller.ScanPage)
+		r.Post("/app/scan", controller.Scan)
+		r.Post("/app/scan/confirm", controller.Confirm)
+		r.Get("/app/scan/cancel", controller.Cancel)
 	})
 
 	s.router = r

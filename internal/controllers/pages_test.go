@@ -10,15 +10,15 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/controllers"
 )
 
-type LandingHandlerTestSuite struct {
+type PagesSuite struct {
 	suite.Suite
 }
 
-func TestLandingHandlerTestSuite(t *testing.T) {
-	suite.Run(t, new(LandingHandlerTestSuite))
+func TestPagesSuite(t *testing.T) {
+	suite.Run(t, new(PagesSuite))
 }
 
-func (s *LandingHandlerTestSuite) TestLanding() {
+func (s *PagesSuite) TestLanding() {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rr := httptest.NewRecorder()
 
