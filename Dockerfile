@@ -19,14 +19,18 @@ RUN CGO_ENABLED=1 GOOS=linux go build -o bin/discogs-collection-manager ./cmd/se
 
 FROM alpine:3.21
 
-RUN apk add --no-cache ca-certificates sqlite
+RUN apk add --no-cache ca-certificates sqlite su-exec \
+    && addgroup -S app && adduser -S -G app app
 
 WORKDIR /app
 COPY --from=builder /app/bin/discogs-collection-manager ./
 COPY --from=builder /app/migrations ./migrations
 COPY --from=builder /app/static ./static
 
-RUN mkdir -p /app/data
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh \
+    && mkdir -p /app/data && chown -R app:app /app/data
 
 EXPOSE 8080
+ENTRYPOINT ["docker-entrypoint.sh"]
 CMD ["./discogs-collection-manager"]
