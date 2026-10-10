@@ -17,40 +17,48 @@ func NewRouter(a *app.App) http.Handler {
 	r.Use(RequestLogger(a.Logger))
 	r.Use(middleware.Recoverer)
 
-	authHandler := controllers.NewAuthHandler(a.Users, a.Sessions, a.OTPCodes, a.ResetTokens, a.Mailer, a.BaseURL)
-	discogsOAuthHandler := controllers.NewDiscogsOAuthHandler(a.OAuthTokens, a.Sessions, a.Users, a.DiscogsOAuth)
-	scanHandler := controllers.NewScanHandler(a.Discogs, a.OAuthTokens)
+	c := &controllers.Controller{
+		Users:        a.Users,
+		Sessions:     a.Sessions,
+		OTPCodes:     a.OTPCodes,
+		ResetTokens:  a.ResetTokens,
+		OAuthTokens:  a.OAuthTokens,
+		Mailer:       a.Mailer,
+		Discogs:      a.Discogs,
+		DiscogsOAuth: a.DiscogsOAuth,
+		BaseURL:      a.BaseURL,
+	}
 
-	r.Get("/", controllers.Landing)
+	r.Get("/", c.Landing)
 
 	r.Route("/auth", func(r chi.Router) {
-		r.Get("/register", authHandler.RegisterPage)
-		r.Post("/register", authHandler.Register)
-		r.Get("/login", authHandler.LoginPage)
-		r.Post("/login", authHandler.Login)
-		r.Get("/login/otp", authHandler.OTPPage)
-		r.Post("/login/otp", authHandler.VerifyOTP)
-		r.Get("/forgot-password", authHandler.ForgotPasswordPage)
-		r.Post("/forgot-password", authHandler.ForgotPassword)
-		r.Get("/reset-password", authHandler.ResetPasswordPage)
-		r.Post("/reset-password", authHandler.ResetPassword)
+		r.Get("/register", c.RegisterPage)
+		r.Post("/register", c.Register)
+		r.Get("/login", c.LoginPage)
+		r.Post("/login", c.Login)
+		r.Get("/login/otp", c.OTPPage)
+		r.Post("/login/otp", c.VerifyOTP)
+		r.Get("/forgot-password", c.ForgotPasswordPage)
+		r.Post("/forgot-password", c.ForgotPassword)
+		r.Get("/reset-password", c.ResetPasswordPage)
+		r.Post("/reset-password", c.ResetPassword)
 
 		r.Group(func(r chi.Router) {
 			r.Use(RequireAuth(a.Sessions))
-			r.Post("/logout", authHandler.Logout)
+			r.Post("/logout", c.Logout)
 		})
 	})
 
 	r.Group(func(r chi.Router) {
 		r.Use(RequireAuth(a.Sessions))
-		r.Get("/app/settings", discogsOAuthHandler.SettingsPage)
-		r.Get("/app/scanner", scanHandler.ScanPage)
-		r.Post("/app/scan", scanHandler.Scan)
-		r.Post("/app/scan/confirm", scanHandler.Confirm)
-		r.Get("/app/scan/cancel", scanHandler.Cancel)
-		r.Get("/discogs/connect", discogsOAuthHandler.Connect)
-		r.Get("/discogs/callback", discogsOAuthHandler.Callback)
-		r.Post("/discogs/disconnect", discogsOAuthHandler.Disconnect)
+		r.Get("/app/settings", c.SettingsPage)
+		r.Get("/app/scanner", c.ScanPage)
+		r.Post("/app/scan", c.Scan)
+		r.Post("/app/scan/confirm", c.Confirm)
+		r.Get("/app/scan/cancel", c.Cancel)
+		r.Get("/discogs/connect", c.Connect)
+		r.Get("/discogs/callback", c.Callback)
+		r.Post("/discogs/disconnect", c.Disconnect)
 	})
 
 	r.Handle("/static/*", staticCache(http.StripPrefix("/static/", http.FileServer(http.Dir("./static")))))

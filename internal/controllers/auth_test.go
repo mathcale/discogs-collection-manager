@@ -88,7 +88,14 @@ func (s *AuthSuite) SetupTest() {
 
 	s.mailer = &MockMailer{}
 
-	authHandler := controllers.NewAuthHandler(s.users, s.sessions, s.otpCodes, s.resetTokens, s.mailer, "http://localhost")
+	authHandler := &controllers.Controller{
+		Users:       s.users,
+		Sessions:    s.sessions,
+		OTPCodes:    s.otpCodes,
+		ResetTokens: s.resetTokens,
+		Mailer:      s.mailer,
+		BaseURL:     "http://localhost",
+	}
 
 	r := chi.NewRouter()
 	r.Route("/auth", func(r chi.Router) {

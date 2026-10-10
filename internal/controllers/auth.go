@@ -12,8 +12,6 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
-	"github.com/mathcale/discogs-collection-manager/internal/app/clients/mailer"
-	"github.com/mathcale/discogs-collection-manager/internal/models"
 	"github.com/mathcale/discogs-collection-manager/internal/views"
 )
 
@@ -26,39 +24,11 @@ const (
 	resetTokenExpiry       = 1 * time.Hour
 )
 
-type AuthHandler struct {
-	Users       models.UserRepository
-	Sessions    models.SessionRepository
-	OTPCodes    models.OTPRepository
-	ResetTokens models.PasswordResetTokenRepository
-	Mailer      mailer.Mailer
-	BaseURL     string
+func (c *Controller) RegisterPage(w http.ResponseWriter, r *http.Request) {
+	render(w, r, http.StatusOK, views.RegisterPage(""))
 }
 
-func NewAuthHandler(
-	users models.UserRepository,
-	sessions models.SessionRepository,
-	otpCodes models.OTPRepository,
-	resetTokens models.PasswordResetTokenRepository,
-	m mailer.Mailer,
-	baseURL string,
-) *AuthHandler {
-	return &AuthHandler{
-		Users:       users,
-		Sessions:    sessions,
-		OTPCodes:    otpCodes,
-		ResetTokens: resetTokens,
-		Mailer:      m,
-		BaseURL:     baseURL,
-	}
-}
-
-func (h *AuthHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	views.RegisterPage("").Render(r.Context(), w)
-}
-
-func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -67,15 +37,13 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	email := r.FormValue("email")
 	password := r.FormValue("password")
 
-	existing, err := h.Users.FindByEmail(r.Context(), email)
+	existing, err := c.Users.FindByEmail(r.Context(), email)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 	if existing != nil {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		views.RegisterPage("This email is already registered.").Render(r.Context(), w)
+		render(w, r, http.StatusUnprocessableEntity, views.RegisterPage("This email is already registered."))
 		return
 	}
 
@@ -85,7 +53,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := h.Users.Create(r.Context(), email, string(hash)); err != nil {
+	if _, err := c.Users.Create(r.Context(), email, string(hash)); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -93,12 +61,11 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/auth/login", http.StatusFound)
 }
 
-func (h *AuthHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	views.LoginPage("").Render(r.Context(), w)
+func (c *Controller) LoginPage(w http.ResponseWriter, r *http.Request) {
+	render(w, r, http.StatusOK, views.LoginPage(""))
 }
 
-func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -108,15 +75,13 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 	stayLoggedIn := r.FormValue("stay_logged_in") == "1"
 
-	user, err := h.Users.FindByEmail(r.Context(), email)
+	user, err := c.Users.FindByEmail(r.Context(), email)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 	if user == nil || bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)) != nil {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusUnauthorized)
-		views.LoginPage("Invalid email or password.").Render(r.Context(), w)
+		render(w, r, http.StatusUnauthorized, views.LoginPage("Invalid email or password."))
 		return
 	}
 
@@ -127,12 +92,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	codeHash := hashToken(code)
-	if _, err := h.OTPCodes.Create(r.Context(), user.ID, codeHash, time.Now().Add(otpExpiry)); err != nil {
+	if _, err := c.OTPCodes.Create(r.Context(), user.ID, codeHash, time.Now().Add(otpExpiry)); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	if err := h.Mailer.Send(user.Email, "Your login code", fmt.Sprintf("Your verification code is: <strong>%s</strong>. It expires in 10 minutes.", code)); err != nil {
+	if err := c.Mailer.Send(user.Email, "Your login code", fmt.Sprintf("Your verification code is: <strong>%s</strong>. It expires in 10 minutes.", code)); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -154,17 +119,16 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/auth/login/otp", http.StatusFound)
 }
 
-func (h *AuthHandler) OTPPage(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) OTPPage(w http.ResponseWriter, r *http.Request) {
 	if _, err := r.Cookie(pendingLoginCookieName); err != nil {
 		http.Redirect(w, r, "/auth/login", http.StatusFound)
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	views.OTPPage("").Render(r.Context(), w)
+	render(w, r, http.StatusOK, views.OTPPage(""))
 }
 
-func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	pendingCookie, err := r.Cookie(pendingLoginCookieName)
 	if err != nil {
 		http.Redirect(w, r, "/auth/login", http.StatusFound)
@@ -186,34 +150,28 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 
 	code := r.FormValue("code")
 
-	otp, err := h.OTPCodes.FindPendingByUserID(r.Context(), userID)
+	otp, err := c.OTPCodes.FindPendingByUserID(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
 	if otp == nil {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		views.OTPPage("Invalid or expired code. Please log in again.").Render(r.Context(), w)
+		render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid or expired code. Please log in again."))
 		return
 	}
 
 	if time.Now().After(otp.ExpiresAt) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		views.OTPPage("Code has expired. Please log in again.").Render(r.Context(), w)
+		render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Code has expired. Please log in again."))
 		return
 	}
 
 	if hashToken(code) != otp.CodeHash {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		views.OTPPage("Invalid code. Please try again.").Render(r.Context(), w)
+		render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid code. Please try again."))
 		return
 	}
 
-	if err := h.OTPCodes.MarkUsed(r.Context(), otp.ID); err != nil {
+	if err := c.OTPCodes.MarkUsed(r.Context(), otp.ID); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -238,7 +196,7 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 	expiresAt := time.Now().Add(expiry)
 
-	if _, err := h.Sessions.Create(r.Context(), userID, token, expiresAt, stayLoggedIn); err != nil {
+	if _, err := c.Sessions.Create(r.Context(), userID, token, expiresAt, stayLoggedIn); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -258,10 +216,10 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/app/scanner", http.StatusFound)
 }
 
-func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) Logout(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(sessionCookieName)
 	if err == nil {
-		h.Sessions.Delete(r.Context(), cookie.Value)
+		c.Sessions.Delete(r.Context(), cookie.Value)
 	}
 
 	http.SetCookie(w, &http.Cookie{
@@ -275,12 +233,11 @@ func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/auth/login", http.StatusFound)
 }
 
-func (h *AuthHandler) ForgotPasswordPage(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	views.ForgotPasswordPage(false).Render(r.Context(), w)
+func (c *Controller) ForgotPasswordPage(w http.ResponseWriter, r *http.Request) {
+	render(w, r, http.StatusOK, views.ForgotPasswordPage(false))
 }
 
-func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -288,7 +245,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 
 	email := r.FormValue("email")
 
-	user, err := h.Users.FindByEmail(r.Context(), email)
+	user, err := c.Users.FindByEmail(r.Context(), email)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
@@ -302,24 +259,23 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		}
 
 		tokenHash := hashToken(rawToken)
-		if _, err := h.ResetTokens.Create(r.Context(), user.ID, tokenHash, time.Now().Add(resetTokenExpiry)); err != nil {
+		if _, err := c.ResetTokens.Create(r.Context(), user.ID, tokenHash, time.Now().Add(resetTokenExpiry)); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
 
-		resetLink := h.BaseURL + "/auth/reset-password?token=" + rawToken
+		resetLink := c.BaseURL + "/auth/reset-password?token=" + rawToken
 		body := fmt.Sprintf("Click the link below to reset your password:<br><a href=\"%s\">%s</a><br>This link expires in 1 hour.", resetLink, resetLink)
-		if err := h.Mailer.Send(user.Email, "Reset your password", body); err != nil {
+		if err := c.Mailer.Send(user.Email, "Reset your password", body); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	views.ForgotPasswordPage(true).Render(r.Context(), w)
+	render(w, r, http.StatusOK, views.ForgotPasswordPage(true))
 }
 
-func (h *AuthHandler) ResetPasswordPage(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) ResetPasswordPage(w http.ResponseWriter, r *http.Request) {
 	rawToken := r.URL.Query().Get("token")
 	if rawToken == "" {
 		http.Redirect(w, r, "/auth/login", http.StatusFound)
@@ -327,23 +283,21 @@ func (h *AuthHandler) ResetPasswordPage(w http.ResponseWriter, r *http.Request) 
 	}
 
 	tokenHash := hashToken(rawToken)
-	record, err := h.ResetTokens.FindByTokenHash(r.Context(), tokenHash)
+	record, err := c.ResetTokens.FindByTokenHash(r.Context(), tokenHash)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
 	if record == nil || record.UsedAt != nil || time.Now().After(record.ExpiresAt) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		views.ResetPasswordPage("", "This reset link is invalid or has expired.").Render(r.Context(), w)
+		render(w, r, http.StatusOK, views.ResetPasswordPage("", "This reset link is invalid or has expired."))
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	views.ResetPasswordPage(rawToken, "").Render(r.Context(), w)
+	render(w, r, http.StatusOK, views.ResetPasswordPage(rawToken, ""))
 }
 
-func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
+func (c *Controller) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -354,23 +308,19 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	passwordConfirm := r.FormValue("password_confirm")
 
 	if password != passwordConfirm {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		views.ResetPasswordPage(rawToken, "Passwords do not match.").Render(r.Context(), w)
+		render(w, r, http.StatusUnprocessableEntity, views.ResetPasswordPage(rawToken, "Passwords do not match."))
 		return
 	}
 
 	tokenHash := hashToken(rawToken)
-	record, err := h.ResetTokens.FindByTokenHash(r.Context(), tokenHash)
+	record, err := c.ResetTokens.FindByTokenHash(r.Context(), tokenHash)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
 	if record == nil || record.UsedAt != nil || time.Now().After(record.ExpiresAt) {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		w.WriteHeader(http.StatusUnprocessableEntity)
-		views.ResetPasswordPage("", "This reset link is invalid or has expired.").Render(r.Context(), w)
+		render(w, r, http.StatusUnprocessableEntity, views.ResetPasswordPage("", "This reset link is invalid or has expired."))
 		return
 	}
 
@@ -380,17 +330,17 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.Users.UpdatePassword(r.Context(), record.UserID, string(hash)); err != nil {
+	if err := c.Users.UpdatePassword(r.Context(), record.UserID, string(hash)); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	if err := h.ResetTokens.MarkUsed(r.Context(), record.ID); err != nil {
+	if err := c.ResetTokens.MarkUsed(r.Context(), record.ID); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	if err := h.Sessions.DeleteAllForUser(r.Context(), record.UserID); err != nil {
+	if err := c.Sessions.DeleteAllForUser(r.Context(), record.UserID); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}

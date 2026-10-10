@@ -74,7 +74,7 @@ func (s *ScanSuite) SetupTest() {
 
 	s.mockDiscogs = &mockDiscogsClient{}
 
-	scanHandler := controllers.NewScanHandler(s.mockDiscogs, s.oauthTokens)
+	scanHandler := &controllers.Controller{Discogs: s.mockDiscogs, OAuthTokens: s.oauthTokens}
 
 	r := chi.NewRouter()
 	r.Group(func(r chi.Router) {

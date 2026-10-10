@@ -33,7 +33,7 @@ type DiscogsOAuthSuite struct {
 	oauthTokens  models.OAuthTokenRepository
 	router       http.Handler
 	mockDiscogs  *httptest.Server
-	oauthHandler *controllers.DiscogsOAuthHandler
+	oauthHandler *controllers.Controller
 }
 
 func TestDiscogsOAuthSuite(t *testing.T) {
@@ -78,8 +78,13 @@ func (s *DiscogsOAuthSuite) SetupTest() {
 		},
 	}
 
-	s.oauthHandler = controllers.NewDiscogsOAuthHandler(s.oauthTokens, s.sessions, s.users, oauthCfg)
-	s.oauthHandler.IdentityURL = s.mockDiscogs.URL + "/oauth/identity"
+	s.oauthHandler = &controllers.Controller{
+		OAuthTokens:  s.oauthTokens,
+		Sessions:     s.sessions,
+		Users:        s.users,
+		DiscogsOAuth: oauthCfg,
+		IdentityURL:  s.mockDiscogs.URL + "/oauth/identity",
+	}
 
 	r := chi.NewRouter()
 
@@ -214,7 +219,7 @@ func (s *DiscogsOAuthSuite) TestCallback_401FromDiscogs_ShowsReconnectPrompt() {
 			AccessTokenURL:  unauthorizedServer.URL + "/oauth/access_token",
 		},
 	}
-	s.oauthHandler.OAuthConfig = oauthCfg
+	s.oauthHandler.DiscogsOAuth = oauthCfg
 
 	user := s.createUser("unauthorized@example.com")
 	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))

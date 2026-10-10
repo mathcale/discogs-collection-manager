@@ -22,7 +22,7 @@ func (s *LandingHandlerTestSuite) TestLanding() {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rr := httptest.NewRecorder()
 
-	controllers.Landing(rr, req)
+	(&controllers.Controller{}).Landing(rr, req)
 
 	s.Equal(http.StatusOK, rr.Code)
 	s.Contains(rr.Body.String(), "Discogs Collection Manager")
