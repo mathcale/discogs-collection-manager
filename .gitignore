@@ -30,6 +30,7 @@ Thumbs.db
 # Air
 build-errors.log
 
+# Local cert files
 *.pem
 
 # Generated CSS
@@ -37,3 +38,6 @@ static/app.min.css
 
 # Node (Railway IaC SDK)
 node_modules/
+
+# Local agent context
+.agents/*.local.md

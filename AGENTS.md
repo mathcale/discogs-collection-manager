@@ -1,24 +1,28 @@
-# Copilot Workspace Instructions
+# Agent Instructions
 
 ## Issue Tracker
 
-This project is tracked in Linear. See [.agents/linear.md](.agents/linear.md) for the full project reference, PRD link, issue list, and dependency graph.
+This project is tracked in Linear (team prefix `ATMT`). The project URL, PRD link, issue list, and dependency graph live in `.agents/linear.local.md`. Read it if it exists; otherwise ask for the Linear project.
 
-- **Linear project:** https://linear.app/automatta-tech/project/discogs-collection-manager-1c0eb5085335
-- **Team prefix:** `ATMT`
-- **PRD:** https://linear.app/automatta-tech/document/prd-discogs-collection-manager-4d2e202ef767
-
-When filing issues, referencing work, or picking up tasks, always use the Linear project above.
+When filing issues, referencing work, or picking up tasks, always use that Linear project.
 
 ## Tooling
 
-- **Git / GitHub:** Use the terminal only. Do not use the GitKraken MCP tools for any git or GitHub operations.
+- **Git / GitHub:** Use the terminal only. Do not use MCP tools for any git or GitHub operations.
 
 ## Branching
 
 - All implementation work must happen on a feature branch — never commit directly to `main`.
 - Branch naming: `feat/<short-description>` for features, `fix/<short-description>` for bug fixes, `chore/<short-description>` for maintenance tasks.
 - On finishing implementing a task, open a PR to `main` and assign it to the task in Linear. The PR title should match the Linear issue title.
+
+## Commits
+
+- When allowed to commit, use a one-line semantic commit message: `type(scope): description`.
+- When working on a ticket, the scope is the ticket ID. Example: `feat(ATMT-73): add barcode scanner view`.
+- Otherwise, the scope is the component or feature. Examples: `chore(discogs): bump oauth1 to latest version`, `fix(auth): expire sessions on password reset`.
+- Never mention an agent or model as co-author or in any attribution line (no `Co-Authored-By`, no "Generated with" footers) in commits or PRs.
+- Always commit with the machine-configured gitconfig identity. Never override the author or committer (no `--author`, no `git config user.*` changes, no `GIT_AUTHOR_*` / `GIT_COMMITTER_*` env vars).
 
 ## Tech Stack
 
@@ -40,7 +44,7 @@ When filing issues, referencing work, or picking up tasks, always use the Linear
 
 ## Package Structure
 
-```
+```plaintext
 internal/
   web/       # HTTP layer: router (chi routes + middleware), Server (listen + graceful shutdown)
   pkg/       # Infrastructure utilities with no business logic: kernel/, migrate/, ...
