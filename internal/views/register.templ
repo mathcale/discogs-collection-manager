@@ -1,0 +1,49 @@
+package views
+
+templ RegisterPage(errorMsg string) {
+	@BaseLayout("Register — Discogs Collection Manager") {
+		<main class="min-h-screen flex items-center justify-center px-4 py-12">
+			<div class="w-full max-w-sm">
+				<h1 class="text-3xl font-bold tracking-tight mb-10 text-center">
+					Create account
+				</h1>
+
+				<div class="card">
+					<div role="alert" aria-live="polite">
+						if errorMsg != "" {
+							@AlertError(errorMsg)
+						}
+					</div>
+
+					<form
+						method="POST"
+						action="/auth/register"
+						hx-boost="true"
+						hx-disabled-elt="find button[type='submit']"
+					>
+						<div class="flex flex-col gap-4">
+							<div>
+								<label class="block text-sm font-medium mb-1.5" for="email">Email</label>
+								<input class="input" type="email" id="email" name="email" required autocomplete="email"/>
+							</div>
+
+							<div>
+								<label class="block text-sm font-medium mb-1.5" for="password">Password</label>
+								<input class="input" type="password" id="password" name="password" required minlength="8" autocomplete="new-password"/>
+							</div>
+
+							<button type="submit" class="btn btn-primary w-full mt-2">
+								<span class="spinner mr-1.5" aria-hidden="true"></span>
+								Register
+							</button>
+						</div>
+					</form>
+				</div>
+
+				<p class="text-center text-sm mt-4">
+					<a href="/auth/login">Already have an account? Log in</a>
+				</p>
+			</div>
+		</main>
+	}
+}
