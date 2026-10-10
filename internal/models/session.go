@@ -8,6 +8,18 @@ import (
 	"github.com/google/uuid"
 )
 
+const (
+	shortSessionExpiry = 6 * time.Hour
+	longSessionExpiry  = 30 * 24 * time.Hour
+)
+
+func SessionExpiry(persistent bool) time.Duration {
+	if persistent {
+		return longSessionExpiry
+	}
+	return shortSessionExpiry
+}
+
 type Session struct {
 	ID         string
 	UserID     string
@@ -15,6 +27,10 @@ type Session struct {
 	ExpiresAt  time.Time
 	Persistent bool
 	CreatedAt  time.Time
+}
+
+func (s *Session) IsExpired() bool {
+	return time.Now().After(s.ExpiresAt)
 }
 
 type SessionRepository interface {

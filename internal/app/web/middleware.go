@@ -7,6 +7,7 @@ import (
 
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/mathcale/discogs-collection-manager/internal/controllers"
 	"github.com/mathcale/discogs-collection-manager/internal/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/ctxkey"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/logger"
@@ -43,14 +44,14 @@ func RequestLogger(log logger.Logger) func(http.Handler) http.Handler {
 func RequireAuth(sessions models.SessionRepository) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			cookie, err := r.Cookie("session_token")
+			cookie, err := r.Cookie(controllers.SessionCookieName)
 			if err != nil {
 				http.Redirect(w, r, "/auth/login", http.StatusFound)
 				return
 			}
 
 			session, err := sessions.FindByToken(r.Context(), cookie.Value)
-			if err != nil || session == nil || time.Now().After(session.ExpiresAt) {
+			if err != nil || session == nil || session.IsExpired() {
 				http.Redirect(w, r, "/auth/login", http.StatusFound)
 				return
 			}

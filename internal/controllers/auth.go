@@ -1,27 +1,18 @@
 package controllers
 
 import (
-	"crypto/rand"
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"math/big"
 	"net/http"
 	"strings"
 	"time"
 
-	"golang.org/x/crypto/bcrypt"
-
+	"github.com/mathcale/discogs-collection-manager/internal/models"
 	"github.com/mathcale/discogs-collection-manager/internal/views"
 )
 
 const (
-	sessionCookieName      = "session_token"
+	SessionCookieName      = "session_token"
 	pendingLoginCookieName = "pending_login"
-	shortSessionExpiry     = 6 * time.Hour
-	longSessionExpiry      = 30 * 24 * time.Hour
-	otpExpiry              = 10 * time.Minute
-	resetTokenExpiry       = 1 * time.Hour
 )
 
 func (c *Controller) RegisterPage(w http.ResponseWriter, r *http.Request) {
@@ -47,13 +38,13 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hash, err := models.HashPassword(password)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	if _, err := c.Users.Create(r.Context(), email, string(hash)); err != nil {
+	if _, err := c.Users.Create(r.Context(), email, hash); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -80,19 +71,19 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
-	if user == nil || bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)) != nil {
+	if user == nil || !user.CheckPassword(password) {
 		render(w, r, http.StatusUnauthorized, views.LoginPage("Invalid email or password."))
 		return
 	}
 
-	code, err := generateOTPCode()
+	code, err := models.GenerateOTPCode()
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	codeHash := hashToken(code)
-	if _, err := c.OTPCodes.Create(r.Context(), user.ID, codeHash, time.Now().Add(otpExpiry)); err != nil {
+	codeHash := models.HashToken(code)
+	if _, err := c.OTPCodes.Create(r.Context(), user.ID, codeHash, time.Now().Add(models.OTPExpiry)); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -113,7 +104,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(otpExpiry.Seconds()),
+		MaxAge:   int(models.OTPExpiry.Seconds()),
 	})
 
 	http.Redirect(w, r, "/auth/login/otp", http.StatusFound)
@@ -161,12 +152,12 @@ func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if time.Now().After(otp.ExpiresAt) {
+	if otp.IsExpired() {
 		render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Code has expired. Please log in again."))
 		return
 	}
 
-	if hashToken(code) != otp.CodeHash {
+	if !otp.Matches(code) {
 		render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid code. Please try again."))
 		return
 	}
@@ -184,17 +175,13 @@ func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	})
 
-	token, err := generateToken()
+	token, err := models.GenerateToken()
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	expiry := shortSessionExpiry
-	if stayLoggedIn {
-		expiry = longSessionExpiry
-	}
-	expiresAt := time.Now().Add(expiry)
+	expiresAt := time.Now().Add(models.SessionExpiry(stayLoggedIn))
 
 	if _, err := c.Sessions.Create(r.Context(), userID, token, expiresAt, stayLoggedIn); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -202,7 +189,7 @@ func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	cookie := &http.Cookie{
-		Name:     sessionCookieName,
+		Name:     SessionCookieName,
 		Value:    token,
 		Path:     "/",
 		HttpOnly: true,
@@ -217,13 +204,13 @@ func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) Logout(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie(sessionCookieName)
+	cookie, err := r.Cookie(SessionCookieName)
 	if err == nil {
 		c.Sessions.Delete(r.Context(), cookie.Value)
 	}
 
 	http.SetCookie(w, &http.Cookie{
-		Name:     sessionCookieName,
+		Name:     SessionCookieName,
 		Value:    "",
 		Path:     "/",
 		MaxAge:   -1,
@@ -252,14 +239,14 @@ func (c *Controller) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user != nil {
-		rawToken, err := generateToken()
+		rawToken, err := models.GenerateToken()
 		if err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
 
-		tokenHash := hashToken(rawToken)
-		if _, err := c.ResetTokens.Create(r.Context(), user.ID, tokenHash, time.Now().Add(resetTokenExpiry)); err != nil {
+		tokenHash := models.HashToken(rawToken)
+		if _, err := c.ResetTokens.Create(r.Context(), user.ID, tokenHash, time.Now().Add(models.ResetTokenExpiry)); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
@@ -282,14 +269,14 @@ func (c *Controller) ResetPasswordPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenHash := hashToken(rawToken)
+	tokenHash := models.HashToken(rawToken)
 	record, err := c.ResetTokens.FindByTokenHash(r.Context(), tokenHash)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	if record == nil || record.UsedAt != nil || time.Now().After(record.ExpiresAt) {
+	if record == nil || !record.IsUsable() {
 		render(w, r, http.StatusOK, views.ResetPasswordPage("", "This reset link is invalid or has expired."))
 		return
 	}
@@ -312,25 +299,25 @@ func (c *Controller) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenHash := hashToken(rawToken)
+	tokenHash := models.HashToken(rawToken)
 	record, err := c.ResetTokens.FindByTokenHash(r.Context(), tokenHash)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	if record == nil || record.UsedAt != nil || time.Now().After(record.ExpiresAt) {
+	if record == nil || !record.IsUsable() {
 		render(w, r, http.StatusUnprocessableEntity, views.ResetPasswordPage("", "This reset link is invalid or has expired."))
 		return
 	}
 
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	hash, err := models.HashPassword(password)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	if err := c.Users.UpdatePassword(r.Context(), record.UserID, string(hash)); err != nil {
+	if err := c.Users.UpdatePassword(r.Context(), record.UserID, hash); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -346,25 +333,4 @@ func (c *Controller) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	http.Redirect(w, r, "/auth/login", http.StatusFound)
-}
-
-func generateToken() (string, error) {
-	b := make([]byte, 32)
-	if _, err := rand.Read(b); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(b), nil
-}
-
-func generateOTPCode() (string, error) {
-	n, err := rand.Int(rand.Reader, big.NewInt(1_000_000))
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("%06d", n.Int64()), nil
-}
-
-func hashToken(token string) string {
-	h := sha256.Sum256([]byte(token))
-	return hex.EncodeToString(h[:])
 }

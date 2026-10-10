@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const OTPExpiry = 10 * time.Minute
+
 type OTPCode struct {
 	ID        string
 	UserID    string
@@ -15,6 +17,14 @@ type OTPCode struct {
 	ExpiresAt time.Time
 	UsedAt    *time.Time
 	CreatedAt time.Time
+}
+
+func (o *OTPCode) IsExpired() bool {
+	return time.Now().After(o.ExpiresAt)
+}
+
+func (o *OTPCode) Matches(code string) bool {
+	return HashToken(code) == o.CodeHash
 }
 
 type OTPRepository interface {

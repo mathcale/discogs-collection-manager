@@ -8,6 +8,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const ResetTokenExpiry = time.Hour
+
 type PasswordResetToken struct {
 	ID        string
 	UserID    string
@@ -15,6 +17,10 @@ type PasswordResetToken struct {
 	ExpiresAt time.Time
 	UsedAt    *time.Time
 	CreatedAt time.Time
+}
+
+func (t *PasswordResetToken) IsUsable() bool {
+	return t.UsedAt == nil && !time.Now().After(t.ExpiresAt)
 }
 
 type PasswordResetTokenRepository interface {
