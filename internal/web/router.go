@@ -17,11 +17,11 @@ func NewRouter(k *kernel.Kernel) http.Handler {
 	r.Use(RequestLogger(k.Logger))
 	r.Use(middleware.Recoverer)
 
-	authHandler := handler.NewAuthHandler(k.Users, k.Sessions, k.OTPCodes, k.ResetTokens, k.Mailer, k.BaseURL)
+	authHandler := handler.NewAuthHandler(k.Users, k.Sessions, k.OTPCodes, k.ResetTokens, k.Mailer, k.BaseURL, k.TwoStepAuthEnabled, k.SignupsEnabled)
 	discogsOAuthHandler := handler.NewDiscogsOAuthHandler(k.OAuthTokens, k.Sessions, k.Users, k.DiscogsOAuth)
 	scanHandler := handler.NewScanHandler(k.Discogs, k.OAuthTokens)
 
-	r.Get("/", handler.Landing)
+	r.Get("/", handler.Landing(k.SignupsEnabled))
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Get("/register", authHandler.RegisterPage)

@@ -33,6 +33,9 @@ type AuthHandler struct {
 	ResetTokens repository.PasswordResetTokenRepository
 	Mailer      mailer.Mailer
 	BaseURL     string
+
+	TwoStepAuthEnabled bool
+	SignupsEnabled     bool
 }
 
 func NewAuthHandler(
@@ -42,6 +45,8 @@ func NewAuthHandler(
 	resetTokens repository.PasswordResetTokenRepository,
 	m mailer.Mailer,
 	baseURL string,
+	twoStepAuthEnabled bool,
+	signupsEnabled bool,
 ) *AuthHandler {
 	return &AuthHandler{
 		Users:       users,
@@ -50,15 +55,28 @@ func NewAuthHandler(
 		ResetTokens: resetTokens,
 		Mailer:      m,
 		BaseURL:     baseURL,
+
+		TwoStepAuthEnabled: twoStepAuthEnabled,
+		SignupsEnabled:     signupsEnabled,
 	}
 }
 
 func (h *AuthHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
+	if !h.SignupsEnabled {
+		http.NotFound(w, r)
+		return
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	templates.RegisterPage("").Render(r.Context(), w)
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
+	if !h.SignupsEnabled {
+		http.NotFound(w, r)
+		return
+	}
+
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -95,7 +113,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	templates.LoginPage("").Render(r.Context(), w)
+	templates.LoginPage("", h.SignupsEnabled).Render(r.Context(), w)
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +134,12 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	if user == nil || bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)) != nil {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusUnauthorized)
-		templates.LoginPage("Invalid email or password.").Render(r.Context(), w)
+		templates.LoginPage("Invalid email or password.", h.SignupsEnabled).Render(r.Context(), w)
+		return
+	}
+
+	if !h.TwoStepAuthEnabled {
+		h.startSession(w, r, user.ID, stayLoggedIn)
 		return
 	}
 
@@ -226,6 +249,10 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	})
 
+	h.startSession(w, r, userID, stayLoggedIn)
+}
+
+func (h *AuthHandler) startSession(w http.ResponseWriter, r *http.Request, userID string, stayLoggedIn bool) {
 	token, err := generateToken()
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
