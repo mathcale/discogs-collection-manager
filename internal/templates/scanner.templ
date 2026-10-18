@@ -36,11 +36,10 @@ templ ScannerPage() {
 			</div>
 		</div>
 
-		<!-- Manual entry sheet -->
-		<div id="manual-backdrop" class="sheet-backdrop" role="dialog" aria-modal="true" aria-label="Enter barcode">
-			<div class="sheet" id="manual-sheet">
-				<div class="sheet-handle"></div>
-				<h2 class="sheet-title">Enter barcode</h2>
+		<!-- Manual entry modal -->
+		<div id="manual-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Enter barcode">
+			<div class="modal" id="manual-modal">
+				<h2 class="modal-title">Enter barcode</h2>
 				<form id="manual-form" novalidate>
 					<input
 						type="text"
