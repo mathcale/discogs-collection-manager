@@ -23,6 +23,11 @@ type DiscogsOAuthHandler struct {
 	requestTokens sync.Map
 }
 
+type pendingOAuthRequest struct {
+	secret string
+	userID string
+}
+
 func NewDiscogsOAuthHandler(
 	oauthTokens repository.OAuthTokenRepository,
 	sessions repository.SessionRepository,
@@ -63,6 +68,8 @@ func (h *DiscogsOAuthHandler) SettingsPage(w http.ResponseWriter, r *http.Reques
 }
 
 func (h *DiscogsOAuthHandler) Connect(w http.ResponseWriter, r *http.Request) {
+	userID, _ := r.Context().Value(ctxkey.UserID).(string)
+
 	requestToken, requestSecret, err := h.OAuthConfig.RequestToken()
 	if err != nil {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
@@ -71,7 +78,7 @@ func (h *DiscogsOAuthHandler) Connect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	h.requestTokens.Store(requestToken, requestSecret)
+	h.requestTokens.Store(requestToken, pendingOAuthRequest{secret: requestSecret, userID: userID})
 
 	authURL, err := h.OAuthConfig.AuthorizationURL(requestToken)
 	if err != nil {
@@ -96,17 +103,17 @@ func (h *DiscogsOAuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestSecretVal, ok := h.requestTokens.Load(requestToken)
-	if !ok {
+	userID, _ := r.Context().Value(ctxkey.UserID).(string)
+
+	pendingVal, ok := h.requestTokens.LoadAndDelete(requestToken)
+	pending, _ := pendingVal.(pendingOAuthRequest)
+	if !ok || pending.userID != userID {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusBadRequest)
 		templates.DiscogsConnectError("OAuth session expired or not found. Please try connecting again.").Render(r.Context(), w)
 		return
 	}
-	requestSecret, _ := requestSecretVal.(string)
-	h.requestTokens.Delete(requestToken)
-
-	accessToken, accessSecret, err := h.OAuthConfig.AccessToken(requestToken, requestSecret, verifier)
+	accessToken, accessSecret, err := h.OAuthConfig.AccessToken(requestToken, pending.secret, verifier)
 	if err != nil {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusBadGateway)
@@ -116,7 +123,6 @@ func (h *DiscogsOAuthHandler) Callback(w http.ResponseWriter, r *http.Request) {
 
 	discogsUsername := h.fetchDiscogsUsername(r, accessToken, accessSecret)
 
-	userID, _ := r.Context().Value(ctxkey.UserID).(string)
 	if _, err := h.OAuthTokens.Upsert(r.Context(), userID, accessToken, accessSecret, discogsUsername); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
