@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -24,6 +25,7 @@ const (
 	longSessionExpiry      = 30 * 24 * time.Hour
 	otpExpiry              = 10 * time.Minute
 	resetTokenExpiry       = 1 * time.Hour
+	maxOTPFailedAttempts   = 5
 )
 
 type AuthHandler struct {
@@ -31,6 +33,7 @@ type AuthHandler struct {
 	Sessions    repository.SessionRepository
 	OTPCodes    repository.OTPRepository
 	ResetTokens repository.PasswordResetTokenRepository
+	OAuthTokens repository.OAuthTokenRepository
 	Mailer      mailer.Mailer
 	BaseURL     string
 
@@ -43,6 +46,7 @@ func NewAuthHandler(
 	sessions repository.SessionRepository,
 	otpCodes repository.OTPRepository,
 	resetTokens repository.PasswordResetTokenRepository,
+	oauthTokens repository.OAuthTokenRepository,
 	m mailer.Mailer,
 	baseURL string,
 	twoStepAuthEnabled bool,
@@ -53,6 +57,7 @@ func NewAuthHandler(
 		Sessions:    sessions,
 		OTPCodes:    otpCodes,
 		ResetTokens: resetTokens,
+		OAuthTokens: oauthTokens,
 		Mailer:      m,
 		BaseURL:     baseURL,
 
@@ -82,7 +87,7 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := r.FormValue("email")
+	email := normalizeEmail(r.FormValue("email"))
 	password := r.FormValue("password")
 
 	existing, err := h.Users.FindByEmail(r.Context(), email)
@@ -122,7 +127,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := r.FormValue("email")
+	email := normalizeEmail(r.FormValue("email"))
 	password := r.FormValue("password")
 	stayLoggedIn := r.FormValue("stay_logged_in") == "1"
 
@@ -230,6 +235,11 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if hashToken(code) != otp.CodeHash {
+		if err := h.OTPCodes.RecordFailedAttempt(r.Context(), otp.ID, maxOTPFailedAttempts); err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		templates.OTPPage("Invalid code. Please try again.").Render(r.Context(), w)
@@ -237,6 +247,13 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.OTPCodes.MarkUsed(r.Context(), otp.ID); err != nil {
+		if errors.Is(err, repository.ErrOTPNotPending) {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			templates.OTPPage("Invalid or expired code. Please log in again.").Render(r.Context(), w)
+			return
+		}
+
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -313,7 +330,7 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := r.FormValue("email")
+	email := normalizeEmail(r.FormValue("email"))
 
 	user, err := h.Users.FindByEmail(r.Context(), email)
 	if err != nil {
@@ -324,6 +341,11 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	if user != nil {
 		rawToken, err := generateToken()
 		if err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+
+		if err := h.ResetTokens.MarkAllUsedForUser(r.Context(), user.ID); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
@@ -412,7 +434,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.ResetTokens.MarkUsed(r.Context(), record.ID); err != nil {
+	if err := h.ResetTokens.MarkAllUsedForUser(r.Context(), record.UserID); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -422,7 +444,16 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if err := h.OAuthTokens.DeleteByUserID(r.Context(), record.UserID); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
 	http.Redirect(w, r, "/auth/login", http.StatusFound)
+}
+
+func normalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
 }
 
 func generateToken() (string, error) {
