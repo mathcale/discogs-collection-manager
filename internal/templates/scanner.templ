@@ -8,8 +8,6 @@ import (
 
 templ ScannerPage() {
 	@AppLayout("Scanner — Discogs Collection Manager", "scanner") {
-		<script src="/static/html5-qrcode.min.js"></script>
-
 		<div class="scanner-shell">
 			<div class="scanner-viewport">
 				<div id="reader"></div>
@@ -75,7 +73,7 @@ templ ScannerPage() {
 		</div>
 
 		<script>
-			(function () {
+			function initScanner() {
 				var submitted = false;
 
 				var resultBackdrop = document.getElementById('result-backdrop');
@@ -215,7 +213,16 @@ templ ScannerPage() {
 				});
 
 				startScanner();
-			})();
+			}
+
+			if (window.Html5Qrcode) {
+				initScanner();
+			} else {
+				var libraryScript = document.createElement('script');
+				libraryScript.src = '/static/html5-qrcode.min.js';
+				libraryScript.onload = initScanner;
+				document.head.appendChild(libraryScript);
+			}
 		</script>
 	}
 }

@@ -41,3 +41,4 @@ node_modules/
 
 # Local agent context
 .agents/*.local.md
+.playwright-mcp/

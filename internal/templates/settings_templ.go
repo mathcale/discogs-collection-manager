@@ -129,7 +129,7 @@ func DiscogsConnectError(message string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<main class=\"min-h-screen flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm\"><h1 class=\"text-2xl font-semibold tracking-tight mb-8 text-center\">Connection Failed</h1><div class=\"card flex flex-col gap-4\"><div role=\"alert\" aria-live=\"assertive\"><div class=\"alert alert-error\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<main class=\"min-h-dvh flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm\"><h1 class=\"text-2xl font-semibold tracking-tight mb-8 text-center\">Connection Failed</h1><div class=\"card flex flex-col gap-4\"><div role=\"alert\" aria-live=\"assertive\"><div class=\"alert alert-error\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
