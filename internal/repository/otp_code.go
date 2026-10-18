@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,10 +18,13 @@ type OTPCode struct {
 	CreatedAt time.Time
 }
 
+var ErrOTPNotPending = errors.New("otp code is not pending")
+
 type OTPRepository interface {
 	Create(ctx context.Context, userID, codeHash string, expiresAt time.Time) (*OTPCode, error)
 	FindPendingByUserID(ctx context.Context, userID string) (*OTPCode, error)
 	MarkUsed(ctx context.Context, id string) error
+	RecordFailedAttempt(ctx context.Context, id string, maxAttempts int) error
 }
 
 type SQLiteOTPRepository struct {
@@ -89,9 +93,33 @@ func (r *SQLiteOTPRepository) FindPendingByUserID(
 }
 
 func (r *SQLiteOTPRepository) MarkUsed(ctx context.Context, id string) error {
-	_, err := r.db.ExecContext(ctx,
-		`UPDATE otp_codes SET used_at = ? WHERE id = ?`,
+	result, err := r.db.ExecContext(ctx,
+		`UPDATE otp_codes SET used_at = ? WHERE id = ? AND used_at IS NULL`,
 		time.Now().UTC().Format(time.DateTime), id,
+	)
+	if err != nil {
+		return err
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affected == 0 {
+		return ErrOTPNotPending
+	}
+
+	return nil
+}
+
+func (r *SQLiteOTPRepository) RecordFailedAttempt(ctx context.Context, id string, maxAttempts int) error {
+	_, err := r.db.ExecContext(ctx,
+		`UPDATE otp_codes
+		 SET failed_attempts = failed_attempts + 1,
+		     used_at = CASE WHEN failed_attempts + 1 >= ? THEN ? ELSE used_at END
+		 WHERE id = ? AND used_at IS NULL`,
+		maxAttempts, time.Now().UTC().Format(time.DateTime), id,
 	)
 
 	return err

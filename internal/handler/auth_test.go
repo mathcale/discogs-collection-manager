@@ -349,6 +349,37 @@ func (s *AuthSuite) TestVerifyOTP_InvalidCode_Returns422() {
 	s.Contains(rr.Body.String(), "Invalid code")
 }
 
+func (s *AuthSuite) TestVerifyOTP_RepeatedWrongCodes_InvalidatesCode() {
+	user := s.registerUser("otpbrute@example.com", "password123")
+
+	code := "424242"
+	_, err := s.otpCodes.Create(context.Background(), user.ID, hashToken(code), time.Now().Add(10*time.Minute))
+	s.Require().NoError(err)
+
+	submit := func(attempt string) *httptest.ResponseRecorder {
+		form := url.Values{"code": {attempt}}
+		req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.AddCookie(&http.Cookie{Name: "pending_login", Value: user.ID + ":0"})
+		rr := httptest.NewRecorder()
+		s.router.ServeHTTP(rr, req)
+		return rr
+	}
+
+	for range 5 {
+		rr := submit("000000")
+		s.Equal(http.StatusUnprocessableEntity, rr.Code)
+	}
+
+	rr := submit(code)
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+	s.Nil(s.cookieNamed(rr, "session_token"))
+
+	pending, err := s.otpCodes.FindPendingByUserID(context.Background(), user.ID)
+	s.Require().NoError(err)
+	s.Nil(pending)
+}
+
 func (s *AuthSuite) TestVerifyOTP_ExpiredCode_Returns422() {
 	user := s.registerUser("otpexpired@example.com", "password123")
 

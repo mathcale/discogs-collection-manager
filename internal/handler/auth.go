@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -24,6 +25,7 @@ const (
 	longSessionExpiry      = 30 * 24 * time.Hour
 	otpExpiry              = 10 * time.Minute
 	resetTokenExpiry       = 1 * time.Hour
+	maxOTPFailedAttempts   = 5
 )
 
 type AuthHandler struct {
@@ -230,6 +232,11 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if hashToken(code) != otp.CodeHash {
+		if err := h.OTPCodes.RecordFailedAttempt(r.Context(), otp.ID, maxOTPFailedAttempts); err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.WriteHeader(http.StatusUnprocessableEntity)
 		templates.OTPPage("Invalid code. Please try again.").Render(r.Context(), w)
@@ -237,6 +244,13 @@ func (h *AuthHandler) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.OTPCodes.MarkUsed(r.Context(), otp.ID); err != nil {
+		if errors.Is(err, repository.ErrOTPNotPending) {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			templates.OTPPage("Invalid or expired code. Please log in again.").Render(r.Context(), w)
+			return
+		}
+
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
