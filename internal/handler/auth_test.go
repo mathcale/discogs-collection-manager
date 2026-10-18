@@ -50,6 +50,7 @@ type AuthSuite struct {
 	sessions    repository.SessionRepository
 	otpCodes    repository.OTPRepository
 	resetTokens repository.PasswordResetTokenRepository
+	oauthTokens repository.OAuthTokenRepository
 	mailer      *MockMailer
 	router      http.Handler
 }
@@ -74,12 +75,15 @@ func (s *AuthSuite) SetupSuite() {
 	s.sessions = repository.NewSQLiteSessionRepository(db)
 	s.otpCodes = repository.NewSQLiteOTPRepository(db)
 	s.resetTokens = repository.NewSQLitePasswordResetTokenRepository(db)
+	s.oauthTokens = repository.NewSQLiteOAuthTokenRepository(db)
 }
 
 func (s *AuthSuite) SetupTest() {
 	_, err := s.db.Exec(`DELETE FROM otp_codes`)
 	s.Require().NoError(err)
 	_, err = s.db.Exec(`DELETE FROM password_reset_tokens`)
+	s.Require().NoError(err)
+	_, err = s.db.Exec(`DELETE FROM oauth_tokens`)
 	s.Require().NoError(err)
 	_, err = s.db.Exec(`DELETE FROM sessions`)
 	s.Require().NoError(err)
@@ -92,7 +96,7 @@ func (s *AuthSuite) SetupTest() {
 }
 
 func (s *AuthSuite) buildRouter(twoStepAuthEnabled, signupsEnabled bool) http.Handler {
-	authHandler := handler.NewAuthHandler(s.users, s.sessions, s.otpCodes, s.resetTokens, s.mailer, "http://localhost", twoStepAuthEnabled, signupsEnabled)
+	authHandler := handler.NewAuthHandler(s.users, s.sessions, s.otpCodes, s.resetTokens, s.oauthTokens, s.mailer, "http://localhost", twoStepAuthEnabled, signupsEnabled)
 
 	r := chi.NewRouter()
 	r.Route("/auth", func(r chi.Router) {
@@ -605,6 +609,65 @@ func (s *AuthSuite) TestForgotPassword_POST_InvalidatesPreviousToken() {
 		"password_confirm": {"newpassword123"},
 	})
 	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+}
+
+func (s *AuthSuite) TestRegister_POST_EmailCaseInsensitive_DuplicateRejected() {
+	s.registerUser("case@example.com", "password123")
+
+	rr := s.postForm(s.router, "/auth/register", url.Values{"email": {"  CASE@Example.com "}, "password": {"password123"}})
+
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+	s.Contains(rr.Body.String(), "already registered")
+}
+
+func (s *AuthSuite) TestRegister_POST_StoresNormalizedEmail() {
+	rr := s.postForm(s.router, "/auth/register", url.Values{"email": {" Mixed@Example.COM "}, "password": {"password123"}})
+	s.Equal(http.StatusFound, rr.Code)
+
+	user, err := s.users.FindByEmail(context.Background(), "mixed@example.com")
+	s.Require().NoError(err)
+	s.Require().NotNil(user)
+	s.Equal("mixed@example.com", user.Email)
+}
+
+func (s *AuthSuite) TestLogin_POST_EmailCaseInsensitive() {
+	s.registerUser("logincase@example.com", "password123")
+	router := s.buildRouter(false, true)
+
+	rr := s.postForm(router, "/auth/login", url.Values{"email": {"LoginCase@Example.com"}, "password": {"password123"}})
+
+	s.Equal(http.StatusFound, rr.Code)
+	s.NotNil(s.cookieNamed(rr, "session_token"))
+}
+
+func (s *AuthSuite) TestForgotPassword_POST_EmailCaseInsensitive() {
+	s.registerUser("forgotcase@example.com", "password123")
+
+	rr := s.postForm(s.router, "/auth/forgot-password", url.Values{"email": {"ForgotCase@Example.com"}})
+
+	s.Equal(http.StatusOK, rr.Code)
+	s.Require().Len(s.mailer.Sent, 1)
+	s.Equal("forgotcase@example.com", s.mailer.Sent[0].To)
+}
+
+func (s *AuthSuite) TestResetPassword_POST_Success_DeletesOAuthToken() {
+	user := s.registerUser("resetoauth@example.com", "oldpassword")
+	_, err := s.oauthTokens.Upsert(context.Background(), user.ID, "access", "secret", "attacker")
+	s.Require().NoError(err)
+
+	_, err = s.resetTokens.Create(context.Background(), user.ID, hashToken("oauth-reset-token"), time.Now().Add(1*time.Hour))
+	s.Require().NoError(err)
+
+	rr := s.postForm(s.router, "/auth/reset-password", url.Values{
+		"token":            {"oauth-reset-token"},
+		"password":         {"newpassword123"},
+		"password_confirm": {"newpassword123"},
+	})
+	s.Equal(http.StatusFound, rr.Code)
+
+	token, err := s.oauthTokens.FindByUserID(context.Background(), user.ID)
+	s.Require().NoError(err)
+	s.Nil(token)
 }
 
 func (s *AuthSuite) TestResetPassword_POST_UsedToken_Rejected() {
