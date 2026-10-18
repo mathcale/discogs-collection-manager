@@ -55,7 +55,7 @@ func NewRouter(k *kernel.Kernel) http.Handler {
 
 	r.Handle("/static/*", staticCache(http.StripPrefix("/static/", http.FileServer(http.Dir("./static")))))
 
-	return r
+	return http.NewCrossOriginProtection().Handler(r)
 }
 
 func staticCache(next http.Handler) http.Handler {
