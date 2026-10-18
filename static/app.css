@@ -650,7 +650,7 @@ a:hover {
 .manual-form-actions {
   display: flex;
   gap: 0.75rem;
-  margin-top: 0.75rem;
+  margin-top: 1rem;
 }
 
 /* ── Scan loading state ──────────────────────────────── */
