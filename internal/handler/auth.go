@@ -342,6 +342,11 @@ func (h *AuthHandler) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		if err := h.ResetTokens.MarkAllUsedForUser(r.Context(), user.ID); err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+
 		tokenHash := hashToken(rawToken)
 		if _, err := h.ResetTokens.Create(r.Context(), user.ID, tokenHash, time.Now().Add(resetTokenExpiry)); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
@@ -426,7 +431,7 @@ func (h *AuthHandler) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.ResetTokens.MarkUsed(r.Context(), record.ID); err != nil {
+	if err := h.ResetTokens.MarkAllUsedForUser(r.Context(), record.UserID); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}

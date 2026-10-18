@@ -567,6 +567,46 @@ func (s *AuthSuite) TestResetPassword_POST_Success_UpdatesPasswordAndInvalidates
 	s.NotEqual(user.PasswordHash, updated.PasswordHash)
 }
 
+func (s *AuthSuite) TestResetPassword_POST_Success_InvalidatesOtherUnusedTokens() {
+	user := s.registerUser("resetother@example.com", "oldpassword")
+
+	_, err := s.resetTokens.Create(context.Background(), user.ID, hashToken("first-token"), time.Now().Add(1*time.Hour))
+	s.Require().NoError(err)
+	_, err = s.resetTokens.Create(context.Background(), user.ID, hashToken("second-token"), time.Now().Add(1*time.Hour))
+	s.Require().NoError(err)
+
+	rr := s.postForm(s.router, "/auth/reset-password", url.Values{
+		"token":            {"first-token"},
+		"password":         {"newpassword123"},
+		"password_confirm": {"newpassword123"},
+	})
+	s.Equal(http.StatusFound, rr.Code)
+
+	rr = s.postForm(s.router, "/auth/reset-password", url.Values{
+		"token":            {"second-token"},
+		"password":         {"attackerpassword"},
+		"password_confirm": {"attackerpassword"},
+	})
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+}
+
+func (s *AuthSuite) TestForgotPassword_POST_InvalidatesPreviousToken() {
+	user := s.registerUser("resetagain@example.com", "password123")
+
+	_, err := s.resetTokens.Create(context.Background(), user.ID, hashToken("old-token"), time.Now().Add(1*time.Hour))
+	s.Require().NoError(err)
+
+	rr := s.postForm(s.router, "/auth/forgot-password", url.Values{"email": {"resetagain@example.com"}})
+	s.Equal(http.StatusOK, rr.Code)
+
+	rr = s.postForm(s.router, "/auth/reset-password", url.Values{
+		"token":            {"old-token"},
+		"password":         {"newpassword123"},
+		"password_confirm": {"newpassword123"},
+	})
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+}
+
 func (s *AuthSuite) TestResetPassword_POST_UsedToken_Rejected() {
 	user := s.registerUser("resetused@example.com", "password123")
 
