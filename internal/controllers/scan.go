@@ -83,6 +83,25 @@ func (c *Controller) Confirm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.FormValue("acknowledged") == "" {
+		release, err := c.Discogs.GetRelease(r.Context(), releaseID)
+		if err != nil {
+			renderDiscogsError(w, r, err, "Could not check your collection. Please try again.")
+			return
+		}
+
+		owned, err := c.Discogs.ListCollection(r.Context(), token.DiscogsUsername)
+		if err != nil {
+			renderDiscogsError(w, r, err, "Could not check your collection. Please try again.")
+			return
+		}
+
+		if matches := discogs.MatchOwned(release, owned); matches.Any() {
+			render(w, r, http.StatusOK, views.ScanOwnedWarningPartial(releaseID, matches))
+			return
+		}
+	}
+
 	if err := c.Discogs.AddToCollection(r.Context(), token.DiscogsUsername, releaseID); err != nil {
 		renderDiscogsError(w, r, err, "Could not add release to collection. Please try again.")
 		return

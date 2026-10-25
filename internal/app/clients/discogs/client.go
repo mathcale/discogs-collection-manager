@@ -45,17 +45,25 @@ func (r Release) Label() string {
 }
 
 func (r Release) FormatSummary() string {
+	return formatSummary(r.Formats)
+}
+
+func (r Release) Variant() string {
+	return variant(r.Formats)
+}
+
+func formatSummary(formats []Format) string {
 	var parts []string
-	for _, f := range r.Formats {
+	for _, f := range formats {
 		parts = append(parts, f.Name)
 		parts = append(parts, f.Descriptions...)
 	}
 	return strings.Join(parts, ", ")
 }
 
-func (r Release) Variant() string {
+func variant(formats []Format) string {
 	var texts []string
-	for _, f := range r.Formats {
+	for _, f := range formats {
 		if f.Text != "" {
 			texts = append(texts, f.Text)
 		}
@@ -79,8 +87,83 @@ func (e *DiscogsAuthError) Error() string {
 	return "discogs token revoked or unauthorised"
 }
 
+type Artist struct {
+	Name string `json:"name"`
+}
+
+type ReleaseDetail struct {
+	ID      int      `json:"id"`
+	Title   string   `json:"title"`
+	Artists []Artist `json:"artists"`
+}
+
+func (d ReleaseDetail) PrimaryArtist() string {
+	if len(d.Artists) == 0 {
+		return ""
+	}
+	return d.Artists[0].Name
+}
+
+type OwnedRelease struct {
+	ID      int      `json:"id"`
+	Title   string   `json:"title"`
+	Year    int      `json:"year"`
+	Thumb   string   `json:"thumb"`
+	Artists []Artist `json:"artists"`
+	Formats []Format `json:"formats"`
+	Labels  []struct {
+		Name string `json:"name"`
+	} `json:"labels"`
+}
+
+func (o OwnedRelease) PrimaryArtist() string {
+	if len(o.Artists) == 0 {
+		return ""
+	}
+	return o.Artists[0].Name
+}
+
+func (o OwnedRelease) Label() string {
+	if len(o.Labels) == 0 {
+		return ""
+	}
+	return o.Labels[0].Name
+}
+
+func (o OwnedRelease) FormatSummary() string {
+	return formatSummary(o.Formats)
+}
+
+func (o OwnedRelease) Variant() string {
+	return variant(o.Formats)
+}
+
+type OwnedMatches struct {
+	Exact   []OwnedRelease
+	Similar []OwnedRelease
+}
+
+func (m OwnedMatches) Any() bool {
+	return len(m.Exact) > 0 || len(m.Similar) > 0
+}
+
+func MatchOwned(release ReleaseDetail, owned []OwnedRelease) OwnedMatches {
+	var matches OwnedMatches
+	for _, o := range owned {
+		switch {
+		case o.ID == release.ID:
+			matches.Exact = append(matches.Exact, o)
+		case strings.EqualFold(o.PrimaryArtist(), release.PrimaryArtist()) && strings.EqualFold(o.Title, release.Title):
+			matches.Similar = append(matches.Similar, o)
+		}
+	}
+	return matches
+}
+
 type DiscogsClient interface {
 	SearchByBarcode(ctx context.Context, barcode string) ([]Release, error)
+	GetRelease(ctx context.Context, releaseID int) (ReleaseDetail, error)
+	ListCollection(ctx context.Context, username string) ([]OwnedRelease, error)
 	AddToCollection(ctx context.Context, username string, releaseID int) error
 }
 
@@ -179,4 +262,69 @@ func (c *HTTPDiscogsClient) AddToCollection(ctx context.Context, username string
 	}
 
 	return nil
+}
+
+func (c *HTTPDiscogsClient) GetRelease(ctx context.Context, releaseID int) (ReleaseDetail, error) {
+	var detail ReleaseDetail
+	err := c.getJSON(ctx, fmt.Sprintf("%s/releases/%d", c.apiBase, releaseID), &detail)
+	return detail, err
+}
+
+func (c *HTTPDiscogsClient) ListCollection(ctx context.Context, username string) ([]OwnedRelease, error) {
+	var owned []OwnedRelease
+
+	for page := 1; ; page++ {
+		var result struct {
+			Pagination struct {
+				Pages int `json:"pages"`
+			} `json:"pagination"`
+			Releases []struct {
+				BasicInformation OwnedRelease `json:"basic_information"`
+			} `json:"releases"`
+		}
+
+		url := fmt.Sprintf("%s/users/%s/collection/folders/0/releases?per_page=100&page=%d", c.apiBase, username, page)
+		if err := c.getJSON(ctx, url, &result); err != nil {
+			return nil, err
+		}
+
+		for _, r := range result.Releases {
+			owned = append(owned, r.BasicInformation)
+		}
+
+		if page >= result.Pagination.Pages {
+			return owned, nil
+		}
+	}
+}
+
+func (c *HTTPDiscogsClient) getJSON(ctx context.Context, url string, target any) error {
+	httpClient, err := c.httpClientForUser(ctx)
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("User-Agent", userAgent)
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusTooManyRequests {
+		return &RateLimitError{}
+	}
+	if resp.StatusCode == http.StatusUnauthorized {
+		return &DiscogsAuthError{}
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("discogs request %s failed with status %d", url, resp.StatusCode)
+	}
+
+	return json.NewDecoder(resp.Body).Decode(target)
 }

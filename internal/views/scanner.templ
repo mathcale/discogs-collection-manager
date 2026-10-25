@@ -156,6 +156,14 @@ templ ScannerPage() {
 					}
 				});
 
+				// Warning from a conflict-list confirm is swapped into the hidden result modal
+				document.addEventListener('htmx:afterSwap', function () {
+					if (scanResult.querySelector('.scan-owned-warning')) {
+						closeBackdrop(conflictBackdrop);
+						openBackdrop(resultBackdrop);
+					}
+				});
+
 				// Keep reviewing
 				keepBtn.addEventListener('click', function () {
 					closeBackdrop(cancelBackdrop);
@@ -369,6 +377,85 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 			</div>
 		</form>
 	</div>
+}
+
+templ ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) {
+	<div class="scan-result-card scan-owned-warning">
+		<div class="scan-result-body">
+			<h2 class="scan-result-title">
+				if len(matches.Exact) > 0 {
+					Already in your collection
+				} else {
+					You own another edition
+				}
+			</h2>
+
+			if len(matches.Exact) > 0 {
+				<p class="scan-result-subtitle">This exact release is already in your collection:</p>
+				@ownedReleaseList(matches.Exact)
+			}
+
+			if len(matches.Similar) > 0 {
+				<p class="scan-result-subtitle">Other editions of this album you own:</p>
+				@ownedReleaseList(matches.Similar)
+			}
+		</div>
+
+		<div class="scan-result-actions">
+			<form
+				hx-post="/app/scan/confirm"
+				hx-target="#scan-result"
+				hx-swap="innerHTML"
+				hx-disabled-elt="find button[type='submit']"
+			>
+				<input type="hidden" name="release_id" value={ strconv.Itoa(releaseID) }/>
+				<input type="hidden" name="acknowledged" value="1"/>
+
+				<button type="submit" class="btn btn-primary scan-result-action-btn">
+					<span class="spinner" aria-hidden="true"></span>
+					Add anyway
+				</button>
+			</form>
+
+			<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Cancel</a>
+		</div>
+	</div>
+}
+
+templ ownedReleaseList(owned []discogs.OwnedRelease) {
+	<ul class="scan-conflict-list">
+		for _, o := range owned {
+			<li class="scan-conflict-item scan-owned-item">
+				if o.Thumb != "" {
+					<img src={ o.Thumb } alt={ o.Title } class="scan-conflict-thumb"/>
+				}
+
+				<span class="scan-conflict-info">
+					<strong>{ o.PrimaryArtist() } — { o.Title }</strong>
+
+					<span class="scan-conflict-meta">
+						if o.Year != 0 {
+							<span>{ strconv.Itoa(o.Year) }</span>
+						}
+
+						if o.Label() != "" {
+							<span>{ o.Label() }</span>
+						}
+					</span>
+
+					<span class="scan-conflict-detail">
+						if o.FormatSummary() != "" {
+							<span>{ o.FormatSummary() }</span>
+						}
+
+						if o.Variant() != "" {
+							<span class="scan-conflict-variant">{ o.Variant() }</span>
+						}
+					</span>
+				</span>
+			</li>
+		}
+	</ul>
 }
 
 templ ScanSuccessPartial() {}

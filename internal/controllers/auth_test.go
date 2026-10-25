@@ -295,7 +295,7 @@ func (s *AuthSuite) TestVerifyOTP_ValidCode_IssuesSession() {
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusFound, rr.Code)
-	s.Equal("/app/settings", rr.Header().Get("Location"))
+	s.Equal("/app/scanner", rr.Header().Get("Location"))
 
 	cookies := rr.Result().Cookies()
 	var sessionCookie *http.Cookie
