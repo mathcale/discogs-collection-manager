@@ -25,6 +25,9 @@ type Controller struct {
 	BaseURL       string
 	IdentityURL   string
 	requestTokens sync.Map
+
+	TwoStepAuthEnabled bool
+	SignupsEnabled     bool
 }
 
 func render(w http.ResponseWriter, r *http.Request, status int, component templ.Component) {

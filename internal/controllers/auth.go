@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -16,16 +17,26 @@ const (
 )
 
 func (c *Controller) RegisterPage(w http.ResponseWriter, r *http.Request) {
+	if !c.SignupsEnabled {
+		http.NotFound(w, r)
+		return
+	}
+
 	render(w, r, http.StatusOK, views.RegisterPage(""))
 }
 
 func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
+	if !c.SignupsEnabled {
+		http.NotFound(w, r)
+		return
+	}
+
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
 	}
 
-	email := r.FormValue("email")
+	email := models.NormalizeEmail(r.FormValue("email"))
 	password := r.FormValue("password")
 
 	existing, err := c.Users.FindByEmail(r.Context(), email)
@@ -53,7 +64,7 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) LoginPage(w http.ResponseWriter, r *http.Request) {
-	render(w, r, http.StatusOK, views.LoginPage(""))
+	render(w, r, http.StatusOK, views.LoginPage("", c.SignupsEnabled))
 }
 
 func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +73,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := r.FormValue("email")
+	email := models.NormalizeEmail(r.FormValue("email"))
 	password := r.FormValue("password")
 	stayLoggedIn := r.FormValue("stay_logged_in") == "1"
 
@@ -72,7 +83,12 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if user == nil || !user.CheckPassword(password) {
-		render(w, r, http.StatusUnauthorized, views.LoginPage("Invalid email or password."))
+		render(w, r, http.StatusUnauthorized, views.LoginPage("Invalid email or password.", c.SignupsEnabled))
+		return
+	}
+
+	if !c.TwoStepAuthEnabled {
+		c.startSession(w, r, user.ID, stayLoggedIn)
 		return
 	}
 
@@ -158,11 +174,21 @@ func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !otp.Matches(code) {
+		if err := c.OTPCodes.RecordFailedAttempt(r.Context(), otp.ID, models.MaxOTPFailedAttempts); err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+
 		render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid code. Please try again."))
 		return
 	}
 
 	if err := c.OTPCodes.MarkUsed(r.Context(), otp.ID); err != nil {
+		if errors.Is(err, models.ErrOTPNotPending) {
+			render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid or expired code. Please log in again."))
+			return
+		}
+
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -175,6 +201,10 @@ func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 		MaxAge:   -1,
 	})
 
+	c.startSession(w, r, userID, stayLoggedIn)
+}
+
+func (c *Controller) startSession(w http.ResponseWriter, r *http.Request, userID string, stayLoggedIn bool) {
 	token, err := models.GenerateToken()
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -230,7 +260,7 @@ func (c *Controller) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := r.FormValue("email")
+	email := models.NormalizeEmail(r.FormValue("email"))
 
 	user, err := c.Users.FindByEmail(r.Context(), email)
 	if err != nil {
@@ -241,6 +271,11 @@ func (c *Controller) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	if user != nil {
 		rawToken, err := models.GenerateToken()
 		if err != nil {
+			http.Error(w, "internal error", http.StatusInternalServerError)
+			return
+		}
+
+		if err := c.ResetTokens.MarkAllUsedForUser(r.Context(), user.ID); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
@@ -322,12 +357,17 @@ func (c *Controller) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := c.ResetTokens.MarkUsed(r.Context(), record.ID); err != nil {
+	if err := c.ResetTokens.MarkAllUsedForUser(r.Context(), record.UserID); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
 	if err := c.Sessions.DeleteAllForUser(r.Context(), record.UserID); err != nil {
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
+
+	if err := c.OAuthTokens.DeleteByUserID(r.Context(), record.UserID); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}

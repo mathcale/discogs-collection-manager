@@ -27,6 +27,9 @@ func NewRouter(a *app.App) http.Handler {
 		Discogs:      a.Discogs,
 		DiscogsOAuth: a.DiscogsOAuth,
 		BaseURL:      a.BaseURL,
+
+		TwoStepAuthEnabled: a.TwoStepAuthEnabled,
+		SignupsEnabled:     a.SignupsEnabled,
 	}
 
 	r.Get("/", c.Landing)
@@ -63,7 +66,7 @@ func NewRouter(a *app.App) http.Handler {
 
 	r.Handle("/static/*", staticCache(http.StripPrefix("/static/", http.FileServer(http.Dir("./static")))))
 
-	return r
+	return http.NewCrossOriginProtection().Handler(r)
 }
 
 func staticCache(next http.Handler) http.Handler {

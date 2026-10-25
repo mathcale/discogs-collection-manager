@@ -43,6 +43,7 @@ type AuthSuite struct {
 	sessions    models.SessionRepository
 	otpCodes    models.OTPRepository
 	resetTokens models.PasswordResetTokenRepository
+	oauthTokens models.OAuthTokenRepository
 	mailer      *MockMailer
 	router      http.Handler
 }
@@ -67,12 +68,15 @@ func (s *AuthSuite) SetupSuite() {
 	s.sessions = models.NewSQLiteSessionRepository(db)
 	s.otpCodes = models.NewSQLiteOTPRepository(db)
 	s.resetTokens = models.NewSQLitePasswordResetTokenRepository(db)
+	s.oauthTokens = models.NewSQLiteOAuthTokenRepository(db)
 }
 
 func (s *AuthSuite) SetupTest() {
 	_, err := s.db.Exec(`DELETE FROM otp_codes`)
 	s.Require().NoError(err)
 	_, err = s.db.Exec(`DELETE FROM password_reset_tokens`)
+	s.Require().NoError(err)
+	_, err = s.db.Exec(`DELETE FROM oauth_tokens`)
 	s.Require().NoError(err)
 	_, err = s.db.Exec(`DELETE FROM sessions`)
 	s.Require().NoError(err)
@@ -81,13 +85,21 @@ func (s *AuthSuite) SetupTest() {
 
 	s.mailer = &MockMailer{}
 
+	s.router = s.buildRouter(true, true)
+}
+
+func (s *AuthSuite) buildRouter(twoStepAuthEnabled, signupsEnabled bool) http.Handler {
 	controller := &controllers.Controller{
 		Users:       s.users,
 		Sessions:    s.sessions,
 		OTPCodes:    s.otpCodes,
 		ResetTokens: s.resetTokens,
+		OAuthTokens: s.oauthTokens,
 		Mailer:      s.mailer,
 		BaseURL:     "http://localhost",
+
+		TwoStepAuthEnabled: twoStepAuthEnabled,
+		SignupsEnabled:     signupsEnabled,
 	}
 
 	r := chi.NewRouter()
@@ -116,7 +128,7 @@ func (s *AuthSuite) SetupTest() {
 		})
 	})
 
-	s.router = r
+	return r
 }
 
 func (s *AuthSuite) TearDownSuite() {
@@ -345,6 +357,37 @@ func (s *AuthSuite) TestVerifyOTP_InvalidCode_Returns422() {
 	s.Contains(rr.Body.String(), "Invalid code")
 }
 
+func (s *AuthSuite) TestVerifyOTP_RepeatedWrongCodes_InvalidatesCode() {
+	user := s.registerUser("otpbrute@example.com", "password123")
+
+	code := "424242"
+	_, err := s.otpCodes.Create(context.Background(), user.ID, models.HashToken(code), time.Now().Add(10*time.Minute))
+	s.Require().NoError(err)
+
+	submit := func(attempt string) *httptest.ResponseRecorder {
+		form := url.Values{"code": {attempt}}
+		req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.AddCookie(&http.Cookie{Name: "pending_login", Value: user.ID + ":0"})
+		rr := httptest.NewRecorder()
+		s.router.ServeHTTP(rr, req)
+		return rr
+	}
+
+	for range 5 {
+		rr := submit("000000")
+		s.Equal(http.StatusUnprocessableEntity, rr.Code)
+	}
+
+	rr := submit(code)
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+	s.Nil(s.cookieNamed(rr, "session_token"))
+
+	pending, err := s.otpCodes.FindPendingByUserID(context.Background(), user.ID)
+	s.Require().NoError(err)
+	s.Nil(pending)
+}
+
 func (s *AuthSuite) TestVerifyOTP_ExpiredCode_Returns422() {
 	user := s.registerUser("otpexpired@example.com", "password123")
 
@@ -532,6 +575,105 @@ func (s *AuthSuite) TestResetPassword_POST_Success_UpdatesPasswordAndInvalidates
 	s.NotEqual(user.PasswordHash, updated.PasswordHash)
 }
 
+func (s *AuthSuite) TestResetPassword_POST_Success_InvalidatesOtherUnusedTokens() {
+	user := s.registerUser("resetother@example.com", "oldpassword")
+
+	_, err := s.resetTokens.Create(context.Background(), user.ID, models.HashToken("first-token"), time.Now().Add(1*time.Hour))
+	s.Require().NoError(err)
+	_, err = s.resetTokens.Create(context.Background(), user.ID, models.HashToken("second-token"), time.Now().Add(1*time.Hour))
+	s.Require().NoError(err)
+
+	rr := s.postForm(s.router, "/auth/reset-password", url.Values{
+		"token":            {"first-token"},
+		"password":         {"newpassword123"},
+		"password_confirm": {"newpassword123"},
+	})
+	s.Equal(http.StatusFound, rr.Code)
+
+	rr = s.postForm(s.router, "/auth/reset-password", url.Values{
+		"token":            {"second-token"},
+		"password":         {"attackerpassword"},
+		"password_confirm": {"attackerpassword"},
+	})
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+}
+
+func (s *AuthSuite) TestForgotPassword_POST_InvalidatesPreviousToken() {
+	user := s.registerUser("resetagain@example.com", "password123")
+
+	_, err := s.resetTokens.Create(context.Background(), user.ID, models.HashToken("old-token"), time.Now().Add(1*time.Hour))
+	s.Require().NoError(err)
+
+	rr := s.postForm(s.router, "/auth/forgot-password", url.Values{"email": {"resetagain@example.com"}})
+	s.Equal(http.StatusOK, rr.Code)
+
+	rr = s.postForm(s.router, "/auth/reset-password", url.Values{
+		"token":            {"old-token"},
+		"password":         {"newpassword123"},
+		"password_confirm": {"newpassword123"},
+	})
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+}
+
+func (s *AuthSuite) TestRegister_POST_EmailCaseInsensitive_DuplicateRejected() {
+	s.registerUser("case@example.com", "password123")
+
+	rr := s.postForm(s.router, "/auth/register", url.Values{"email": {"  CASE@Example.com "}, "password": {"password123"}})
+
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+	s.Contains(rr.Body.String(), "already registered")
+}
+
+func (s *AuthSuite) TestRegister_POST_StoresNormalizedEmail() {
+	rr := s.postForm(s.router, "/auth/register", url.Values{"email": {" Mixed@Example.COM "}, "password": {"password123"}})
+	s.Equal(http.StatusFound, rr.Code)
+
+	user, err := s.users.FindByEmail(context.Background(), "mixed@example.com")
+	s.Require().NoError(err)
+	s.Require().NotNil(user)
+	s.Equal("mixed@example.com", user.Email)
+}
+
+func (s *AuthSuite) TestLogin_POST_EmailCaseInsensitive() {
+	s.registerUser("logincase@example.com", "password123")
+	router := s.buildRouter(false, true)
+
+	rr := s.postForm(router, "/auth/login", url.Values{"email": {"LoginCase@Example.com"}, "password": {"password123"}})
+
+	s.Equal(http.StatusFound, rr.Code)
+	s.NotNil(s.cookieNamed(rr, "session_token"))
+}
+
+func (s *AuthSuite) TestForgotPassword_POST_EmailCaseInsensitive() {
+	s.registerUser("forgotcase@example.com", "password123")
+
+	rr := s.postForm(s.router, "/auth/forgot-password", url.Values{"email": {"ForgotCase@Example.com"}})
+
+	s.Equal(http.StatusOK, rr.Code)
+	s.Require().Len(s.mailer.Sent, 1)
+	s.Equal("forgotcase@example.com", s.mailer.Sent[0].To)
+}
+
+func (s *AuthSuite) TestResetPassword_POST_Success_DeletesOAuthToken() {
+	user := s.registerUser("resetoauth@example.com", "oldpassword")
+	_, err := s.oauthTokens.Upsert(context.Background(), user.ID, "access", "secret", "attacker")
+	s.Require().NoError(err)
+
+	_, err = s.resetTokens.Create(context.Background(), user.ID, models.HashToken("oauth-reset-token"), time.Now().Add(1*time.Hour))
+	s.Require().NoError(err)
+
+	rr := s.postForm(s.router, "/auth/reset-password", url.Values{
+		"token":            {"oauth-reset-token"},
+		"password":         {"newpassword123"},
+		"password_confirm": {"newpassword123"},
+	})
+	s.Equal(http.StatusFound, rr.Code)
+
+	token, err := s.oauthTokens.FindByUserID(context.Background(), user.ID)
+	s.Require().NoError(err)
+	s.Nil(token)
+}
+
 func (s *AuthSuite) TestResetPassword_POST_UsedToken_Rejected() {
 	user := s.registerUser("resetused@example.com", "password123")
 
@@ -577,6 +719,109 @@ func (s *AuthSuite) TestResetPassword_POST_PasswordMismatch_Returns422() {
 
 	s.Equal(http.StatusUnprocessableEntity, rr.Code)
 	s.Contains(rr.Body.String(), "do not match")
+}
+
+func (s *AuthSuite) postForm(router http.Handler, path string, form url.Values) *httptest.ResponseRecorder {
+	req := httptest.NewRequest(http.MethodPost, path, strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+	return rr
+}
+
+func (s *AuthSuite) cookieNamed(rr *httptest.ResponseRecorder, name string) *http.Cookie {
+	for _, c := range rr.Result().Cookies() {
+		if c.Name == name {
+			return c
+		}
+	}
+	return nil
+}
+
+func (s *AuthSuite) TestLogin_TwoStepDisabled_StartsSessionDirectly() {
+	s.registerUser("direct@example.com", "password123")
+	router := s.buildRouter(false, true)
+
+	rr := s.postForm(router, "/auth/login", url.Values{"email": {"direct@example.com"}, "password": {"password123"}})
+
+	s.Equal(http.StatusFound, rr.Code)
+	s.Equal("/app/scanner", rr.Header().Get("Location"))
+	session := s.cookieNamed(rr, "session_token")
+	s.Require().NotNil(session)
+	s.True(session.Expires.IsZero())
+	s.Nil(s.cookieNamed(rr, "pending_login"))
+	s.Empty(s.mailer.Sent)
+
+	var otpCount int
+	s.Require().NoError(s.db.QueryRow(`SELECT COUNT(*) FROM otp_codes`).Scan(&otpCount))
+	s.Zero(otpCount)
+}
+
+func (s *AuthSuite) TestLogin_TwoStepDisabled_StayLoggedIn_SetsLongExpiry() {
+	s.registerUser("longlived@example.com", "password123")
+	router := s.buildRouter(false, true)
+
+	rr := s.postForm(router, "/auth/login", url.Values{"email": {"longlived@example.com"}, "password": {"password123"}, "stay_logged_in": {"1"}})
+
+	session := s.cookieNamed(rr, "session_token")
+	s.Require().NotNil(session)
+	s.WithinDuration(time.Now().Add(30*24*time.Hour), session.Expires, time.Minute)
+}
+
+func (s *AuthSuite) TestLogin_TwoStepDisabled_InvalidPassword() {
+	s.registerUser("nope@example.com", "password123")
+	router := s.buildRouter(false, true)
+
+	rr := s.postForm(router, "/auth/login", url.Values{"email": {"nope@example.com"}, "password": {"wrong"}})
+
+	s.Equal(http.StatusUnauthorized, rr.Code)
+	s.Nil(s.cookieNamed(rr, "session_token"))
+}
+
+func (s *AuthSuite) TestOTPPage_TwoStepDisabled_RedirectsToLogin() {
+	router := s.buildRouter(false, true)
+
+	req := httptest.NewRequest(http.MethodGet, "/auth/login/otp", nil)
+	rr := httptest.NewRecorder()
+	router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusFound, rr.Code)
+	s.Equal("/auth/login", rr.Header().Get("Location"))
+}
+
+func (s *AuthSuite) TestRegister_SignupsDisabled_ReturnsNotFound() {
+	router := s.buildRouter(true, false)
+
+	getRR := httptest.NewRecorder()
+	router.ServeHTTP(getRR, httptest.NewRequest(http.MethodGet, "/auth/register", nil))
+	s.Equal(http.StatusNotFound, getRR.Code)
+
+	postRR := s.postForm(router, "/auth/register", url.Values{"email": {"new@example.com"}, "password": {"password123"}})
+	s.Equal(http.StatusNotFound, postRR.Code)
+
+	user, err := s.users.FindByEmail(context.Background(), "new@example.com")
+	s.Require().NoError(err)
+	s.Nil(user)
+}
+
+func (s *AuthSuite) TestLoginPage_RegisterLinkFollowsSignupsFlag() {
+	enabled := httptest.NewRecorder()
+	s.router.ServeHTTP(enabled, httptest.NewRequest(http.MethodGet, "/auth/login", nil))
+	s.Contains(enabled.Body.String(), "/auth/register")
+
+	disabled := httptest.NewRecorder()
+	s.buildRouter(true, false).ServeHTTP(disabled, httptest.NewRequest(http.MethodGet, "/auth/login", nil))
+	s.NotContains(disabled.Body.String(), "/auth/register")
+}
+
+func (s *AuthSuite) TestLanding_RegisterLinkFollowsSignupsFlag() {
+	enabled := httptest.NewRecorder()
+	(&controllers.Controller{SignupsEnabled: true}).Landing(enabled, httptest.NewRequest(http.MethodGet, "/", nil))
+	s.Contains(enabled.Body.String(), "/auth/register")
+
+	disabled := httptest.NewRecorder()
+	(&controllers.Controller{SignupsEnabled: false}).Landing(disabled, httptest.NewRequest(http.MethodGet, "/", nil))
+	s.NotContains(disabled.Body.String(), "/auth/register")
 }
 
 func (s *AuthSuite) registerUser(email, password string) *models.User {

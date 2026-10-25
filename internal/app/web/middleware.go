@@ -29,7 +29,7 @@ func RequestLogger(log logger.Logger) func(http.Handler) http.Handler {
 			start := time.Now()
 
 			requestID := middleware.GetReqID(r.Context())
-			reqLog := log.With("method", r.Method, "url", r.URL.RequestURI(), "request_id", requestID)
+			reqLog := log.With("method", r.Method, "url", r.URL.Path, "request_id", requestID)
 
 			ctx := logger.WithCtx(r.Context(), reqLog)
 			rw := &responseWriter{ResponseWriter: w, status: http.StatusOK}

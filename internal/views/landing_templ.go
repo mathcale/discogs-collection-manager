@@ -8,7 +8,7 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-func LandingPage() templ.Component {
+func LandingPage(signupsEnabled bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
 		if templ_7745c5c3_CtxErr := ctx.Err(); templ_7745c5c3_CtxErr != nil {
@@ -41,7 +41,17 @@ func LandingPage() templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-screen flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm text-center\"><h1 class=\"text-3xl font-semibold tracking-tight mb-3\">Discogs Collection Manager</h1><p class=\"text-sm mb-8\" style=\"color: var(--color-muted)\">Connect your Discogs account to start scanning your vinyl collection.</p><div class=\"flex flex-col gap-3\"><a href=\"/auth/login\" class=\"btn btn-primary\">Log in</a> <a href=\"/auth/register\" class=\"btn btn-secondary\">Create account</a></div></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-dvh flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm text-center\"><h1 class=\"text-3xl font-semibold tracking-tight mb-3\">Discogs Collection Manager</h1><p class=\"text-sm mb-8\" style=\"color: var(--color-muted)\">Connect your Discogs account to start scanning your vinyl collection.</p><div class=\"flex flex-col gap-3\"><a href=\"/auth/login\" class=\"btn btn-primary\">Log in</a> ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			if signupsEnabled {
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<a href=\"/auth/register\" class=\"btn btn-secondary\">Create account</a>")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

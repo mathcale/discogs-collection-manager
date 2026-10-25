@@ -46,6 +46,8 @@ cp .env.example .env
 | `DISCOGS_CONSUMER_KEY` / `DISCOGS_CONSUMER_SECRET` | Credentials from your [Discogs developer app](https://www.discogs.com/settings/developers). |
 | `DISCOGS_CALLBACK_URL` | OAuth callback, e.g. `http://localhost:8080/discogs/callback`. |
 | `RESEND_API_KEY` / `RESEND_FROM` | [Resend](https://resend.com) credentials for sending email. |
+| `TWO_STEP_AUTH_ENABLED` | Require an emailed one-time code after the password at login. Defaults to `true`. |
+| `SIGNUPS_ENABLED` | Allow new accounts to be registered. Defaults to `true`. |
 
 The `.env` file is loaded automatically by `air`.
 

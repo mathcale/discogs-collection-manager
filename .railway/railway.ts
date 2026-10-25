@@ -35,6 +35,8 @@ export default defineRailway(() => {
       PORT: preserve(),
       RESEND_API_KEY: preserve(),
       RESEND_FROM: preserve(),
+      SIGNUPS_ENABLED: preserve(),
+      TWO_STEP_AUTH_ENABLED: preserve(),
     },
   });
 

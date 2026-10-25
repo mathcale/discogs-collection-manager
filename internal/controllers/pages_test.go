@@ -22,7 +22,7 @@ func (s *PagesSuite) TestLanding() {
 	req := httptest.NewRequest(http.MethodGet, "/", nil)
 	rr := httptest.NewRecorder()
 
-	(&controllers.Controller{}).Landing(rr, req)
+	(&controllers.Controller{SignupsEnabled: true}).Landing(rr, req)
 
 	s.Equal(http.StatusOK, rr.Code)
 	s.Contains(rr.Body.String(), "Discogs Collection Manager")

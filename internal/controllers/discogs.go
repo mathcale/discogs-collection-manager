@@ -12,6 +12,11 @@ import (
 
 const defaultDiscogsIdentityURL = "https://api.discogs.com/oauth/identity"
 
+type pendingOAuthRequest struct {
+	secret string
+	userID string
+}
+
 func (c *Controller) SettingsPage(w http.ResponseWriter, r *http.Request) {
 	userID := currentUserID(r)
 
@@ -36,13 +41,15 @@ func (c *Controller) SettingsPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) Connect(w http.ResponseWriter, r *http.Request) {
+	userID := currentUserID(r)
+
 	requestToken, requestSecret, err := c.DiscogsOAuth.RequestToken()
 	if err != nil {
 		render(w, r, http.StatusBadGateway, views.DiscogsConnectError("Could not initiate Discogs connection. Please try again."))
 		return
 	}
 
-	c.requestTokens.Store(requestToken, requestSecret)
+	c.requestTokens.Store(requestToken, pendingOAuthRequest{secret: requestSecret, userID: userID})
 
 	authURL, err := c.DiscogsOAuth.AuthorizationURL(requestToken)
 	if err != nil {
@@ -63,15 +70,15 @@ func (c *Controller) Callback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	requestSecretVal, ok := c.requestTokens.Load(requestToken)
-	if !ok {
+	userID := currentUserID(r)
+
+	pendingVal, ok := c.requestTokens.LoadAndDelete(requestToken)
+	pending, _ := pendingVal.(pendingOAuthRequest)
+	if !ok || pending.userID != userID {
 		render(w, r, http.StatusBadRequest, views.DiscogsConnectError("OAuth session expired or not found. Please try connecting again."))
 		return
 	}
-	requestSecret, _ := requestSecretVal.(string)
-	c.requestTokens.Delete(requestToken)
-
-	accessToken, accessSecret, err := c.DiscogsOAuth.AccessToken(requestToken, requestSecret, verifier)
+	accessToken, accessSecret, err := c.DiscogsOAuth.AccessToken(requestToken, pending.secret, verifier)
 	if err != nil {
 		render(w, r, http.StatusBadGateway, views.DiscogsConnectError("Could not connect your Discogs account. Please reconnect and try again."))
 		return
@@ -79,7 +86,6 @@ func (c *Controller) Callback(w http.ResponseWriter, r *http.Request) {
 
 	discogsUsername := c.fetchDiscogsUsername(r, accessToken, accessSecret)
 
-	userID := currentUserID(r)
 	if _, err := c.OAuthTokens.Upsert(r.Context(), userID, accessToken, accessSecret, discogsUsername); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return

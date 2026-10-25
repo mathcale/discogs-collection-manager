@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"strconv"
 
 	"github.com/dghubble/oauth1"
 	_ "github.com/mattn/go-sqlite3"
@@ -27,9 +28,36 @@ type App struct {
 	BaseURL      string
 	DiscogsOAuth *oauth1.Config
 	Discogs      discogs.DiscogsClient
+
+	TwoStepAuthEnabled bool
+	SignupsEnabled     bool
+}
+
+func envBool(name string, defaultValue bool) (bool, error) {
+	raw := os.Getenv(name)
+	if raw == "" {
+		return defaultValue, nil
+	}
+
+	value, err := strconv.ParseBool(raw)
+	if err != nil {
+		return false, fmt.Errorf("parse %s: %w", name, err)
+	}
+
+	return value, nil
 }
 
 func New() (*App, error) {
+	twoStepAuthEnabled, err := envBool("TWO_STEP_AUTH_ENABLED", true)
+	if err != nil {
+		return nil, err
+	}
+
+	signupsEnabled, err := envBool("SIGNUPS_ENABLED", true)
+	if err != nil {
+		return nil, err
+	}
+
 	env := os.Getenv("ENVIRONMENT")
 	log := logger.New(env)
 
@@ -100,6 +128,9 @@ func New() (*App, error) {
 		BaseURL:      baseURL,
 		DiscogsOAuth: discogsOAuth,
 		Discogs:      discogs.NewHTTPDiscogsClient(discogsOAuth, oauthTokens),
+
+		TwoStepAuthEnabled: twoStepAuthEnabled,
+		SignupsEnabled:     signupsEnabled,
 	}, nil
 }
 

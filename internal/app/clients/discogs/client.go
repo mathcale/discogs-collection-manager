@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/dghubble/oauth1"
 
@@ -18,14 +19,52 @@ const (
 	userAgent        = "DiscogsCollectionManager/1.0"
 )
 
+type Format struct {
+	Name         string   `json:"name"`
+	Text         string   `json:"text"`
+	Descriptions []string `json:"descriptions"`
+}
+
 type Release struct {
-	ID      int
-	Title   string
-	Country string
-	Year    string
-	Label   string
-	Thumb   string
-	URI     string
+	ID      int      `json:"id"`
+	Title   string   `json:"title"`
+	Country string   `json:"country"`
+	Year    string   `json:"year"`
+	Labels  []string `json:"label"`
+	Catno   string   `json:"catno"`
+	Formats []Format `json:"formats"`
+	Thumb   string   `json:"thumb"`
+	Path    string   `json:"uri"`
+}
+
+func (r Release) Label() string {
+	if len(r.Labels) == 0 {
+		return ""
+	}
+	return r.Labels[0]
+}
+
+func (r Release) FormatSummary() string {
+	var parts []string
+	for _, f := range r.Formats {
+		parts = append(parts, f.Name)
+		parts = append(parts, f.Descriptions...)
+	}
+	return strings.Join(parts, ", ")
+}
+
+func (r Release) Variant() string {
+	var texts []string
+	for _, f := range r.Formats {
+		if f.Text != "" {
+			texts = append(texts, f.Text)
+		}
+	}
+	return strings.Join(texts, ", ")
+}
+
+func (r Release) URL() string {
+	return "https://www.discogs.com" + r.Path
 }
 
 type RateLimitError struct{}
@@ -101,37 +140,13 @@ func (c *HTTPDiscogsClient) SearchByBarcode(ctx context.Context, barcode string)
 	}
 
 	var result struct {
-		Results []struct {
-			ID      int      `json:"id"`
-			Title   string   `json:"title"`
-			Country string   `json:"country"`
-			Year    string   `json:"year"`
-			Label   []string `json:"label"`
-			Thumb   string   `json:"thumb"`
-			URI     string   `json:"uri"`
-		} `json:"results"`
+		Results []Release `json:"results"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 
-	releases := make([]Release, 0, len(result.Results))
-	for _, r := range result.Results {
-		label := ""
-		if len(r.Label) > 0 {
-			label = r.Label[0]
-		}
-		releases = append(releases, Release{
-			ID:      r.ID,
-			Title:   r.Title,
-			Country: r.Country,
-			Year:    r.Year,
-			Label:   label,
-			Thumb:   r.Thumb,
-			URI:     "https://www.discogs.com" + r.URI,
-		})
-	}
-	return releases, nil
+	return result.Results, nil
 }
 
 func (c *HTTPDiscogsClient) AddToCollection(ctx context.Context, username string, releaseID int) error {

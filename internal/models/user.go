@@ -3,6 +3,7 @@ package models
 import (
 	"context"
 	"database/sql"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +15,10 @@ type User struct {
 	Email        string
 	PasswordHash string
 	CreatedAt    time.Time
+}
+
+func NormalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
 }
 
 func HashPassword(password string) (string, error) {

@@ -174,6 +174,29 @@ func (s *DiscogsOAuthSuite) TestCallback_StoresAccessToken() {
 	s.Equal("testdiscogsuser", stored.DiscogsUsername)
 }
 
+func (s *DiscogsOAuthSuite) TestCallback_FromDifferentUser_IsRejected() {
+	attacker := s.createUser("attacker@example.com")
+	attackerSession := s.createSession(attacker.ID, time.Now().Add(6*time.Hour))
+	victim := s.createUser("victim@example.com")
+	victimSession := s.createSession(victim.ID, time.Now().Add(6*time.Hour))
+
+	connectReq := httptest.NewRequest(http.MethodGet, "/discogs/connect", nil)
+	connectReq.AddCookie(&http.Cookie{Name: "session_token", Value: attackerSession})
+	s.router.ServeHTTP(httptest.NewRecorder(), connectReq)
+
+	callbackReq := httptest.NewRequest(http.MethodGet, "/discogs/callback?oauth_token=mock-request-token&oauth_verifier=mock-verifier", nil)
+	callbackReq.AddCookie(&http.Cookie{Name: "session_token", Value: victimSession})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, callbackReq)
+
+	s.Equal(http.StatusBadRequest, rr.Code)
+
+	stored, err := s.oauthTokens.FindByUserID(context.Background(), victim.ID)
+	s.Require().NoError(err)
+	s.Nil(stored)
+}
+
 func (s *DiscogsOAuthSuite) TestDisconnect_RemovesToken() {
 	user := s.createUser("disconnect@example.com")
 	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
