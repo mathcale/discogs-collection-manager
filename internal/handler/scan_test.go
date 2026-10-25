@@ -132,7 +132,7 @@ func (s *ScanSuite) TestScan_POST_SingleMatch_RendersConfirmCard() {
 	token := s.createSession("user-single-match", time.Now().Add(time.Hour))
 	s.createOAuthToken("user-single-match", "discogs-user")
 	s.mockDiscogs.searchReturns = []discogs.Release{
-		{ID: 12345, Title: "Artist - Album", Country: "US", Year: "1991", Label: "Some Label", Thumb: "", URI: "https://www.discogs.com/release/12345"},
+		{ID: 12345, Title: "Artist - Album", Country: "US", Year: "1991", Labels: []string{"Some Label"}, Thumb: "", Path: "/release/12345"},
 	}
 
 	form := url.Values{"barcode": {"1234567890"}}
@@ -185,8 +185,8 @@ func (s *ScanSuite) TestScan_POST_MultipleMatches_RendersConflictList() {
 	token := s.createSession("user-multi-match", time.Now().Add(time.Hour))
 	s.createOAuthToken("user-multi-match", "discogs-user")
 	s.mockDiscogs.searchReturns = []discogs.Release{
-		{ID: 11111, Title: "Artist - Album (US)", Country: "US", Year: "1991", Label: "Label A", Thumb: "", URI: "https://www.discogs.com/release/11111"},
-		{ID: 22222, Title: "Artist - Album (UK)", Country: "UK", Year: "1992", Label: "Label B", Thumb: "", URI: "https://www.discogs.com/release/22222"},
+		{ID: 11111, Title: "Artist - Album (US)", Country: "US", Year: "1991", Labels: []string{"Label A"}, Thumb: "", Path: "/release/11111"},
+		{ID: 22222, Title: "Artist - Album (UK)", Country: "UK", Year: "1992", Labels: []string{"Label B"}, Thumb: "", Path: "/release/22222"},
 	}
 
 	form := url.Values{"barcode": {"1234567890"}}

@@ -20,18 +20,16 @@ templ ScannerPage() {
 			</div>
 		</div>
 
-		<!-- Result sheet (half-height, single match) -->
-		<div id="result-backdrop" class="sheet-backdrop" role="dialog" aria-modal="true" aria-label="Scan result">
-			<div class="sheet" id="result-sheet">
-				<div class="sheet-handle"></div>
+		<!-- Result modal (single match) -->
+		<div id="result-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Scan result">
+			<div class="modal modal-scroll" id="result-modal">
 				<div id="scan-result" aria-live="polite" aria-atomic="true"></div>
 			</div>
 		</div>
 
-		<!-- Conflict sheet (full-screen, multiple matches) -->
-		<div id="conflict-backdrop" class="sheet-backdrop" role="dialog" aria-modal="true" aria-label="Choose release">
-			<div class="sheet sheet-full" id="conflict-sheet">
-				<div class="sheet-handle"></div>
+		<!-- Conflict modal (multiple matches) -->
+		<div id="conflict-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Choose release">
+			<div class="modal modal-wide modal-scroll" id="conflict-modal">
 				<div id="scan-conflict" aria-live="polite" aria-atomic="true"></div>
 			</div>
 		</div>
@@ -149,7 +147,7 @@ templ ScannerPage() {
 					if (e.target === conflictBackdrop) openBackdrop(cancelBackdrop);
 				});
 
-				// Intercept Cancel / Try again links inside result and conflict sheets
+				// Intercept Cancel / Try again links inside result and conflict modals
 				document.addEventListener('click', function (e) {
 					var link = e.target.closest('a[href="/app/scanner"]');
 					if (link && (resultBackdrop.classList.contains('is-open') || conflictBackdrop.classList.contains('is-open'))) {
@@ -246,14 +244,29 @@ templ ScanConfirmPartial(release discogs.Release) {
 					<dd>{ release.Year }</dd>
 				}
 
-				if release.Label != "" {
+				if release.Label() != "" {
 					<dt>Label</dt>
-					<dd class="scan-result-catno">{ release.Label }</dd>
+					<dd>{ release.Label() }</dd>
+				}
+
+				if release.Catno != "" {
+					<dt>Cat. no.</dt>
+					<dd class="scan-result-catno">{ release.Catno }</dd>
+				}
+
+				if release.FormatSummary() != "" {
+					<dt>Format</dt>
+					<dd>{ release.FormatSummary() }</dd>
+				}
+
+				if release.Variant() != "" {
+					<dt>Variant</dt>
+					<dd>{ release.Variant() }</dd>
 				}
 			</dl>
 
 			<a
-				href={ templ.SafeURL(release.URI) }
+				href={ templ.SafeURL(release.URL()) }
 				target="_blank"
 				rel="noopener noreferrer"
 				class="scan-result-link"
@@ -317,12 +330,27 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 										<span>{ r.Year }</span>
 									}
 
-									if r.Label != "" {
-										<span class="scan-conflict-catno">{ r.Label }</span>
+									if r.Label() != "" {
+										<span>{ r.Label() }</span>
+									}
+
+								</span>
+
+								<span class="scan-conflict-detail">
+									if r.Catno != "" {
+										<span class="scan-conflict-catno">{ r.Catno }</span>
+									}
+
+									if r.FormatSummary() != "" {
+										<span>{ r.FormatSummary() }</span>
+									}
+
+									if r.Variant() != "" {
+										<span class="scan-conflict-variant">{ r.Variant() }</span>
 									}
 								</span>
 
-								<a href={ templ.SafeURL(r.URI) } target="_blank" rel="noopener noreferrer" class="scan-result-link">
+								<a href={ templ.SafeURL(r.URL()) } target="_blank" rel="noopener noreferrer" class="scan-result-link">
 									View on Discogs ↗
 								</a>
 							</span>
