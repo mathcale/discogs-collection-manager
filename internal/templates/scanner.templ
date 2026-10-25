@@ -425,8 +425,12 @@ templ ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) {
 templ ownedReleaseList(owned []discogs.OwnedRelease) {
 	<ul class="scan-conflict-list">
 		for _, o := range owned {
-			<li class="scan-conflict-item">
-				<span class="scan-conflict-info scan-owned-item">
+			<li class="scan-conflict-item scan-owned-item">
+				if o.Thumb != "" {
+					<img src={ o.Thumb } alt={ o.Title } class="scan-conflict-thumb"/>
+				}
+
+				<span class="scan-conflict-info">
 					<strong>{ o.PrimaryArtist() } — { o.Title }</strong>
 
 					<span class="scan-conflict-meta">
