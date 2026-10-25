@@ -108,6 +108,7 @@ type OwnedRelease struct {
 	ID      int      `json:"id"`
 	Title   string   `json:"title"`
 	Year    int      `json:"year"`
+	Thumb   string   `json:"thumb"`
 	Artists []Artist `json:"artists"`
 	Formats []Format `json:"formats"`
 	Labels  []struct {
