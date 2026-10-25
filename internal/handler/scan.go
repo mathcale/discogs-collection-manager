@@ -52,21 +52,7 @@ func (h *ScanHandler) Scan(w http.ResponseWriter, r *http.Request) {
 
 	releases, err := h.Discogs.SearchByBarcode(r.Context(), barcode)
 	if err != nil {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		var rle *discogs.RateLimitError
-		if errors.As(err, &rle) {
-			w.WriteHeader(http.StatusTooManyRequests)
-			templates.ScanErrorPartial("Discogs rate limit reached. Please wait a moment and try again.").Render(r.Context(), w)
-			return
-		}
-		var dae *discogs.DiscogsAuthError
-		if errors.As(err, &dae) {
-			w.WriteHeader(http.StatusUnauthorized)
-			templates.ScanReconnectPartial().Render(r.Context(), w)
-			return
-		}
-		w.WriteHeader(http.StatusBadGateway)
-		templates.ScanErrorPartial("Could not search Discogs. Please try again.").Render(r.Context(), w)
+		renderDiscogsError(w, r, err, "Could not search Discogs. Please try again.")
 		return
 	}
 
@@ -116,22 +102,28 @@ func (h *ScanHandler) Confirm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.FormValue("acknowledged") == "" {
+		release, err := h.Discogs.GetRelease(r.Context(), releaseID)
+		if err != nil {
+			renderDiscogsError(w, r, err, "Could not check your collection. Please try again.")
+			return
+		}
+
+		owned, err := h.Discogs.ListCollection(r.Context(), token.DiscogsUsername)
+		if err != nil {
+			renderDiscogsError(w, r, err, "Could not check your collection. Please try again.")
+			return
+		}
+
+		if matches := discogs.MatchOwned(release, owned); matches.Any() {
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			templates.ScanOwnedWarningPartial(releaseID, matches).Render(r.Context(), w)
+			return
+		}
+	}
+
 	if err := h.Discogs.AddToCollection(r.Context(), token.DiscogsUsername, releaseID); err != nil {
-		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		var rle *discogs.RateLimitError
-		if errors.As(err, &rle) {
-			w.WriteHeader(http.StatusTooManyRequests)
-			templates.ScanErrorPartial("Discogs rate limit reached. Please wait a moment and try again.").Render(r.Context(), w)
-			return
-		}
-		var dae *discogs.DiscogsAuthError
-		if errors.As(err, &dae) {
-			w.WriteHeader(http.StatusUnauthorized)
-			templates.ScanReconnectPartial().Render(r.Context(), w)
-			return
-		}
-		w.WriteHeader(http.StatusBadGateway)
-		templates.ScanErrorPartial("Could not add release to collection. Please try again.").Render(r.Context(), w)
+		renderDiscogsError(w, r, err, "Could not add release to collection. Please try again.")
 		return
 	}
 
@@ -142,4 +134,25 @@ func (h *ScanHandler) Confirm(w http.ResponseWriter, r *http.Request) {
 
 func (h *ScanHandler) Cancel(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/app/scanner", http.StatusFound)
+}
+
+func renderDiscogsError(w http.ResponseWriter, r *http.Request, err error, fallbackMessage string) {
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+	var rle *discogs.RateLimitError
+	if errors.As(err, &rle) {
+		w.WriteHeader(http.StatusTooManyRequests)
+		templates.ScanErrorPartial("Discogs rate limit reached. Please wait a moment and try again.").Render(r.Context(), w)
+		return
+	}
+
+	var dae *discogs.DiscogsAuthError
+	if errors.As(err, &dae) {
+		w.WriteHeader(http.StatusUnauthorized)
+		templates.ScanReconnectPartial().Render(r.Context(), w)
+		return
+	}
+
+	w.WriteHeader(http.StatusBadGateway)
+	templates.ScanErrorPartial(fallbackMessage).Render(r.Context(), w)
 }

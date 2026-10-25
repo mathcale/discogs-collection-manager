@@ -526,6 +526,10 @@ a:hover {
   border-color: var(--color-primary);
 }
 
+.scan-owned-item {
+  padding: 0.875rem 0.75rem;
+}
+
 .scan-conflict-radio {
   flex-shrink: 0;
   width: 1.125rem;

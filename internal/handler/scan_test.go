@@ -27,10 +27,20 @@ type mockDiscogsClient struct {
 	searchErr             error
 	addToCollectionCalled bool
 	addToCollectionErr    error
+	releaseDetail         discogs.ReleaseDetail
+	owned                 []discogs.OwnedRelease
 }
 
 func (m *mockDiscogsClient) SearchByBarcode(_ context.Context, _ string) ([]discogs.Release, error) {
 	return m.searchReturns, m.searchErr
+}
+
+func (m *mockDiscogsClient) GetRelease(_ context.Context, _ int) (discogs.ReleaseDetail, error) {
+	return m.releaseDetail, nil
+}
+
+func (m *mockDiscogsClient) ListCollection(_ context.Context, _ string) ([]discogs.OwnedRelease, error) {
+	return m.owned, nil
 }
 
 func (m *mockDiscogsClient) AddToCollection(_ context.Context, _ string, _ int) error {
@@ -178,7 +188,74 @@ func (s *ScanSuite) TestScanConfirm_POST_CallsAddToCollection() {
 
 	s.Equal(http.StatusOK, rr.Code)
 	s.True(s.mockDiscogs.addToCollectionCalled)
-	s.Contains(rr.Body.String(), "collection")
+	s.Equal("scan-success", rr.Header().Get("HX-Trigger"))
+}
+
+func (s *ScanSuite) postConfirm(userID string, form url.Values) *httptest.ResponseRecorder {
+	token := s.createSession(userID, time.Now().Add(time.Hour))
+	s.createOAuthToken(userID, "discogs-user")
+
+	req := httptest.NewRequest(http.MethodPost, "/app/scan/confirm", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	return rr
+}
+
+func (s *ScanSuite) TestScanConfirm_POST_ExactReleaseOwned_WarnsWithoutAdding() {
+	s.mockDiscogs.releaseDetail = discogs.ReleaseDetail{ID: 12345, Title: "Album", Artists: []discogs.Artist{{Name: "Artist"}}}
+	s.mockDiscogs.owned = []discogs.OwnedRelease{
+		{ID: 12345, Title: "Album", Artists: []discogs.Artist{{Name: "Artist"}}},
+	}
+
+	rr := s.postConfirm("user-exact-owned", url.Values{"release_id": {"12345"}})
+
+	s.Equal(http.StatusOK, rr.Code)
+	s.False(s.mockDiscogs.addToCollectionCalled)
+	s.Contains(rr.Body.String(), "Already in your collection")
+	s.Contains(rr.Body.String(), `name="acknowledged"`)
+}
+
+func (s *ScanSuite) TestScanConfirm_POST_OtherEditionOwned_WarnsWithoutAdding() {
+	s.mockDiscogs.releaseDetail = discogs.ReleaseDetail{ID: 12345, Title: "Album", Artists: []discogs.Artist{{Name: "Artist"}}}
+	s.mockDiscogs.owned = []discogs.OwnedRelease{
+		{ID: 99999, Title: "album", Year: 2010, Artists: []discogs.Artist{{Name: "ARTIST"}}},
+	}
+
+	rr := s.postConfirm("user-similar-owned", url.Values{"release_id": {"12345"}})
+
+	s.Equal(http.StatusOK, rr.Code)
+	s.False(s.mockDiscogs.addToCollectionCalled)
+	s.Contains(rr.Body.String(), "You own another edition")
+	s.NotContains(rr.Body.String(), "Already in your collection")
+}
+
+func (s *ScanSuite) TestScanConfirm_POST_UnrelatedReleaseOwned_AddsDirectly() {
+	s.mockDiscogs.releaseDetail = discogs.ReleaseDetail{ID: 12345, Title: "Album", Artists: []discogs.Artist{{Name: "Artist"}}}
+	s.mockDiscogs.owned = []discogs.OwnedRelease{
+		{ID: 99999, Title: "Other Album", Artists: []discogs.Artist{{Name: "Artist"}}},
+		{ID: 88888, Title: "Album", Artists: []discogs.Artist{{Name: "Other Artist"}}},
+	}
+
+	rr := s.postConfirm("user-unrelated-owned", url.Values{"release_id": {"12345"}})
+
+	s.Equal(http.StatusOK, rr.Code)
+	s.True(s.mockDiscogs.addToCollectionCalled)
+}
+
+func (s *ScanSuite) TestScanConfirm_POST_Acknowledged_AddsDespiteOwnedRelease() {
+	s.mockDiscogs.releaseDetail = discogs.ReleaseDetail{ID: 12345, Title: "Album", Artists: []discogs.Artist{{Name: "Artist"}}}
+	s.mockDiscogs.owned = []discogs.OwnedRelease{
+		{ID: 12345, Title: "Album", Artists: []discogs.Artist{{Name: "Artist"}}},
+	}
+
+	rr := s.postConfirm("user-acknowledged", url.Values{"release_id": {"12345"}, "acknowledged": {"1"}})
+
+	s.Equal(http.StatusOK, rr.Code)
+	s.True(s.mockDiscogs.addToCollectionCalled)
 }
 
 func (s *ScanSuite) TestScan_POST_MultipleMatches_RendersConflictList() {
