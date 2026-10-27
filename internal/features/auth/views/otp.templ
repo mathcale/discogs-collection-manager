@@ -1,0 +1,166 @@
+package views
+
+import "github.com/mathcale/discogs-collection-manager/internal/ui"
+
+templ OTPPage(errorMsg string) {
+	@ui.BaseLayout("Verify code — Discogs Collection Manager") {
+		<main class="min-h-dvh flex items-center justify-center px-4 py-12">
+			<div class="w-full max-w-sm">
+				<h1 class="text-3xl font-bold tracking-tight mb-2 text-center">
+					Check your email
+				</h1>
+
+				<p class="text-sm text-center mb-10" style="color: var(--color-muted)">
+					We sent a 6-digit code to your email address. Enter it below to continue.
+				</p>
+
+				<div class="card">
+					<div role="alert" aria-live="polite">
+						if errorMsg != "" {
+							@ui.AlertError(errorMsg)
+						}
+					</div>
+
+					<form
+						method="POST"
+						action="/auth/login/otp"
+						id="otp-form"
+						hx-boost="true"
+						hx-disabled-elt="find button[type='submit']"
+					>
+						<input type="hidden" name="code" id="otp-hidden"/>
+
+						<div class="flex flex-col gap-4">
+							<div>
+								<label class="block text-sm font-medium mb-3 text-center" for="otp-0">Verification code</label>
+								<div class="otp-inputs" id="otp-inputs">
+									<input
+										type="text"
+										class="otp-digit"
+										id="otp-0"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										autocomplete="one-time-code" required
+									/>
+
+									<input
+										type="text"
+										class="otp-digit"
+										id="otp-1"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										required
+									/>
+
+									<input
+										type="text"
+										class="otp-digit"
+										id="otp-2"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										required
+									/>
+
+									<input
+										type="text"
+										class="otp-digit"
+										id="otp-3"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										required
+									/>
+
+									<input
+										type="text"
+										class="otp-digit"
+										id="otp-4"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										required
+									/>
+
+									<input
+										class="otp-digit"
+										id="otp-5"
+										type="text"
+										inputmode="numeric"
+										pattern="[0-9]"
+										maxlength="1"
+										required
+									/>
+								</div>
+							</div>
+
+							<button type="submit" class="btn btn-primary w-full mt-2">
+								<span class="spinner mr-1.5" aria-hidden="true"></span>
+								Verify
+							</button>
+						</div>
+					</form>
+
+					<script>
+						(function () {
+							var form = document.currentScript.closest('.card').querySelector('form');
+							var digits = form.querySelectorAll('.otp-digit');
+							var hidden = form.querySelector('input[name="code"]');
+
+							function collectValue() {
+								hidden.value = Array.from(digits).map(function(d) {
+									return d.value;
+								}).join('');
+							}
+
+							digits.forEach(function (input, i) {
+								input.addEventListener('input', function() {
+									var val = input.value.replace(/\D/g, '');
+									input.value = val.slice(-1);
+
+									if (input.value && i < digits.length - 1) {
+										digits[i + 1].focus();
+									}
+
+									collectValue();
+								});
+
+								input.addEventListener('keydown', function(e) {
+									if (e.key === 'Backspace' && !input.value && i > 0) {
+										digits[i - 1].focus();
+										digits[i - 1].value = '';
+
+										collectValue();
+									}
+								});
+
+								input.addEventListener('paste', function(e) {
+									e.preventDefault();
+
+									var pasted = (e.clipboardData || window.clipboardData)
+										.getData('text')
+										.replace(/\D/g, '')
+										.slice(0, 6);
+
+									pasted.split('').forEach(function(ch, j) {
+										if (digits[j]) digits[j].value = ch;
+									});
+
+									var next = Math.min(pasted.length, digits.length - 1);
+									digits[next].focus();
+
+									collectValue();
+								});
+							});
+
+							form.addEventListener('htmx:configRequest', collectValue);
+							form.addEventListener('submit', collectValue);
+						})();
+					</script>
+				</div>
+			</div>
+		</main>
+	}
+}
