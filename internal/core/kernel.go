@@ -13,7 +13,7 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
 	"github.com/mathcale/discogs-collection-manager/internal/features/account"
 	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
-	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth"
 	"github.com/mathcale/discogs-collection-manager/internal/features/landing"
 	"github.com/mathcale/discogs-collection-manager/internal/features/scanner"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/logger"
@@ -21,23 +21,12 @@ import (
 )
 
 type Kernel struct {
-	DB           *sql.DB
-	Logger       logger.Logger
-	Users        authmodels.UserRepository
-	Sessions     authmodels.SessionRepository
-	OAuthTokens  accountmodels.OAuthTokenRepository
-	OTPCodes     authmodels.OTPRepository
-	ResetTokens  authmodels.PasswordResetTokenRepository
-	Mailer       mailer.Mailer
-	BaseURL      string
-	DiscogsOAuth *oauth1.Config
-	Discogs      discogs.DiscogsClient
-	Landing      *landing.Module
-	Account      *account.Module
-	Scanner      *scanner.Module
-
-	TwoStepAuthEnabled bool
-	SignupsEnabled     bool
+	DB      *sql.DB
+	Logger  logger.Logger
+	Landing *landing.Module
+	Auth    *auth.Module
+	Account *account.Module
+	Scanner *scanner.Module
 }
 
 func envBool(name string, defaultValue bool) (bool, error) {
@@ -126,23 +115,18 @@ func New() (*Kernel, error) {
 	discogsClient := discogs.NewHTTPDiscogsClient(discogsOAuth, oauthTokens)
 
 	return &Kernel{
-		DB:           db,
-		Logger:       log,
-		Users:        authmodels.NewUserRepository(db),
-		Sessions:     authmodels.NewSessionRepository(db),
-		OAuthTokens:  oauthTokens,
-		OTPCodes:     authmodels.NewOTPRepository(db),
-		ResetTokens:  authmodels.NewPasswordResetTokenRepository(db),
-		Mailer:       mailer.NewResendMailer(resendAPIKey, resendFrom),
-		BaseURL:      baseURL,
-		DiscogsOAuth: discogsOAuth,
-		Discogs:      discogsClient,
-		Landing:      landing.New(landing.Deps{SignupsEnabled: signupsEnabled}),
-		Account:      account.New(account.Deps{DB: db, DiscogsOAuth: discogsOAuth}),
-		Scanner:      scanner.New(scanner.Deps{DB: db, Discogs: discogsClient}),
-
-		TwoStepAuthEnabled: twoStepAuthEnabled,
-		SignupsEnabled:     signupsEnabled,
+		DB:      db,
+		Logger:  log,
+		Landing: landing.New(landing.Deps{SignupsEnabled: signupsEnabled}),
+		Auth: auth.New(auth.Deps{
+			DB:                 db,
+			Mailer:             mailer.NewResendMailer(resendAPIKey, resendFrom),
+			BaseURL:            baseURL,
+			TwoStepAuthEnabled: twoStepAuthEnabled,
+			SignupsEnabled:     signupsEnabled,
+		}),
+		Account: account.New(account.Deps{DB: db, DiscogsOAuth: discogsOAuth}),
+		Scanner: scanner.New(scanner.Deps{DB: db, Discogs: discogsClient}),
 	}, nil
 }
 

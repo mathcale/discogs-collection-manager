@@ -1,15 +1,11 @@
 package web
 
 import (
-	"context"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/mathcale/discogs-collection-manager/internal/controllers"
-	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
-	"github.com/mathcale/discogs-collection-manager/internal/pkg/ctxkey"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/logger"
 )
 
@@ -37,27 +33,6 @@ func RequestLogger(log logger.Logger) func(http.Handler) http.Handler {
 			next.ServeHTTP(rw, r.WithContext(ctx))
 
 			reqLog.Info("request", "status", rw.status, "duration_ms", time.Since(start).Milliseconds())
-		})
-	}
-}
-
-func RequireAuth(sessions authmodels.SessionRepository) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			cookie, err := r.Cookie(controllers.SessionCookieName)
-			if err != nil {
-				http.Redirect(w, r, "/auth/login", http.StatusFound)
-				return
-			}
-
-			session, err := sessions.FindByToken(r.Context(), cookie.Value)
-			if err != nil || session == nil || session.IsExpired() {
-				http.Redirect(w, r, "/auth/login", http.StatusFound)
-				return
-			}
-
-			ctx := context.WithValue(r.Context(), ctxkey.UserID, session.UserID)
-			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
 }

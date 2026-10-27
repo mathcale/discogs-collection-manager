@@ -18,9 +18,9 @@ import (
 
 	"github.com/dghubble/oauth1"
 
-	"github.com/mathcale/discogs-collection-manager/internal/core/web"
 	"github.com/mathcale/discogs-collection-manager/internal/features/account"
 	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth"
 	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
@@ -85,7 +85,7 @@ func (s *DiscogsOAuthSuite) buildRouter(oauthCfg *oauth1.Config) http.Handler {
 	r := chi.NewRouter()
 
 	r.Group(func(r chi.Router) {
-		r.Use(web.RequireAuth(s.sessions))
+		r.Use(auth.New(auth.Deps{DB: s.db}).RequireAuth)
 		account.New(account.Deps{
 			DB:           s.db,
 			DiscogsOAuth: oauthCfg,

@@ -16,8 +16,8 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
-	"github.com/mathcale/discogs-collection-manager/internal/core/web"
 	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth"
 	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/features/scanner"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
@@ -87,7 +87,7 @@ func (s *ScanSuite) SetupTest() {
 
 	r := chi.NewRouter()
 	r.Group(func(r chi.Router) {
-		r.Use(web.RequireAuth(s.sessions))
+		r.Use(auth.New(auth.Deps{DB: s.db}).RequireAuth)
 		scanner.New(scanner.Deps{DB: s.db, Discogs: s.mockDiscogs}).Routes(r)
 	})
 

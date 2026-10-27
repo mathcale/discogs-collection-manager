@@ -1,4 +1,4 @@
-package controllers_test
+package auth_test
 
 import (
 	"context"
@@ -16,9 +16,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/mathcale/discogs-collection-manager/internal/controllers"
-	"github.com/mathcale/discogs-collection-manager/internal/core/web"
 	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth"
 	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
@@ -59,7 +58,7 @@ func (s *AuthSuite) SetupSuite() {
 	s.dbPath = f.Name()
 	f.Close()
 
-	s.Require().NoError(migrate.Up(s.dbPath, "../../migrations"))
+	s.Require().NoError(migrate.Up(s.dbPath, "../../../migrations"))
 
 	db, err := sql.Open("sqlite3", s.dbPath)
 	s.Require().NoError(err)
@@ -90,40 +89,19 @@ func (s *AuthSuite) SetupTest() {
 }
 
 func (s *AuthSuite) buildRouter(twoStepAuthEnabled, signupsEnabled bool) http.Handler {
-	controller := &controllers.Controller{
-		Users:       s.users,
-		Sessions:    s.sessions,
-		OTPCodes:    s.otpCodes,
-		ResetTokens: s.resetTokens,
-		OAuthTokens: s.oauthTokens,
-		Mailer:      s.mailer,
-		BaseURL:     "http://localhost",
-
+	m := auth.New(auth.Deps{
+		DB:                 s.db,
+		Mailer:             s.mailer,
+		BaseURL:            "http://localhost",
 		TwoStepAuthEnabled: twoStepAuthEnabled,
 		SignupsEnabled:     signupsEnabled,
-	}
-
-	r := chi.NewRouter()
-	r.Route("/auth", func(r chi.Router) {
-		r.Get("/register", controller.RegisterPage)
-		r.Post("/register", controller.Register)
-		r.Get("/login", controller.LoginPage)
-		r.Post("/login", controller.Login)
-		r.Get("/login/otp", controller.OTPPage)
-		r.Post("/login/otp", controller.VerifyOTP)
-		r.Get("/forgot-password", controller.ForgotPasswordPage)
-		r.Post("/forgot-password", controller.ForgotPassword)
-		r.Get("/reset-password", controller.ResetPasswordPage)
-		r.Post("/reset-password", controller.ResetPassword)
-
-		r.Group(func(r chi.Router) {
-			r.Use(web.RequireAuth(s.sessions))
-			r.Post("/logout", controller.Logout)
-		})
 	})
 
+	r := chi.NewRouter()
+	m.Routes(r)
+
 	r.Group(func(r chi.Router) {
-		r.Use(web.RequireAuth(s.sessions))
+		r.Use(m.RequireAuth)
 		r.Get("/app", func(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusOK)
 		})

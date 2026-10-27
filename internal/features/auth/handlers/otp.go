@@ -1,0 +1,70 @@
+package handlers
+
+import (
+	"errors"
+	"net/http"
+	"strings"
+
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/usecases"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/views"
+	"github.com/mathcale/discogs-collection-manager/internal/ui"
+)
+
+func (h *Handler) OTPPage(w http.ResponseWriter, r *http.Request) {
+	if _, err := r.Cookie(pendingLoginCookieName); err != nil {
+		http.Redirect(w, r, "/auth/login", http.StatusFound)
+		return
+	}
+
+	ui.Render(w, r, http.StatusOK, views.OTPPage(""))
+}
+
+func (h *Handler) VerifyOTPSubmit(w http.ResponseWriter, r *http.Request) {
+	pendingCookie, err := r.Cookie(pendingLoginCookieName)
+	if err != nil {
+		http.Redirect(w, r, "/auth/login", http.StatusFound)
+		return
+	}
+
+	parts := strings.SplitN(pendingCookie.Value, ":", 2)
+	if len(parts) != 2 {
+		http.Redirect(w, r, "/auth/login", http.StatusFound)
+		return
+	}
+	userID := parts[0]
+	stayLoggedIn := parts[1] == "1"
+
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "bad request", http.StatusBadRequest)
+		return
+	}
+
+	out, err := h.VerifyOTP.Execute(r.Context(), usecases.VerifyOTPInput{
+		UserID:       userID,
+		Code:         r.FormValue("code"),
+		StayLoggedIn: stayLoggedIn,
+	})
+	if err != nil {
+		switch {
+		case errors.Is(err, usecases.ErrOTPNotFound):
+			ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid or expired code. Please log in again."))
+		case errors.Is(err, usecases.ErrOTPExpired):
+			ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Code has expired. Please log in again."))
+		case errors.Is(err, usecases.ErrOTPMismatch):
+			ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid code. Please try again."))
+		default:
+			http.Error(w, "internal error", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     pendingLoginCookieName,
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   -1,
+	})
+
+	startSession(w, r, out.SessionToken, out.SessionExpiresAt, stayLoggedIn)
+}

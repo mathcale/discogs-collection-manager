@@ -6,7 +6,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/mathcale/discogs-collection-manager/internal/controllers"
 	"github.com/mathcale/discogs-collection-manager/internal/core"
 )
 
@@ -17,41 +16,10 @@ func NewRouter(k *core.Kernel) http.Handler {
 	r.Use(RequestLogger(k.Logger))
 	r.Use(middleware.Recoverer)
 
-	c := &controllers.Controller{
-		Users:       k.Users,
-		Sessions:    k.Sessions,
-		OTPCodes:    k.OTPCodes,
-		ResetTokens: k.ResetTokens,
-		OAuthTokens: k.OAuthTokens,
-		Mailer:      k.Mailer,
-		BaseURL:     k.BaseURL,
-
-		TwoStepAuthEnabled: k.TwoStepAuthEnabled,
-		SignupsEnabled:     k.SignupsEnabled,
-	}
-
 	r.Group(k.Landing.Routes)
-
-	r.Route("/auth", func(r chi.Router) {
-		r.Get("/register", c.RegisterPage)
-		r.Post("/register", c.Register)
-		r.Get("/login", c.LoginPage)
-		r.Post("/login", c.Login)
-		r.Get("/login/otp", c.OTPPage)
-		r.Post("/login/otp", c.VerifyOTP)
-		r.Get("/forgot-password", c.ForgotPasswordPage)
-		r.Post("/forgot-password", c.ForgotPassword)
-		r.Get("/reset-password", c.ResetPasswordPage)
-		r.Post("/reset-password", c.ResetPassword)
-
-		r.Group(func(r chi.Router) {
-			r.Use(RequireAuth(k.Sessions))
-			r.Post("/logout", c.Logout)
-		})
-	})
-
+	r.Group(k.Auth.Routes)
 	r.Group(func(r chi.Router) {
-		r.Use(RequireAuth(k.Sessions))
+		r.Use(k.Auth.RequireAuth)
 		k.Account.Routes(r)
 		k.Scanner.Routes(r)
 	})
