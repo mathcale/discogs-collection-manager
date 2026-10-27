@@ -18,14 +18,13 @@ func NewRouter(k *core.Kernel) http.Handler {
 	r.Use(middleware.Recoverer)
 
 	c := &controllers.Controller{
-		Users:        k.Users,
-		Sessions:     k.Sessions,
-		OTPCodes:     k.OTPCodes,
-		ResetTokens:  k.ResetTokens,
-		OAuthTokens:  k.OAuthTokens,
-		Mailer:       k.Mailer,
-		DiscogsOAuth: k.DiscogsOAuth,
-		BaseURL:      k.BaseURL,
+		Users:       k.Users,
+		Sessions:    k.Sessions,
+		OTPCodes:    k.OTPCodes,
+		ResetTokens: k.ResetTokens,
+		OAuthTokens: k.OAuthTokens,
+		Mailer:      k.Mailer,
+		BaseURL:     k.BaseURL,
 
 		TwoStepAuthEnabled: k.TwoStepAuthEnabled,
 		SignupsEnabled:     k.SignupsEnabled,
@@ -53,11 +52,8 @@ func NewRouter(k *core.Kernel) http.Handler {
 
 	r.Group(func(r chi.Router) {
 		r.Use(RequireAuth(k.Sessions))
-		r.Get("/app/settings", c.SettingsPage)
+		k.Account.Routes(r)
 		k.Scanner.Routes(r)
-		r.Get("/discogs/connect", c.Connect)
-		r.Get("/discogs/callback", c.Callback)
-		r.Post("/discogs/disconnect", c.Disconnect)
 	})
 
 	r.Handle("/static/*", staticCache(http.StripPrefix("/static/", http.FileServer(http.Dir("./static")))))

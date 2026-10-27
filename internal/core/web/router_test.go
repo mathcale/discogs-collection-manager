@@ -12,13 +12,14 @@ import (
 
 	"github.com/mathcale/discogs-collection-manager/internal/core"
 	"github.com/mathcale/discogs-collection-manager/internal/core/web"
+	"github.com/mathcale/discogs-collection-manager/internal/features/account"
 	"github.com/mathcale/discogs-collection-manager/internal/features/landing"
 	"github.com/mathcale/discogs-collection-manager/internal/features/scanner"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/logger"
 )
 
 func TestRouter_CrossSitePostToLogin_Rejected(t *testing.T) {
-	router := web.NewRouter(&core.Kernel{Logger: logger.NewWithWriter("production", io.Discard), Landing: landing.New(landing.Deps{}), Scanner: scanner.New(scanner.Deps{})})
+	router := web.NewRouter(&core.Kernel{Logger: logger.NewWithWriter("production", io.Discard), Landing: landing.New(landing.Deps{}), Account: account.New(account.Deps{}), Scanner: scanner.New(scanner.Deps{})})
 
 	form := url.Values{"email": {"victim@example.com"}, "password": {"attacker-password"}}
 	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(form.Encode()))
@@ -32,7 +33,7 @@ func TestRouter_CrossSitePostToLogin_Rejected(t *testing.T) {
 }
 
 func TestRouter_MismatchedOriginPostToLogin_Rejected(t *testing.T) {
-	router := web.NewRouter(&core.Kernel{Logger: logger.NewWithWriter("production", io.Discard), Landing: landing.New(landing.Deps{}), Scanner: scanner.New(scanner.Deps{})})
+	router := web.NewRouter(&core.Kernel{Logger: logger.NewWithWriter("production", io.Discard), Landing: landing.New(landing.Deps{}), Account: account.New(account.Deps{}), Scanner: scanner.New(scanner.Deps{})})
 
 	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(""))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

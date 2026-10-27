@@ -11,6 +11,7 @@ import (
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
+	"github.com/mathcale/discogs-collection-manager/internal/features/account"
 	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
 	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/features/landing"
@@ -32,6 +33,7 @@ type Kernel struct {
 	DiscogsOAuth *oauth1.Config
 	Discogs      discogs.DiscogsClient
 	Landing      *landing.Module
+	Account      *account.Module
 	Scanner      *scanner.Module
 
 	TwoStepAuthEnabled bool
@@ -136,6 +138,7 @@ func New() (*Kernel, error) {
 		DiscogsOAuth: discogsOAuth,
 		Discogs:      discogsClient,
 		Landing:      landing.New(landing.Deps{SignupsEnabled: signupsEnabled}),
+		Account:      account.New(account.Deps{DB: db, DiscogsOAuth: discogsOAuth}),
 		Scanner:      scanner.New(scanner.Deps{DB: db, Discogs: discogsClient}),
 
 		TwoStepAuthEnabled: twoStepAuthEnabled,

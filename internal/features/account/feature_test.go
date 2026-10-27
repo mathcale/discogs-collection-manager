@@ -1,4 +1,4 @@
-package controllers_test
+package account_test
 
 import (
 	"context"
@@ -18,8 +18,8 @@ import (
 
 	"github.com/dghubble/oauth1"
 
-	"github.com/mathcale/discogs-collection-manager/internal/controllers"
 	"github.com/mathcale/discogs-collection-manager/internal/core/web"
+	"github.com/mathcale/discogs-collection-manager/internal/features/account"
 	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
 	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
@@ -34,7 +34,6 @@ type DiscogsOAuthSuite struct {
 	oauthTokens accountmodels.OAuthTokenRepository
 	router      http.Handler
 	mockDiscogs *httptest.Server
-	controller  *controllers.Controller
 }
 
 func TestDiscogsOAuthSuite(t *testing.T) {
@@ -47,7 +46,7 @@ func (s *DiscogsOAuthSuite) SetupSuite() {
 	s.dbPath = f.Name()
 	f.Close()
 
-	s.Require().NoError(migrate.Up(s.dbPath, "../../migrations"))
+	s.Require().NoError(migrate.Up(s.dbPath, "../../../migrations"))
 
 	db, err := sql.Open("sqlite3", s.dbPath)
 	s.Require().NoError(err)
@@ -79,25 +78,22 @@ func (s *DiscogsOAuthSuite) SetupTest() {
 		},
 	}
 
-	s.controller = &controllers.Controller{
-		OAuthTokens:  s.oauthTokens,
-		Sessions:     s.sessions,
-		Users:        s.users,
-		DiscogsOAuth: oauthCfg,
-		IdentityURL:  s.mockDiscogs.URL + "/oauth/identity",
-	}
+	s.router = s.buildRouter(oauthCfg)
+}
 
+func (s *DiscogsOAuthSuite) buildRouter(oauthCfg *oauth1.Config) http.Handler {
 	r := chi.NewRouter()
 
 	r.Group(func(r chi.Router) {
 		r.Use(web.RequireAuth(s.sessions))
-		r.Get("/app/settings", s.controller.SettingsPage)
-		r.Get("/discogs/connect", s.controller.Connect)
-		r.Get("/discogs/callback", s.controller.Callback)
-		r.Post("/discogs/disconnect", s.controller.Disconnect)
+		account.New(account.Deps{
+			DB:           s.db,
+			DiscogsOAuth: oauthCfg,
+			IdentityURL:  s.mockDiscogs.URL + "/oauth/identity",
+		}).Routes(r)
 	})
 
-	s.router = r
+	return r
 }
 
 func (s *DiscogsOAuthSuite) TearDownTest() {
@@ -243,7 +239,7 @@ func (s *DiscogsOAuthSuite) TestCallback_401FromDiscogs_ShowsReconnectPrompt() {
 			AccessTokenURL:  unauthorizedServer.URL + "/oauth/access_token",
 		},
 	}
-	s.controller.DiscogsOAuth = oauthCfg
+	s.router = s.buildRouter(oauthCfg)
 
 	user := s.createUser("unauthorized@example.com")
 	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
