@@ -105,9 +105,9 @@ templ OTPPage(errorMsg string) {
 
 					<script>
 						(function () {
-							var digits = document.querySelectorAll('.otp-digit');
-							var hidden = document.getElementById('otp-hidden');
-							var form = document.getElementById('otp-form');
+							var form = document.currentScript.closest('.card').querySelector('form');
+							var digits = form.querySelectorAll('.otp-digit');
+							var hidden = form.querySelector('input[name="code"]');
 
 							function collectValue() {
 								hidden.value = Array.from(digits).map(function(d) {
