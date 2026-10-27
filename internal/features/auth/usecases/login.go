@@ -21,6 +21,7 @@ type LoginOutput struct {
 	OTPRequired      bool
 	SessionToken     string
 	SessionExpiresAt time.Time
+	OTPExpiresIn     time.Duration
 }
 
 var ErrInvalidCredentials = errors.New("invalid credentials")
@@ -67,5 +68,5 @@ func (uc *Login) Execute(ctx context.Context, in LoginInput) (LoginOutput, error
 		return LoginOutput{}, err
 	}
 
-	return LoginOutput{UserID: user.ID, OTPRequired: true}, nil
+	return LoginOutput{UserID: user.ID, OTPRequired: true, OTPExpiresIn: models.OTPExpiry}, nil
 }

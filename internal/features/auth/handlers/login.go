@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/usecases"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/views"
 	"github.com/mathcale/discogs-collection-manager/internal/ui"
@@ -53,7 +52,7 @@ func (h *Handler) LoginSubmit(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(models.OTPExpiry.Seconds()),
+		MaxAge:   int(out.OTPExpiresIn.Seconds()),
 	})
 
 	http.Redirect(w, r, "/auth/login/otp", http.StatusFound)
