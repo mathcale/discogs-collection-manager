@@ -6,11 +6,13 @@ import (
 	"strconv"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/ctxkey"
+	"github.com/mathcale/discogs-collection-manager/internal/ui"
 	"github.com/mathcale/discogs-collection-manager/internal/views"
 )
 
 func (c *Controller) ScanPage(w http.ResponseWriter, r *http.Request) {
-	render(w, r, http.StatusOK, views.ScannerPage())
+	ui.Render(w, r, http.StatusOK, views.ScannerPage())
 }
 
 func (c *Controller) Scan(w http.ResponseWriter, r *http.Request) {
@@ -25,14 +27,14 @@ func (c *Controller) Scan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := currentUserID(r)
+	userID := ctxkey.UserIDFrom(r.Context())
 	token, err := c.OAuthTokens.FindByUserID(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 	if token == nil {
-		render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
+		ui.Render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
 		return
 	}
 
@@ -43,15 +45,15 @@ func (c *Controller) Scan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(releases) == 0 {
-		render(w, r, http.StatusOK, views.ScanErrorPartial("No releases found for this barcode."))
+		ui.Render(w, r, http.StatusOK, views.ScanErrorPartial("No releases found for this barcode."))
 		return
 	}
 	if len(releases) > 1 {
-		render(w, r, http.StatusOK, views.ScanConflictListPartial(releases))
+		ui.Render(w, r, http.StatusOK, views.ScanConflictListPartial(releases))
 		return
 	}
 
-	render(w, r, http.StatusOK, views.ScanConfirmPartial(releases[0]))
+	ui.Render(w, r, http.StatusOK, views.ScanConfirmPartial(releases[0]))
 }
 
 func (c *Controller) Confirm(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +64,7 @@ func (c *Controller) Confirm(w http.ResponseWriter, r *http.Request) {
 
 	releaseIDStr := r.FormValue("release_id")
 	if releaseIDStr == "" {
-		render(w, r, http.StatusUnprocessableEntity, views.ScanErrorPartial("Please select a release before confirming."))
+		ui.Render(w, r, http.StatusUnprocessableEntity, views.ScanErrorPartial("Please select a release before confirming."))
 		return
 	}
 
@@ -72,14 +74,14 @@ func (c *Controller) Confirm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := currentUserID(r)
+	userID := ctxkey.UserIDFrom(r.Context())
 	token, err := c.OAuthTokens.FindByUserID(r.Context(), userID)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 	if token == nil {
-		render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
+		ui.Render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
 		return
 	}
 
@@ -97,7 +99,7 @@ func (c *Controller) Confirm(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if matches := discogs.MatchOwned(release, owned); matches.Any() {
-			render(w, r, http.StatusOK, views.ScanOwnedWarningPartial(releaseID, matches))
+			ui.Render(w, r, http.StatusOK, views.ScanOwnedWarningPartial(releaseID, matches))
 			return
 		}
 	}
@@ -108,7 +110,7 @@ func (c *Controller) Confirm(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("HX-Trigger", "scan-success")
-	render(w, r, http.StatusOK, views.ScanSuccessPartial())
+	ui.Render(w, r, http.StatusOK, views.ScanSuccessPartial())
 }
 
 func (c *Controller) Cancel(w http.ResponseWriter, r *http.Request) {
@@ -118,15 +120,15 @@ func (c *Controller) Cancel(w http.ResponseWriter, r *http.Request) {
 func renderDiscogsError(w http.ResponseWriter, r *http.Request, err error, fallbackMessage string) {
 	var rle *discogs.RateLimitError
 	if errors.As(err, &rle) {
-		render(w, r, http.StatusTooManyRequests, views.ScanErrorPartial("Discogs rate limit reached. Please wait a moment and try again."))
+		ui.Render(w, r, http.StatusTooManyRequests, views.ScanErrorPartial("Discogs rate limit reached. Please wait a moment and try again."))
 		return
 	}
 
 	var dae *discogs.DiscogsAuthError
 	if errors.As(err, &dae) {
-		render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
+		ui.Render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
 		return
 	}
 
-	render(w, r, http.StatusBadGateway, views.ScanErrorPartial(fallbackMessage))
+	ui.Render(w, r, http.StatusBadGateway, views.ScanErrorPartial(fallbackMessage))
 }

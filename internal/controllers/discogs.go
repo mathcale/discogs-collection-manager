@@ -7,6 +7,8 @@ import (
 
 	"github.com/dghubble/oauth1"
 
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/ctxkey"
+	"github.com/mathcale/discogs-collection-manager/internal/ui"
 	"github.com/mathcale/discogs-collection-manager/internal/views"
 )
 
@@ -18,7 +20,7 @@ type pendingOAuthRequest struct {
 }
 
 func (c *Controller) SettingsPage(w http.ResponseWriter, r *http.Request) {
-	userID := currentUserID(r)
+	userID := ctxkey.UserIDFrom(r.Context())
 
 	user, err := c.Users.FindByID(r.Context(), userID)
 	if err != nil || user == nil {
@@ -37,15 +39,15 @@ func (c *Controller) SettingsPage(w http.ResponseWriter, r *http.Request) {
 		discogsUsername = token.DiscogsUsername
 	}
 
-	render(w, r, http.StatusOK, views.SettingsPage(user.Email, discogsUsername))
+	ui.Render(w, r, http.StatusOK, views.SettingsPage(user.Email, discogsUsername))
 }
 
 func (c *Controller) Connect(w http.ResponseWriter, r *http.Request) {
-	userID := currentUserID(r)
+	userID := ctxkey.UserIDFrom(r.Context())
 
 	requestToken, requestSecret, err := c.DiscogsOAuth.RequestToken()
 	if err != nil {
-		render(w, r, http.StatusBadGateway, views.DiscogsConnectError("Could not initiate Discogs connection. Please try again."))
+		ui.Render(w, r, http.StatusBadGateway, views.DiscogsConnectError("Could not initiate Discogs connection. Please try again."))
 		return
 	}
 
@@ -54,7 +56,7 @@ func (c *Controller) Connect(w http.ResponseWriter, r *http.Request) {
 	authURL, err := c.DiscogsOAuth.AuthorizationURL(requestToken)
 	if err != nil {
 		c.requestTokens.Delete(requestToken)
-		render(w, r, http.StatusInternalServerError, views.DiscogsConnectError("Could not build authorization URL."))
+		ui.Render(w, r, http.StatusInternalServerError, views.DiscogsConnectError("Could not build authorization URL."))
 		return
 	}
 
@@ -66,21 +68,21 @@ func (c *Controller) Callback(w http.ResponseWriter, r *http.Request) {
 	verifier := r.URL.Query().Get("oauth_verifier")
 
 	if requestToken == "" || verifier == "" {
-		render(w, r, http.StatusBadRequest, views.DiscogsConnectError("Invalid callback parameters."))
+		ui.Render(w, r, http.StatusBadRequest, views.DiscogsConnectError("Invalid callback parameters."))
 		return
 	}
 
-	userID := currentUserID(r)
+	userID := ctxkey.UserIDFrom(r.Context())
 
 	pendingVal, ok := c.requestTokens.LoadAndDelete(requestToken)
 	pending, _ := pendingVal.(pendingOAuthRequest)
 	if !ok || pending.userID != userID {
-		render(w, r, http.StatusBadRequest, views.DiscogsConnectError("OAuth session expired or not found. Please try connecting again."))
+		ui.Render(w, r, http.StatusBadRequest, views.DiscogsConnectError("OAuth session expired or not found. Please try connecting again."))
 		return
 	}
 	accessToken, accessSecret, err := c.DiscogsOAuth.AccessToken(requestToken, pending.secret, verifier)
 	if err != nil {
-		render(w, r, http.StatusBadGateway, views.DiscogsConnectError("Could not connect your Discogs account. Please reconnect and try again."))
+		ui.Render(w, r, http.StatusBadGateway, views.DiscogsConnectError("Could not connect your Discogs account. Please reconnect and try again."))
 		return
 	}
 
@@ -95,7 +97,7 @@ func (c *Controller) Callback(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) Disconnect(w http.ResponseWriter, r *http.Request) {
-	userID := currentUserID(r)
+	userID := ctxkey.UserIDFrom(r.Context())
 
 	if err := c.OAuthTokens.DeleteByUserID(r.Context(), userID); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)

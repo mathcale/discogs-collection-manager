@@ -1,7 +1,9 @@
 package views
 
+import "github.com/mathcale/discogs-collection-manager/internal/ui"
+
 templ RegisterPage(errorMsg string) {
-	@BaseLayout("Register — Discogs Collection Manager") {
+	@ui.BaseLayout("Register — Discogs Collection Manager") {
 		<main class="min-h-dvh flex items-center justify-center px-4 py-12">
 			<div class="w-full max-w-sm">
 				<h1 class="text-3xl font-bold tracking-tight mb-10 text-center">
@@ -11,7 +13,7 @@ templ RegisterPage(errorMsg string) {
 				<div class="card">
 					<div role="alert" aria-live="polite">
 						if errorMsg != "" {
-							@AlertError(errorMsg)
+							@ui.AlertError(errorMsg)
 						}
 					</div>
 

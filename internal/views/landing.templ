@@ -1,7 +1,9 @@
 package views
 
+import "github.com/mathcale/discogs-collection-manager/internal/ui"
+
 templ LandingPage(signupsEnabled bool) {
-	@BaseLayout("Discogs Collection Manager") {
+	@ui.BaseLayout("Discogs Collection Manager") {
 		<main class="min-h-dvh flex items-center justify-center px-4 py-12">
 			<div class="w-full max-w-sm text-center">
 				<h1 class="text-3xl font-semibold tracking-tight mb-3">

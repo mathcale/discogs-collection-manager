@@ -4,10 +4,11 @@ import (
 	"strconv"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/ui"
 )
 
 templ ScannerPage() {
-	@AppLayout("Scanner — Discogs Collection Manager", "scanner") {
+	@ui.AppLayout("Scanner — Discogs Collection Manager", "scanner") {
 		<div class="scanner-shell">
 			<div class="scanner-viewport">
 				<div id="reader"></div>

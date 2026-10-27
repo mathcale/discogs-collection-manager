@@ -8,6 +8,7 @@ import (
 	"time"
 
 	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/ui"
 	"github.com/mathcale/discogs-collection-manager/internal/views"
 )
 
@@ -22,7 +23,7 @@ func (c *Controller) RegisterPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render(w, r, http.StatusOK, views.RegisterPage(""))
+	ui.Render(w, r, http.StatusOK, views.RegisterPage(""))
 }
 
 func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +46,7 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if existing != nil {
-		render(w, r, http.StatusUnprocessableEntity, views.RegisterPage("This email is already registered."))
+		ui.Render(w, r, http.StatusUnprocessableEntity, views.RegisterPage("This email is already registered."))
 		return
 	}
 
@@ -64,7 +65,7 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) LoginPage(w http.ResponseWriter, r *http.Request) {
-	render(w, r, http.StatusOK, views.LoginPage("", c.SignupsEnabled))
+	ui.Render(w, r, http.StatusOK, views.LoginPage("", c.SignupsEnabled))
 }
 
 func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +84,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if user == nil || !user.CheckPassword(password) {
-		render(w, r, http.StatusUnauthorized, views.LoginPage("Invalid email or password.", c.SignupsEnabled))
+		ui.Render(w, r, http.StatusUnauthorized, views.LoginPage("Invalid email or password.", c.SignupsEnabled))
 		return
 	}
 
@@ -132,7 +133,7 @@ func (c *Controller) OTPPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	render(w, r, http.StatusOK, views.OTPPage(""))
+	ui.Render(w, r, http.StatusOK, views.OTPPage(""))
 }
 
 func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
@@ -164,12 +165,12 @@ func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if otp == nil {
-		render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid or expired code. Please log in again."))
+		ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid or expired code. Please log in again."))
 		return
 	}
 
 	if otp.IsExpired() {
-		render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Code has expired. Please log in again."))
+		ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Code has expired. Please log in again."))
 		return
 	}
 
@@ -179,13 +180,13 @@ func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid code. Please try again."))
+		ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid code. Please try again."))
 		return
 	}
 
 	if err := c.OTPCodes.MarkUsed(r.Context(), otp.ID); err != nil {
 		if errors.Is(err, authmodels.ErrOTPNotPending) {
-			render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid or expired code. Please log in again."))
+			ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid or expired code. Please log in again."))
 			return
 		}
 
@@ -251,7 +252,7 @@ func (c *Controller) Logout(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) ForgotPasswordPage(w http.ResponseWriter, r *http.Request) {
-	render(w, r, http.StatusOK, views.ForgotPasswordPage(false))
+	ui.Render(w, r, http.StatusOK, views.ForgotPasswordPage(false))
 }
 
 func (c *Controller) ForgotPassword(w http.ResponseWriter, r *http.Request) {
@@ -294,7 +295,7 @@ func (c *Controller) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	render(w, r, http.StatusOK, views.ForgotPasswordPage(true))
+	ui.Render(w, r, http.StatusOK, views.ForgotPasswordPage(true))
 }
 
 func (c *Controller) ResetPasswordPage(w http.ResponseWriter, r *http.Request) {
@@ -312,11 +313,11 @@ func (c *Controller) ResetPasswordPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if record == nil || !record.IsUsable() {
-		render(w, r, http.StatusOK, views.ResetPasswordPage("", "This reset link is invalid or has expired."))
+		ui.Render(w, r, http.StatusOK, views.ResetPasswordPage("", "This reset link is invalid or has expired."))
 		return
 	}
 
-	render(w, r, http.StatusOK, views.ResetPasswordPage(rawToken, ""))
+	ui.Render(w, r, http.StatusOK, views.ResetPasswordPage(rawToken, ""))
 }
 
 func (c *Controller) ResetPassword(w http.ResponseWriter, r *http.Request) {
@@ -330,7 +331,7 @@ func (c *Controller) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	passwordConfirm := r.FormValue("password_confirm")
 
 	if password != passwordConfirm {
-		render(w, r, http.StatusUnprocessableEntity, views.ResetPasswordPage(rawToken, "Passwords do not match."))
+		ui.Render(w, r, http.StatusUnprocessableEntity, views.ResetPasswordPage(rawToken, "Passwords do not match."))
 		return
 	}
 
@@ -342,7 +343,7 @@ func (c *Controller) ResetPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if record == nil || !record.IsUsable() {
-		render(w, r, http.StatusUnprocessableEntity, views.ResetPasswordPage("", "This reset link is invalid or has expired."))
+		ui.Render(w, r, http.StatusUnprocessableEntity, views.ResetPasswordPage("", "This reset link is invalid or has expired."))
 		return
 	}
 

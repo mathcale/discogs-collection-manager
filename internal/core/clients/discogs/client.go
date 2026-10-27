@@ -184,7 +184,7 @@ func NewHTTPDiscogsClient(cfg *oauth1.Config, oauthTokens accountmodels.OAuthTok
 }
 
 func (c *HTTPDiscogsClient) httpClientForUser(ctx context.Context) (*http.Client, error) {
-	userID, _ := ctx.Value(ctxkey.UserID).(string)
+	userID := ctxkey.UserIDFrom(ctx)
 	token, err := c.oauthTokens.FindByUserID(ctx, userID)
 	if err != nil || token == nil {
 		return nil, fmt.Errorf("no discogs token for user")
