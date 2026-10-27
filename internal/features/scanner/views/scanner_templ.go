@@ -95,7 +95,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.ResolveAttributeValue(release.Thumb)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 239, Col: 27}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 239, Col: 27}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
 			if templ_7745c5c3_Err != nil {
@@ -108,7 +108,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.ResolveAttributeValue(release.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 239, Col: 49}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 239, Col: 49}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var5)
 			if templ_7745c5c3_Err != nil {
@@ -126,7 +126,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 		var templ_7745c5c3_Var6 string
 		templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(release.Title)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 243, Col: 48}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 243, Col: 48}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 		if templ_7745c5c3_Err != nil {
@@ -144,7 +144,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(release.Country)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 248, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 248, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -163,7 +163,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var8 string
 			templ_7745c5c3_Var8, templ_7745c5c3_Err = templ.JoinStringErrs(release.Year)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 253, Col: 23}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 253, Col: 23}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var8))
 			if templ_7745c5c3_Err != nil {
@@ -182,7 +182,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var9 string
 			templ_7745c5c3_Var9, templ_7745c5c3_Err = templ.JoinStringErrs(release.Label())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 258, Col: 26}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 258, Col: 26}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var9))
 			if templ_7745c5c3_Err != nil {
@@ -201,7 +201,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var10 string
 			templ_7745c5c3_Var10, templ_7745c5c3_Err = templ.JoinStringErrs(release.Catno)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 263, Col: 50}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 263, Col: 50}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var10))
 			if templ_7745c5c3_Err != nil {
@@ -220,7 +220,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var11 string
 			templ_7745c5c3_Var11, templ_7745c5c3_Err = templ.JoinStringErrs(release.FormatSummary())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 268, Col: 34}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 268, Col: 34}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var11))
 			if templ_7745c5c3_Err != nil {
@@ -239,7 +239,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 			var templ_7745c5c3_Var12 string
 			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.JoinStringErrs(release.Variant())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 273, Col: 28}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 273, Col: 28}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var12))
 			if templ_7745c5c3_Err != nil {
@@ -257,7 +257,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 		var templ_7745c5c3_Var13 templ.SafeURL
 		templ_7745c5c3_Var13, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(release.URL()))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 278, Col: 39}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 278, Col: 39}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var13))
 		if templ_7745c5c3_Err != nil {
@@ -270,7 +270,7 @@ func ScanConfirmPartial(release discogs.Release) templ.Component {
 		var templ_7745c5c3_Var14 string
 		templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(release.ID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 294, Col: 75}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 294, Col: 75}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
 		if templ_7745c5c3_Err != nil {
@@ -317,7 +317,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 			var templ_7745c5c3_Var16 string
 			templ_7745c5c3_Var16, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(r.ID))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 324, Col: 71}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 324, Col: 71}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var16)
 			if templ_7745c5c3_Err != nil {
@@ -335,7 +335,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var17 string
 				templ_7745c5c3_Var17, templ_7745c5c3_Err = templ.ResolveAttributeValue(r.Thumb)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 327, Col: 26}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 327, Col: 26}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var17)
 				if templ_7745c5c3_Err != nil {
@@ -348,7 +348,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var18 string
 				templ_7745c5c3_Var18, templ_7745c5c3_Err = templ.ResolveAttributeValue(r.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 327, Col: 42}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 327, Col: 42}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var18)
 				if templ_7745c5c3_Err != nil {
@@ -366,7 +366,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 			var templ_7745c5c3_Var19 string
 			templ_7745c5c3_Var19, templ_7745c5c3_Err = templ.JoinStringErrs(r.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 331, Col: 25}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 331, Col: 25}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var19))
 			if templ_7745c5c3_Err != nil {
@@ -384,7 +384,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var20 string
 				templ_7745c5c3_Var20, templ_7745c5c3_Err = templ.JoinStringErrs(r.Country)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 335, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 335, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var20))
 				if templ_7745c5c3_Err != nil {
@@ -403,7 +403,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var21 string
 				templ_7745c5c3_Var21, templ_7745c5c3_Err = templ.JoinStringErrs(r.Year)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 339, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 339, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var21))
 				if templ_7745c5c3_Err != nil {
@@ -422,7 +422,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var22 string
 				templ_7745c5c3_Var22, templ_7745c5c3_Err = templ.JoinStringErrs(r.Label())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 343, Col: 27}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 343, Col: 27}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var22))
 				if templ_7745c5c3_Err != nil {
@@ -445,7 +445,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var23 string
 				templ_7745c5c3_Var23, templ_7745c5c3_Err = templ.JoinStringErrs(r.Catno)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 350, Col: 53}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 350, Col: 53}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var23))
 				if templ_7745c5c3_Err != nil {
@@ -464,7 +464,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var24 string
 				templ_7745c5c3_Var24, templ_7745c5c3_Err = templ.JoinStringErrs(r.FormatSummary())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 354, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 354, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var24))
 				if templ_7745c5c3_Err != nil {
@@ -483,7 +483,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 				var templ_7745c5c3_Var25 string
 				templ_7745c5c3_Var25, templ_7745c5c3_Err = templ.JoinStringErrs(r.Variant())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 358, Col: 59}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 358, Col: 59}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var25))
 				if templ_7745c5c3_Err != nil {
@@ -501,7 +501,7 @@ func ScanConflictListPartial(releases []discogs.Release) templ.Component {
 			var templ_7745c5c3_Var26 templ.SafeURL
 			templ_7745c5c3_Var26, templ_7745c5c3_Err = templ.JoinURLErrs(templ.SafeURL(r.URL()))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 362, Col: 40}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 362, Col: 40}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var26))
 			if templ_7745c5c3_Err != nil {
@@ -587,7 +587,7 @@ func ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) templ.
 		var templ_7745c5c3_Var28 string
 		templ_7745c5c3_Var28, templ_7745c5c3_Err = templ.ResolveAttributeValue(strconv.Itoa(releaseID))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 412, Col: 74}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 412, Col: 74}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var28)
 		if templ_7745c5c3_Err != nil {
@@ -639,7 +639,7 @@ func ownedReleaseList(owned []discogs.OwnedRelease) templ.Component {
 				var templ_7745c5c3_Var30 string
 				templ_7745c5c3_Var30, templ_7745c5c3_Err = templ.ResolveAttributeValue(o.Thumb)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 431, Col: 23}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 431, Col: 23}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var30)
 				if templ_7745c5c3_Err != nil {
@@ -652,7 +652,7 @@ func ownedReleaseList(owned []discogs.OwnedRelease) templ.Component {
 				var templ_7745c5c3_Var31 string
 				templ_7745c5c3_Var31, templ_7745c5c3_Err = templ.ResolveAttributeValue(o.Title)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 431, Col: 39}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 431, Col: 39}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var31)
 				if templ_7745c5c3_Err != nil {
@@ -670,7 +670,7 @@ func ownedReleaseList(owned []discogs.OwnedRelease) templ.Component {
 			var templ_7745c5c3_Var32 string
 			templ_7745c5c3_Var32, templ_7745c5c3_Err = templ.JoinStringErrs(o.PrimaryArtist())
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 435, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 435, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var32))
 			if templ_7745c5c3_Err != nil {
@@ -683,7 +683,7 @@ func ownedReleaseList(owned []discogs.OwnedRelease) templ.Component {
 			var templ_7745c5c3_Var33 string
 			templ_7745c5c3_Var33, templ_7745c5c3_Err = templ.JoinStringErrs(o.Title)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 435, Col: 48}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 435, Col: 48}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var33))
 			if templ_7745c5c3_Err != nil {
@@ -701,7 +701,7 @@ func ownedReleaseList(owned []discogs.OwnedRelease) templ.Component {
 				var templ_7745c5c3_Var34 string
 				templ_7745c5c3_Var34, templ_7745c5c3_Err = templ.JoinStringErrs(strconv.Itoa(o.Year))
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 439, Col: 35}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 439, Col: 35}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var34))
 				if templ_7745c5c3_Err != nil {
@@ -720,7 +720,7 @@ func ownedReleaseList(owned []discogs.OwnedRelease) templ.Component {
 				var templ_7745c5c3_Var35 string
 				templ_7745c5c3_Var35, templ_7745c5c3_Err = templ.JoinStringErrs(o.Label())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 443, Col: 24}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 443, Col: 24}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var35))
 				if templ_7745c5c3_Err != nil {
@@ -743,7 +743,7 @@ func ownedReleaseList(owned []discogs.OwnedRelease) templ.Component {
 				var templ_7745c5c3_Var36 string
 				templ_7745c5c3_Var36, templ_7745c5c3_Err = templ.JoinStringErrs(o.FormatSummary())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 449, Col: 32}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 449, Col: 32}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var36))
 				if templ_7745c5c3_Err != nil {
@@ -762,7 +762,7 @@ func ownedReleaseList(owned []discogs.OwnedRelease) templ.Component {
 				var templ_7745c5c3_Var37 string
 				templ_7745c5c3_Var37, templ_7745c5c3_Err = templ.JoinStringErrs(o.Variant())
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 453, Col: 56}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 453, Col: 56}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var37))
 				if templ_7745c5c3_Err != nil {
@@ -839,7 +839,7 @@ func ScanErrorPartial(message string) templ.Component {
 		var templ_7745c5c3_Var40 string
 		templ_7745c5c3_Var40, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/views/scanner.templ`, Line: 466, Col: 14}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/scanner/views/scanner.templ`, Line: 466, Col: 14}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var40))
 		if templ_7745c5c3_Err != nil {

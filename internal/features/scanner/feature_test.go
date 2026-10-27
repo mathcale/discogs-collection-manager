@@ -1,4 +1,4 @@
-package controllers_test
+package scanner_test
 
 import (
 	"context"
@@ -15,11 +15,11 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/mathcale/discogs-collection-manager/internal/controllers"
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
 	"github.com/mathcale/discogs-collection-manager/internal/core/web"
 	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
 	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/scanner"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
 
@@ -69,7 +69,7 @@ func (s *ScanSuite) SetupSuite() {
 	s.dbPath = f.Name()
 	f.Close()
 
-	s.Require().NoError(migrate.Up(s.dbPath, "../../migrations"))
+	s.Require().NoError(migrate.Up(s.dbPath, "../../../migrations"))
 
 	db, err := sql.Open("sqlite3", s.dbPath)
 	s.Require().NoError(err)
@@ -85,15 +85,10 @@ func (s *ScanSuite) SetupTest() {
 
 	s.mockDiscogs = &mockDiscogsClient{}
 
-	controller := &controllers.Controller{Discogs: s.mockDiscogs, OAuthTokens: s.oauthTokens}
-
 	r := chi.NewRouter()
 	r.Group(func(r chi.Router) {
 		r.Use(web.RequireAuth(s.sessions))
-		r.Get("/app/scanner", controller.ScanPage)
-		r.Post("/app/scan", controller.Scan)
-		r.Post("/app/scan/confirm", controller.Confirm)
-		r.Get("/app/scan/cancel", controller.Cancel)
+		scanner.New(scanner.Deps{DB: s.db, Discogs: s.mockDiscogs}).Routes(r)
 	})
 
 	s.router = r

@@ -1,4 +1,4 @@
-package controllers
+package handlers
 
 import (
 	"errors"
@@ -6,16 +6,17 @@ import (
 	"strconv"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/features/scanner/usecases"
+	"github.com/mathcale/discogs-collection-manager/internal/features/scanner/views"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/ctxkey"
 	"github.com/mathcale/discogs-collection-manager/internal/ui"
-	"github.com/mathcale/discogs-collection-manager/internal/views"
 )
 
-func (c *Controller) ScanPage(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) ScanPage(w http.ResponseWriter, r *http.Request) {
 	ui.Render(w, r, http.StatusOK, views.ScannerPage())
 }
 
-func (c *Controller) Scan(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Scan(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -27,36 +28,35 @@ func (c *Controller) Scan(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := ctxkey.UserIDFrom(r.Context())
-	token, err := c.OAuthTokens.FindByUserID(r.Context(), userID)
+	out, err := h.LookupBarcode.Execute(r.Context(), usecases.LookupBarcodeInput{
+		UserID:  ctxkey.UserIDFrom(r.Context()),
+		Barcode: barcode,
+	})
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
-		return
-	}
-	if token == nil {
-		ui.Render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
+		switch {
+		case errors.Is(err, usecases.ErrDiscogsNotConnected):
+			ui.Render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
+		case errors.Is(err, usecases.ErrSearchFailed):
+			renderDiscogsError(w, r, err, "Could not search Discogs. Please try again.")
+		default:
+			http.Error(w, "internal error", http.StatusInternalServerError)
+		}
 		return
 	}
 
-	releases, err := c.Discogs.SearchByBarcode(r.Context(), barcode)
-	if err != nil {
-		renderDiscogsError(w, r, err, "Could not search Discogs. Please try again.")
-		return
-	}
-
-	if len(releases) == 0 {
+	if len(out.Releases) == 0 {
 		ui.Render(w, r, http.StatusOK, views.ScanErrorPartial("No releases found for this barcode."))
 		return
 	}
-	if len(releases) > 1 {
-		ui.Render(w, r, http.StatusOK, views.ScanConflictListPartial(releases))
+	if len(out.Releases) > 1 {
+		ui.Render(w, r, http.StatusOK, views.ScanConflictListPartial(out.Releases))
 		return
 	}
 
-	ui.Render(w, r, http.StatusOK, views.ScanConfirmPartial(releases[0]))
+	ui.Render(w, r, http.StatusOK, views.ScanConfirmPartial(out.Releases[0]))
 }
 
-func (c *Controller) Confirm(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Confirm(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -74,38 +74,27 @@ func (c *Controller) Confirm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := ctxkey.UserIDFrom(r.Context())
-	token, err := c.OAuthTokens.FindByUserID(r.Context(), userID)
+	out, err := h.AddToCollection.Execute(r.Context(), usecases.AddToCollectionInput{
+		UserID:       ctxkey.UserIDFrom(r.Context()),
+		ReleaseID:    releaseID,
+		Acknowledged: r.FormValue("acknowledged") != "",
+	})
 	if err != nil {
-		http.Error(w, "internal error", http.StatusInternalServerError)
+		switch {
+		case errors.Is(err, usecases.ErrDiscogsNotConnected):
+			ui.Render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
+		case errors.Is(err, usecases.ErrCollectionCheckFailed):
+			renderDiscogsError(w, r, err, "Could not check your collection. Please try again.")
+		case errors.Is(err, usecases.ErrAddToCollectionFailed):
+			renderDiscogsError(w, r, err, "Could not add release to collection. Please try again.")
+		default:
+			http.Error(w, "internal error", http.StatusInternalServerError)
+		}
 		return
 	}
-	if token == nil {
-		ui.Render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
-		return
-	}
 
-	if r.FormValue("acknowledged") == "" {
-		release, err := c.Discogs.GetRelease(r.Context(), releaseID)
-		if err != nil {
-			renderDiscogsError(w, r, err, "Could not check your collection. Please try again.")
-			return
-		}
-
-		owned, err := c.Discogs.ListCollection(r.Context(), token.DiscogsUsername)
-		if err != nil {
-			renderDiscogsError(w, r, err, "Could not check your collection. Please try again.")
-			return
-		}
-
-		if matches := discogs.MatchOwned(release, owned); matches.Any() {
-			ui.Render(w, r, http.StatusOK, views.ScanOwnedWarningPartial(releaseID, matches))
-			return
-		}
-	}
-
-	if err := c.Discogs.AddToCollection(r.Context(), token.DiscogsUsername, releaseID); err != nil {
-		renderDiscogsError(w, r, err, "Could not add release to collection. Please try again.")
+	if out.Owned.Any() {
+		ui.Render(w, r, http.StatusOK, views.ScanOwnedWarningPartial(releaseID, out.Owned))
 		return
 	}
 
@@ -113,7 +102,7 @@ func (c *Controller) Confirm(w http.ResponseWriter, r *http.Request) {
 	ui.Render(w, r, http.StatusOK, views.ScanSuccessPartial())
 }
 
-func (c *Controller) Cancel(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Cancel(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/app/scanner", http.StatusFound)
 }
 

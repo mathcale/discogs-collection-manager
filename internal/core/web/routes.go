@@ -24,7 +24,6 @@ func NewRouter(k *core.Kernel) http.Handler {
 		ResetTokens:  k.ResetTokens,
 		OAuthTokens:  k.OAuthTokens,
 		Mailer:       k.Mailer,
-		Discogs:      k.Discogs,
 		DiscogsOAuth: k.DiscogsOAuth,
 		BaseURL:      k.BaseURL,
 
@@ -55,10 +54,7 @@ func NewRouter(k *core.Kernel) http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(RequireAuth(k.Sessions))
 		r.Get("/app/settings", c.SettingsPage)
-		r.Get("/app/scanner", c.ScanPage)
-		r.Post("/app/scan", c.Scan)
-		r.Post("/app/scan/confirm", c.Confirm)
-		r.Get("/app/scan/cancel", c.Cancel)
+		k.Scanner.Routes(r)
 		r.Get("/discogs/connect", c.Connect)
 		r.Get("/discogs/callback", c.Callback)
 		r.Post("/discogs/disconnect", c.Disconnect)
