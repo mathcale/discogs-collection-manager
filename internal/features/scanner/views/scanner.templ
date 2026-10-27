@@ -126,6 +126,13 @@ templ ScannerPage() {
 						swap: 'innerHTML',
 						values: { barcode },
 					}).then(function () {
+						if (scanResult.querySelector('.scan-loading')) {
+							submitted = false;
+							closeBackdrop(resultBackdrop);
+							startScanner();
+							return;
+						}
+
 						if (scanResult.querySelector('.scan-conflict-list')) {
 							while (scanResult.firstChild) {
 								scanConflict.appendChild(scanResult.firstChild);

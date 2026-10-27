@@ -42,7 +42,7 @@ func BaseLayout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/app.min.css\"><meta name=\"htmx-config\" content='{\"responseHandling\":[{\"code\":\"204\",\"swap\":false},{\"code\":\"[23]..\",\"swap\":true},{\"code\":\"422\",\"swap\":true},{\"code\":\"[45]..\",\"swap\":false,\"error\":true},{\"code\":\"...\",\"swap\":true}]}'><script src=\"/static/htmx.min.js\"></script><script>\n\t\t\t\tfunction showToast(message, type) {\n\t\t\t\t\tvar container = document.getElementById('toast-container');\n\n\t\t\t\t\tif (!container) return;\n\n\t\t\t\t\tvar toast = document.createElement('div');\n\t\t\t\t\ttoast.className = 'toast toast-' + (type || 'success');\n\t\t\t\t\ttoast.textContent = message;\n\n\t\t\t\t\tcontainer.appendChild(toast);\n\n\t\t\t\t\tsetTimeout(function() {\n\t\t\t\t\t\ttoast.remove();\n\t\t\t\t\t}, 3500);\n\t\t\t\t}\n\t\t\t</script></head><body>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><link rel=\"stylesheet\" href=\"/static/app.min.css\"><meta name=\"htmx-config\" content='{\"responseHandling\":[{\"code\":\"204\",\"swap\":false},{\"code\":\"[23]..\",\"swap\":true},{\"code\":\"[45]..\",\"swap\":false,\"error\":true},{\"code\":\"...\",\"swap\":true}]}'><script src=\"/static/htmx.min.js\"></script><script>\n\t\t\t\tfunction showToast(message, type) {\n\t\t\t\t\tvar container = document.getElementById('toast-container');\n\n\t\t\t\t\tif (!container) return;\n\n\t\t\t\t\tvar toast = document.createElement('div');\n\t\t\t\t\ttoast.className = 'toast toast-' + (type || 'success');\n\t\t\t\t\ttoast.textContent = message;\n\n\t\t\t\t\tcontainer.appendChild(toast);\n\n\t\t\t\t\tsetTimeout(function() {\n\t\t\t\t\t\ttoast.remove();\n\t\t\t\t\t}, 3500);\n\t\t\t\t}\n\n\t\t\t\tdocument.addEventListener('htmx:beforeSwap', function(e) {\n\t\t\t\t\tvar contentType = e.detail.xhr.getResponseHeader('Content-Type') || '';\n\n\t\t\t\t\tif (e.detail.isError && contentType.indexOf('text/html') === 0) {\n\t\t\t\t\t\te.detail.shouldSwap = true;\n\t\t\t\t\t\te.detail.isError = false;\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener('htmx:responseError', function() {\n\t\t\t\t\tshowToast('Something went wrong. Please try again.', 'error');\n\t\t\t\t});\n\t\t\t</script></head><body>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -86,7 +86,7 @@ func AlertError(msg string) templ.Component {
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/layout.templ`, Line: 43, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/layout.templ`, Line: 56, Col: 13}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {

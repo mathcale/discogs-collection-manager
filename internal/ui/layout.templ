@@ -11,7 +11,7 @@ templ BaseLayout(title string) {
 
 			<link rel="stylesheet" href="/static/app.min.css" />
 
-			<meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"422","swap":true},{"code":"[45]..","swap":false,"error":true},{"code":"...","swap":true}]}'/>
+			<meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"[45]..","swap":false,"error":true},{"code":"...","swap":true}]}'/>
 			<script src="/static/htmx.min.js"></script>
 			<script>
 				function showToast(message, type) {
@@ -29,6 +29,19 @@ templ BaseLayout(title string) {
 						toast.remove();
 					}, 3500);
 				}
+
+				document.addEventListener('htmx:beforeSwap', function(e) {
+					var contentType = e.detail.xhr.getResponseHeader('Content-Type') || '';
+
+					if (e.detail.isError && contentType.indexOf('text/html') === 0) {
+						e.detail.shouldSwap = true;
+						e.detail.isError = false;
+					}
+				});
+
+				document.addEventListener('htmx:responseError', function() {
+					showToast('Something went wrong. Please try again.', 'error');
+				});
 			</script>
 		</head>
 
