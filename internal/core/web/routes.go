@@ -16,8 +16,11 @@ func NewRouter(k *core.Kernel) http.Handler {
 	r.Use(RequestLogger(k.Logger))
 	r.Use(middleware.Recoverer)
 
-	r.Group(k.Landing.Routes)
-	r.Group(k.Auth.Routes)
+	r.Group(func(r chi.Router) {
+		r.Use(k.Auth.RedirectIfAuthenticated)
+		k.Landing.Routes(r)
+		k.Auth.Routes(r)
+	})
 	r.Group(func(r chi.Router) {
 		r.Use(k.Auth.RequireAuth)
 		k.Account.Routes(r)

@@ -66,3 +66,7 @@ func (m *Module) Routes(r chi.Router) {
 func (m *Module) RequireAuth(next http.Handler) http.Handler {
 	return m.handler.RequireAuth(next)
 }
+
+func (m *Module) RedirectIfAuthenticated(next http.Handler) http.Handler {
+	return m.handler.RedirectIfAuthenticated(next)
+}

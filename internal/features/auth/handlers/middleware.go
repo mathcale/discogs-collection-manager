@@ -26,3 +26,25 @@ func (h *Handler) RequireAuth(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
+
+func (h *Handler) RedirectIfAuthenticated(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		cookie, err := r.Cookie(SessionCookieName)
+		if err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		if _, err := h.AuthenticateSession.Execute(r.Context(), usecases.AuthenticateSessionInput{Token: cookie.Value}); err != nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		http.Redirect(w, r, "/app/scanner", http.StatusFound)
+	})
+}
