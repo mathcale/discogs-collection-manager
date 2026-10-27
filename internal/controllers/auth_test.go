@@ -18,7 +18,8 @@ import (
 
 	"github.com/mathcale/discogs-collection-manager/internal/controllers"
 	"github.com/mathcale/discogs-collection-manager/internal/core/web"
-	"github.com/mathcale/discogs-collection-manager/internal/models"
+	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
 
@@ -39,11 +40,11 @@ type AuthSuite struct {
 	suite.Suite
 	db          *sql.DB
 	dbPath      string
-	users       models.UserRepository
-	sessions    models.SessionRepository
-	otpCodes    models.OTPRepository
-	resetTokens models.PasswordResetTokenRepository
-	oauthTokens models.OAuthTokenRepository
+	users       authmodels.UserRepository
+	sessions    authmodels.SessionRepository
+	otpCodes    authmodels.OTPRepository
+	resetTokens authmodels.PasswordResetTokenRepository
+	oauthTokens accountmodels.OAuthTokenRepository
 	mailer      *MockMailer
 	router      http.Handler
 }
@@ -64,11 +65,11 @@ func (s *AuthSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.db = db
 
-	s.users = models.NewSQLiteUserRepository(db)
-	s.sessions = models.NewSQLiteSessionRepository(db)
-	s.otpCodes = models.NewSQLiteOTPRepository(db)
-	s.resetTokens = models.NewSQLitePasswordResetTokenRepository(db)
-	s.oauthTokens = models.NewSQLiteOAuthTokenRepository(db)
+	s.users = authmodels.NewUserRepository(db)
+	s.sessions = authmodels.NewSessionRepository(db)
+	s.otpCodes = authmodels.NewOTPRepository(db)
+	s.resetTokens = authmodels.NewPasswordResetTokenRepository(db)
+	s.oauthTokens = accountmodels.NewOAuthTokenRepository(db)
 }
 
 func (s *AuthSuite) SetupTest() {
@@ -282,7 +283,7 @@ func (s *AuthSuite) TestVerifyOTP_ValidCode_IssuesSession() {
 	user := s.registerUser("otp@example.com", "password123")
 
 	code := "123456"
-	codeHash := models.HashToken(code)
+	codeHash := authmodels.HashToken(code)
 	_, err := s.otpCodes.Create(context.Background(), user.ID, codeHash, time.Now().Add(10*time.Minute))
 	s.Require().NoError(err)
 
@@ -312,7 +313,7 @@ func (s *AuthSuite) TestVerifyOTP_ValidCode_StayLoggedIn_PersistentSession() {
 	user := s.registerUser("otppersist@example.com", "password123")
 
 	code := "654321"
-	codeHash := models.HashToken(code)
+	codeHash := authmodels.HashToken(code)
 	_, err := s.otpCodes.Create(context.Background(), user.ID, codeHash, time.Now().Add(10*time.Minute))
 	s.Require().NoError(err)
 
@@ -341,7 +342,7 @@ func (s *AuthSuite) TestVerifyOTP_InvalidCode_Returns422() {
 	user := s.registerUser("otpwrong@example.com", "password123")
 
 	code := "999999"
-	codeHash := models.HashToken(code)
+	codeHash := authmodels.HashToken(code)
 	_, err := s.otpCodes.Create(context.Background(), user.ID, codeHash, time.Now().Add(10*time.Minute))
 	s.Require().NoError(err)
 
@@ -361,7 +362,7 @@ func (s *AuthSuite) TestVerifyOTP_RepeatedWrongCodes_InvalidatesCode() {
 	user := s.registerUser("otpbrute@example.com", "password123")
 
 	code := "424242"
-	_, err := s.otpCodes.Create(context.Background(), user.ID, models.HashToken(code), time.Now().Add(10*time.Minute))
+	_, err := s.otpCodes.Create(context.Background(), user.ID, authmodels.HashToken(code), time.Now().Add(10*time.Minute))
 	s.Require().NoError(err)
 
 	submit := func(attempt string) *httptest.ResponseRecorder {
@@ -392,7 +393,7 @@ func (s *AuthSuite) TestVerifyOTP_ExpiredCode_Returns422() {
 	user := s.registerUser("otpexpired@example.com", "password123")
 
 	code := "777777"
-	codeHash := models.HashToken(code)
+	codeHash := authmodels.HashToken(code)
 	_, err := s.otpCodes.Create(context.Background(), user.ID, codeHash, time.Now().Add(-1*time.Minute))
 	s.Require().NoError(err)
 
@@ -519,7 +520,7 @@ func (s *AuthSuite) TestResetPasswordPage_ValidToken_ShowsForm() {
 	user := s.registerUser("resetpage@example.com", "password123")
 
 	rawToken := "test-reset-token-abc123"
-	tokenHash := models.HashToken(rawToken)
+	tokenHash := authmodels.HashToken(rawToken)
 	_, err := s.resetTokens.Create(context.Background(), user.ID, tokenHash, time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
@@ -548,7 +549,7 @@ func (s *AuthSuite) TestResetPassword_POST_Success_UpdatesPasswordAndInvalidates
 	existingToken := s.createSession(user.ID, time.Now().Add(6*time.Hour), false)
 
 	rawToken := "valid-reset-token-xyz"
-	tokenHash := models.HashToken(rawToken)
+	tokenHash := authmodels.HashToken(rawToken)
 	_, err := s.resetTokens.Create(context.Background(), user.ID, tokenHash, time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
@@ -578,9 +579,9 @@ func (s *AuthSuite) TestResetPassword_POST_Success_UpdatesPasswordAndInvalidates
 func (s *AuthSuite) TestResetPassword_POST_Success_InvalidatesOtherUnusedTokens() {
 	user := s.registerUser("resetother@example.com", "oldpassword")
 
-	_, err := s.resetTokens.Create(context.Background(), user.ID, models.HashToken("first-token"), time.Now().Add(1*time.Hour))
+	_, err := s.resetTokens.Create(context.Background(), user.ID, authmodels.HashToken("first-token"), time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
-	_, err = s.resetTokens.Create(context.Background(), user.ID, models.HashToken("second-token"), time.Now().Add(1*time.Hour))
+	_, err = s.resetTokens.Create(context.Background(), user.ID, authmodels.HashToken("second-token"), time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
 	rr := s.postForm(s.router, "/auth/reset-password", url.Values{
@@ -601,7 +602,7 @@ func (s *AuthSuite) TestResetPassword_POST_Success_InvalidatesOtherUnusedTokens(
 func (s *AuthSuite) TestForgotPassword_POST_InvalidatesPreviousToken() {
 	user := s.registerUser("resetagain@example.com", "password123")
 
-	_, err := s.resetTokens.Create(context.Background(), user.ID, models.HashToken("old-token"), time.Now().Add(1*time.Hour))
+	_, err := s.resetTokens.Create(context.Background(), user.ID, authmodels.HashToken("old-token"), time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
 	rr := s.postForm(s.router, "/auth/forgot-password", url.Values{"email": {"resetagain@example.com"}})
@@ -659,7 +660,7 @@ func (s *AuthSuite) TestResetPassword_POST_Success_DeletesOAuthToken() {
 	_, err := s.oauthTokens.Upsert(context.Background(), user.ID, "access", "secret", "attacker")
 	s.Require().NoError(err)
 
-	_, err = s.resetTokens.Create(context.Background(), user.ID, models.HashToken("oauth-reset-token"), time.Now().Add(1*time.Hour))
+	_, err = s.resetTokens.Create(context.Background(), user.ID, authmodels.HashToken("oauth-reset-token"), time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
 	rr := s.postForm(s.router, "/auth/reset-password", url.Values{
@@ -678,7 +679,7 @@ func (s *AuthSuite) TestResetPassword_POST_UsedToken_Rejected() {
 	user := s.registerUser("resetused@example.com", "password123")
 
 	rawToken := "used-reset-token"
-	tokenHash := models.HashToken(rawToken)
+	tokenHash := authmodels.HashToken(rawToken)
 	record, err := s.resetTokens.Create(context.Background(), user.ID, tokenHash, time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 	s.Require().NoError(s.resetTokens.MarkUsed(context.Background(), record.ID))
@@ -702,7 +703,7 @@ func (s *AuthSuite) TestResetPassword_POST_PasswordMismatch_Returns422() {
 	user := s.registerUser("resetmismatch@example.com", "password123")
 
 	rawToken := "mismatch-token"
-	tokenHash := models.HashToken(rawToken)
+	tokenHash := authmodels.HashToken(rawToken)
 	_, err := s.resetTokens.Create(context.Background(), user.ID, tokenHash, time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
@@ -824,7 +825,7 @@ func (s *AuthSuite) TestLanding_RegisterLinkFollowsSignupsFlag() {
 	s.NotContains(disabled.Body.String(), "/auth/register")
 }
 
-func (s *AuthSuite) registerUser(email, password string) *models.User {
+func (s *AuthSuite) registerUser(email, password string) *authmodels.User {
 	form := url.Values{"email": {email}, "password": {password}}
 	req := httptest.NewRequest(http.MethodPost, "/auth/register", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

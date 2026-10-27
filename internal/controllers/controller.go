@@ -9,16 +9,17 @@ import (
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
-	"github.com/mathcale/discogs-collection-manager/internal/models"
+	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/ctxkey"
 )
 
 type Controller struct {
-	Users         models.UserRepository
-	Sessions      models.SessionRepository
-	OTPCodes      models.OTPRepository
-	ResetTokens   models.PasswordResetTokenRepository
-	OAuthTokens   models.OAuthTokenRepository
+	Users         authmodels.UserRepository
+	Sessions      authmodels.SessionRepository
+	OTPCodes      authmodels.OTPRepository
+	ResetTokens   authmodels.PasswordResetTokenRepository
+	OAuthTokens   accountmodels.OAuthTokenRepository
 	Mailer        mailer.Mailer
 	Discogs       discogs.DiscogsClient
 	DiscogsOAuth  *oauth1.Config

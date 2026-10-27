@@ -11,7 +11,8 @@ import (
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
-	"github.com/mathcale/discogs-collection-manager/internal/models"
+	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/logger"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
@@ -19,11 +20,11 @@ import (
 type Kernel struct {
 	DB           *sql.DB
 	Logger       logger.Logger
-	Users        models.UserRepository
-	Sessions     models.SessionRepository
-	OAuthTokens  models.OAuthTokenRepository
-	OTPCodes     models.OTPRepository
-	ResetTokens  models.PasswordResetTokenRepository
+	Users        authmodels.UserRepository
+	Sessions     authmodels.SessionRepository
+	OAuthTokens  accountmodels.OAuthTokenRepository
+	OTPCodes     authmodels.OTPRepository
+	ResetTokens  authmodels.PasswordResetTokenRepository
 	Mailer       mailer.Mailer
 	BaseURL      string
 	DiscogsOAuth *oauth1.Config
@@ -103,7 +104,7 @@ func New() (*Kernel, error) {
 		},
 	}
 
-	oauthTokens := models.NewSQLiteOAuthTokenRepository(db)
+	oauthTokens := accountmodels.NewOAuthTokenRepository(db)
 
 	resendAPIKey := os.Getenv("RESEND_API_KEY")
 	resendFrom := os.Getenv("RESEND_FROM")
@@ -119,11 +120,11 @@ func New() (*Kernel, error) {
 	return &Kernel{
 		DB:           db,
 		Logger:       log,
-		Users:        models.NewSQLiteUserRepository(db),
-		Sessions:     models.NewSQLiteSessionRepository(db),
+		Users:        authmodels.NewUserRepository(db),
+		Sessions:     authmodels.NewSessionRepository(db),
 		OAuthTokens:  oauthTokens,
-		OTPCodes:     models.NewSQLiteOTPRepository(db),
-		ResetTokens:  models.NewSQLitePasswordResetTokenRepository(db),
+		OTPCodes:     authmodels.NewOTPRepository(db),
+		ResetTokens:  authmodels.NewPasswordResetTokenRepository(db),
 		Mailer:       mailer.NewResendMailer(resendAPIKey, resendFrom),
 		BaseURL:      baseURL,
 		DiscogsOAuth: discogsOAuth,

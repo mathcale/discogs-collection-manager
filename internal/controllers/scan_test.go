@@ -18,7 +18,8 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/controllers"
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
 	"github.com/mathcale/discogs-collection-manager/internal/core/web"
-	"github.com/mathcale/discogs-collection-manager/internal/models"
+	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
 
@@ -52,8 +53,8 @@ type ScanSuite struct {
 	suite.Suite
 	db          *sql.DB
 	dbPath      string
-	sessions    models.SessionRepository
-	oauthTokens models.OAuthTokenRepository
+	sessions    authmodels.SessionRepository
+	oauthTokens accountmodels.OAuthTokenRepository
 	router      http.Handler
 	mockDiscogs *mockDiscogsClient
 }
@@ -74,8 +75,8 @@ func (s *ScanSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.db = db
 
-	s.sessions = models.NewSQLiteSessionRepository(db)
-	s.oauthTokens = models.NewSQLiteOAuthTokenRepository(db)
+	s.sessions = authmodels.NewSessionRepository(db)
+	s.oauthTokens = accountmodels.NewOAuthTokenRepository(db)
 }
 
 func (s *ScanSuite) SetupTest() {

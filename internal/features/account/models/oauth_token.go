@@ -23,17 +23,17 @@ type OAuthTokenRepository interface {
 	DeleteByUserID(ctx context.Context, userID string) error
 }
 
-type SQLiteOAuthTokenRepository struct {
+type oauthTokenRepository struct {
 	db *sql.DB
 }
 
-func NewSQLiteOAuthTokenRepository(db *sql.DB) *SQLiteOAuthTokenRepository {
-	return &SQLiteOAuthTokenRepository{
+func NewOAuthTokenRepository(db *sql.DB) OAuthTokenRepository {
+	return &oauthTokenRepository{
 		db: db,
 	}
 }
 
-func (r *SQLiteOAuthTokenRepository) Upsert(
+func (r *oauthTokenRepository) Upsert(
 	ctx context.Context,
 	userID, accessToken, accessTokenSecret, discogsUsername string,
 ) (*OAuthToken, error) {
@@ -63,7 +63,7 @@ func (r *SQLiteOAuthTokenRepository) Upsert(
 	}, nil
 }
 
-func (r *SQLiteOAuthTokenRepository) FindByUserID(
+func (r *oauthTokenRepository) FindByUserID(
 	ctx context.Context,
 	userID string,
 ) (*OAuthToken, error) {
@@ -87,7 +87,7 @@ func (r *SQLiteOAuthTokenRepository) FindByUserID(
 	return &t, nil
 }
 
-func (r *SQLiteOAuthTokenRepository) DeleteByUserID(ctx context.Context, userID string) error {
+func (r *oauthTokenRepository) DeleteByUserID(ctx context.Context, userID string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM oauth_tokens WHERE user_id = ?`, userID)
 
 	return err

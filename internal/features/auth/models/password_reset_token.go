@@ -30,17 +30,17 @@ type PasswordResetTokenRepository interface {
 	MarkAllUsedForUser(ctx context.Context, userID string) error
 }
 
-type SQLitePasswordResetTokenRepository struct {
+type passwordResetTokenRepository struct {
 	db *sql.DB
 }
 
-func NewSQLitePasswordResetTokenRepository(db *sql.DB) *SQLitePasswordResetTokenRepository {
-	return &SQLitePasswordResetTokenRepository{
+func NewPasswordResetTokenRepository(db *sql.DB) PasswordResetTokenRepository {
+	return &passwordResetTokenRepository{
 		db: db,
 	}
 }
 
-func (r *SQLitePasswordResetTokenRepository) Create(
+func (r *passwordResetTokenRepository) Create(
 	ctx context.Context,
 	userID, tokenHash string,
 	expiresAt time.Time,
@@ -65,7 +65,7 @@ func (r *SQLitePasswordResetTokenRepository) Create(
 	}, nil
 }
 
-func (r *SQLitePasswordResetTokenRepository) FindByTokenHash(
+func (r *passwordResetTokenRepository) FindByTokenHash(
 	ctx context.Context,
 	tokenHash string,
 ) (*PasswordResetToken, error) {
@@ -93,7 +93,7 @@ func (r *SQLitePasswordResetTokenRepository) FindByTokenHash(
 	return &t, nil
 }
 
-func (r *SQLitePasswordResetTokenRepository) MarkUsed(ctx context.Context, id string) error {
+func (r *passwordResetTokenRepository) MarkUsed(ctx context.Context, id string) error {
 	_, err := r.db.ExecContext(ctx,
 		`UPDATE password_reset_tokens SET used_at = ? WHERE id = ?`,
 		time.Now().UTC().Format(time.DateTime), id,
@@ -102,7 +102,7 @@ func (r *SQLitePasswordResetTokenRepository) MarkUsed(ctx context.Context, id st
 	return err
 }
 
-func (r *SQLitePasswordResetTokenRepository) MarkAllUsedForUser(ctx context.Context, userID string) error {
+func (r *passwordResetTokenRepository) MarkAllUsedForUser(ctx context.Context, userID string) error {
 	_, err := r.db.ExecContext(ctx,
 		`UPDATE password_reset_tokens SET used_at = ? WHERE user_id = ? AND used_at IS NULL`,
 		time.Now().UTC().Format(time.DateTime), userID,

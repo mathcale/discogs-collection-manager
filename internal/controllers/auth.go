@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/mathcale/discogs-collection-manager/internal/models"
+	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/views"
 )
 
@@ -36,7 +36,7 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := models.NormalizeEmail(r.FormValue("email"))
+	email := authmodels.NormalizeEmail(r.FormValue("email"))
 	password := r.FormValue("password")
 
 	existing, err := c.Users.FindByEmail(r.Context(), email)
@@ -49,7 +49,7 @@ func (c *Controller) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash, err := models.HashPassword(password)
+	hash, err := authmodels.HashPassword(password)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
@@ -73,7 +73,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := models.NormalizeEmail(r.FormValue("email"))
+	email := authmodels.NormalizeEmail(r.FormValue("email"))
 	password := r.FormValue("password")
 	stayLoggedIn := r.FormValue("stay_logged_in") == "1"
 
@@ -92,14 +92,14 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	code, err := models.GenerateOTPCode()
+	code, err := authmodels.GenerateOTPCode()
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	codeHash := models.HashToken(code)
-	if _, err := c.OTPCodes.Create(r.Context(), user.ID, codeHash, time.Now().Add(models.OTPExpiry)); err != nil {
+	codeHash := authmodels.HashToken(code)
+	if _, err := c.OTPCodes.Create(r.Context(), user.ID, codeHash, time.Now().Add(authmodels.OTPExpiry)); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
@@ -120,7 +120,7 @@ func (c *Controller) Login(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-		MaxAge:   int(models.OTPExpiry.Seconds()),
+		MaxAge:   int(authmodels.OTPExpiry.Seconds()),
 	})
 
 	http.Redirect(w, r, "/auth/login/otp", http.StatusFound)
@@ -174,7 +174,7 @@ func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !otp.Matches(code) {
-		if err := c.OTPCodes.RecordFailedAttempt(r.Context(), otp.ID, models.MaxOTPFailedAttempts); err != nil {
+		if err := c.OTPCodes.RecordFailedAttempt(r.Context(), otp.ID, authmodels.MaxOTPFailedAttempts); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
@@ -184,7 +184,7 @@ func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := c.OTPCodes.MarkUsed(r.Context(), otp.ID); err != nil {
-		if errors.Is(err, models.ErrOTPNotPending) {
+		if errors.Is(err, authmodels.ErrOTPNotPending) {
 			render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid or expired code. Please log in again."))
 			return
 		}
@@ -205,13 +205,13 @@ func (c *Controller) VerifyOTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Controller) startSession(w http.ResponseWriter, r *http.Request, userID string, stayLoggedIn bool) {
-	token, err := models.GenerateToken()
+	token, err := authmodels.GenerateToken()
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	expiresAt := time.Now().Add(models.SessionExpiry(stayLoggedIn))
+	expiresAt := time.Now().Add(authmodels.SessionExpiry(stayLoggedIn))
 
 	if _, err := c.Sessions.Create(r.Context(), userID, token, expiresAt, stayLoggedIn); err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -260,7 +260,7 @@ func (c *Controller) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	email := models.NormalizeEmail(r.FormValue("email"))
+	email := authmodels.NormalizeEmail(r.FormValue("email"))
 
 	user, err := c.Users.FindByEmail(r.Context(), email)
 	if err != nil {
@@ -269,7 +269,7 @@ func (c *Controller) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if user != nil {
-		rawToken, err := models.GenerateToken()
+		rawToken, err := authmodels.GenerateToken()
 		if err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
@@ -280,8 +280,8 @@ func (c *Controller) ForgotPassword(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		tokenHash := models.HashToken(rawToken)
-		if _, err := c.ResetTokens.Create(r.Context(), user.ID, tokenHash, time.Now().Add(models.ResetTokenExpiry)); err != nil {
+		tokenHash := authmodels.HashToken(rawToken)
+		if _, err := c.ResetTokens.Create(r.Context(), user.ID, tokenHash, time.Now().Add(authmodels.ResetTokenExpiry)); err != nil {
 			http.Error(w, "internal error", http.StatusInternalServerError)
 			return
 		}
@@ -304,7 +304,7 @@ func (c *Controller) ResetPasswordPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenHash := models.HashToken(rawToken)
+	tokenHash := authmodels.HashToken(rawToken)
 	record, err := c.ResetTokens.FindByTokenHash(r.Context(), tokenHash)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -334,7 +334,7 @@ func (c *Controller) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenHash := models.HashToken(rawToken)
+	tokenHash := authmodels.HashToken(rawToken)
 	record, err := c.ResetTokens.FindByTokenHash(r.Context(), tokenHash)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
@@ -346,7 +346,7 @@ func (c *Controller) ResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hash, err := models.HashPassword(password)
+	hash, err := authmodels.HashPassword(password)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return

@@ -40,17 +40,17 @@ type SessionRepository interface {
 	DeleteAllForUser(ctx context.Context, userID string) error
 }
 
-type SQLiteSessionRepository struct {
+type sessionRepository struct {
 	db *sql.DB
 }
 
-func NewSQLiteSessionRepository(db *sql.DB) *SQLiteSessionRepository {
-	return &SQLiteSessionRepository{
+func NewSessionRepository(db *sql.DB) SessionRepository {
+	return &sessionRepository{
 		db: db,
 	}
 }
 
-func (r *SQLiteSessionRepository) Create(
+func (r *sessionRepository) Create(
 	ctx context.Context,
 	userID, token string,
 	expiresAt time.Time,
@@ -83,7 +83,7 @@ func (r *SQLiteSessionRepository) Create(
 	}, nil
 }
 
-func (r *SQLiteSessionRepository) FindByToken(
+func (r *sessionRepository) FindByToken(
 	ctx context.Context,
 	token string,
 ) (*Session, error) {
@@ -109,13 +109,13 @@ func (r *SQLiteSessionRepository) FindByToken(
 	return &s, nil
 }
 
-func (r *SQLiteSessionRepository) Delete(ctx context.Context, token string) error {
+func (r *sessionRepository) Delete(ctx context.Context, token string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM sessions WHERE token = ?`, token)
 
 	return err
 }
 
-func (r *SQLiteSessionRepository) DeleteAllForUser(ctx context.Context, userID string) error {
+func (r *sessionRepository) DeleteAllForUser(ctx context.Context, userID string) error {
 	_, err := r.db.ExecContext(ctx, `DELETE FROM sessions WHERE user_id = ?`, userID)
 
 	return err

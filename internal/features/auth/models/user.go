@@ -40,17 +40,17 @@ type UserRepository interface {
 	UpdatePassword(ctx context.Context, id, passwordHash string) error
 }
 
-type SQLiteUserRepository struct {
+type userRepository struct {
 	db *sql.DB
 }
 
-func NewSQLiteUserRepository(db *sql.DB) *SQLiteUserRepository {
-	return &SQLiteUserRepository{
+func NewUserRepository(db *sql.DB) UserRepository {
+	return &userRepository{
 		db: db,
 	}
 }
 
-func (r *SQLiteUserRepository) Create(
+func (r *userRepository) Create(
 	ctx context.Context,
 	email, passwordHash string,
 ) (*User, error) {
@@ -73,7 +73,7 @@ func (r *SQLiteUserRepository) Create(
 	}, nil
 }
 
-func (r *SQLiteUserRepository) FindByEmail(ctx context.Context, email string) (*User, error) {
+func (r *userRepository) FindByEmail(ctx context.Context, email string) (*User, error) {
 	var u User
 	var createdAt string
 
@@ -93,7 +93,7 @@ func (r *SQLiteUserRepository) FindByEmail(ctx context.Context, email string) (*
 	return &u, nil
 }
 
-func (r *SQLiteUserRepository) FindByID(ctx context.Context, id string) (*User, error) {
+func (r *userRepository) FindByID(ctx context.Context, id string) (*User, error) {
 	var u User
 	var createdAt string
 
@@ -113,7 +113,7 @@ func (r *SQLiteUserRepository) FindByID(ctx context.Context, id string) (*User, 
 	return &u, nil
 }
 
-func (r *SQLiteUserRepository) UpdatePassword(
+func (r *userRepository) UpdatePassword(
 	ctx context.Context,
 	id, passwordHash string,
 ) error {

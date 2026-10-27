@@ -40,17 +40,17 @@ type OTPRepository interface {
 	RecordFailedAttempt(ctx context.Context, id string, maxAttempts int) error
 }
 
-type SQLiteOTPRepository struct {
+type otpRepository struct {
 	db *sql.DB
 }
 
-func NewSQLiteOTPRepository(db *sql.DB) *SQLiteOTPRepository {
-	return &SQLiteOTPRepository{
+func NewOTPRepository(db *sql.DB) OTPRepository {
+	return &otpRepository{
 		db: db,
 	}
 }
 
-func (r *SQLiteOTPRepository) Create(
+func (r *otpRepository) Create(
 	ctx context.Context,
 	userID, codeHash string,
 	expiresAt time.Time,
@@ -75,7 +75,7 @@ func (r *SQLiteOTPRepository) Create(
 	}, nil
 }
 
-func (r *SQLiteOTPRepository) FindPendingByUserID(
+func (r *otpRepository) FindPendingByUserID(
 	ctx context.Context,
 	userID string,
 ) (*OTPCode, error) {
@@ -105,7 +105,7 @@ func (r *SQLiteOTPRepository) FindPendingByUserID(
 	return &otp, nil
 }
 
-func (r *SQLiteOTPRepository) MarkUsed(ctx context.Context, id string) error {
+func (r *otpRepository) MarkUsed(ctx context.Context, id string) error {
 	result, err := r.db.ExecContext(ctx,
 		`UPDATE otp_codes SET used_at = ? WHERE id = ? AND used_at IS NULL`,
 		time.Now().UTC().Format(time.DateTime), id,
@@ -126,7 +126,7 @@ func (r *SQLiteOTPRepository) MarkUsed(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *SQLiteOTPRepository) RecordFailedAttempt(ctx context.Context, id string, maxAttempts int) error {
+func (r *otpRepository) RecordFailedAttempt(ctx context.Context, id string, maxAttempts int) error {
 	_, err := r.db.ExecContext(ctx,
 		`UPDATE otp_codes
 		 SET failed_attempts = failed_attempts + 1,

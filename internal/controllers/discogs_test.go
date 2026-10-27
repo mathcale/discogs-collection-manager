@@ -20,7 +20,8 @@ import (
 
 	"github.com/mathcale/discogs-collection-manager/internal/controllers"
 	"github.com/mathcale/discogs-collection-manager/internal/core/web"
-	"github.com/mathcale/discogs-collection-manager/internal/models"
+	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
 
@@ -28,9 +29,9 @@ type DiscogsOAuthSuite struct {
 	suite.Suite
 	db          *sql.DB
 	dbPath      string
-	users       models.UserRepository
-	sessions    models.SessionRepository
-	oauthTokens models.OAuthTokenRepository
+	users       authmodels.UserRepository
+	sessions    authmodels.SessionRepository
+	oauthTokens accountmodels.OAuthTokenRepository
 	router      http.Handler
 	mockDiscogs *httptest.Server
 	controller  *controllers.Controller
@@ -52,9 +53,9 @@ func (s *DiscogsOAuthSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.db = db
 
-	s.users = models.NewSQLiteUserRepository(db)
-	s.sessions = models.NewSQLiteSessionRepository(db)
-	s.oauthTokens = models.NewSQLiteOAuthTokenRepository(db)
+	s.users = authmodels.NewUserRepository(db)
+	s.sessions = authmodels.NewSessionRepository(db)
+	s.oauthTokens = accountmodels.NewOAuthTokenRepository(db)
 }
 
 func (s *DiscogsOAuthSuite) SetupTest() {
@@ -309,7 +310,7 @@ func (s *DiscogsOAuthSuite) TestSettingsPage_ShowsNavigation() {
 	s.Contains(body, "/app/scanner")
 }
 
-func (s *DiscogsOAuthSuite) createUser(email string) *models.User {
+func (s *DiscogsOAuthSuite) createUser(email string) *authmodels.User {
 	form := url.Values{"email": {email}, "password": {"password123"}}
 	user, err := s.users.Create(context.Background(), email, "hashed")
 	s.Require().NoError(err)
