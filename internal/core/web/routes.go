@@ -32,7 +32,7 @@ func NewRouter(k *core.Kernel) http.Handler {
 		SignupsEnabled:     k.SignupsEnabled,
 	}
 
-	r.Get("/", c.Landing)
+	r.Group(k.Landing.Routes)
 
 	r.Route("/auth", func(r chi.Router) {
 		r.Get("/register", c.RegisterPage)

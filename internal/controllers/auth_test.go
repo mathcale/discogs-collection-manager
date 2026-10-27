@@ -815,16 +815,6 @@ func (s *AuthSuite) TestLoginPage_RegisterLinkFollowsSignupsFlag() {
 	s.NotContains(disabled.Body.String(), "/auth/register")
 }
 
-func (s *AuthSuite) TestLanding_RegisterLinkFollowsSignupsFlag() {
-	enabled := httptest.NewRecorder()
-	(&controllers.Controller{SignupsEnabled: true}).Landing(enabled, httptest.NewRequest(http.MethodGet, "/", nil))
-	s.Contains(enabled.Body.String(), "/auth/register")
-
-	disabled := httptest.NewRecorder()
-	(&controllers.Controller{SignupsEnabled: false}).Landing(disabled, httptest.NewRequest(http.MethodGet, "/", nil))
-	s.NotContains(disabled.Body.String(), "/auth/register")
-}
-
 func (s *AuthSuite) registerUser(email, password string) *authmodels.User {
 	form := url.Values{"email": {email}, "password": {password}}
 	req := httptest.NewRequest(http.MethodPost, "/auth/register", strings.NewReader(form.Encode()))
