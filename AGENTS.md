@@ -45,19 +45,66 @@ When filing issues, referencing work, or picking up tasks, always use that Linea
 ## Package Structure
 
 ```plaintext
+cmd/server/main.go                      core.New() → web.NewServer(k).Run()
+
 internal/
-  web/       # HTTP layer: router (chi routes + middleware), Server (listen + graceful shutdown)
-  pkg/       # Infrastructure utilities with no business logic: kernel/, migrate/, ...
-  handler/   # HTTP handlers — one file per feature area
-  templates/ # a-h/templ components
+  core/
+    kernel.go                           env config, DB, migrations, clients, feature modules
+    web/
+      routes.go                         global middleware + mounts each module
+      middleware.go                     RequestLogger only
+      server.go
+    clients/
+      discogs/
+      mailer/
+
+  features/
+    landing/        feature.go, handlers/, views/
+    auth/           feature.go, handlers/, usecases/, models/, views/
+    account/        feature.go, handlers/, usecases/, models/, views/
+    scanner/        feature.go, handlers/, usecases/, views/
+
+  ui/                                   BaseLayout, AppLayout, AlertError, icons, Render
+  pkg/                                  ctxkey/  logger/  migrate/
+
+migrations/
 ```
 
-`cmd/server/main.go` only orchestrates: `kernel.New()` → `web.NewServer(k).Run()`. Nothing else.
+`cmd/server/main.go` only orchestrates: `core.New()` → `web.NewServer(k).Run()`. Nothing else.
+
+## Import Rules
+
+| Package | May import |
+|---|---|
+| `core/web` | `core`, `pkg/*` |
+| `core` (kernel) | feature **root** packages, `core/clients/*`, `pkg/*`, and `features/account/models` (only to build the Discogs client) |
+| `core/clients/discogs` | `features/account/models`, `pkg/ctxkey` |
+| feature root (`feature.go`) | its own subpackages, other features' `models`, `core/clients/*`, `chi` |
+| `<f>/handlers` | own `usecases`, own `views`, `ui`, `pkg/ctxkey`, `core/clients/discogs` (error types only) |
+| `<f>/usecases` | own `models`, other features' `models`, `core/clients/*` |
+| `<f>/models` | stdlib only (plus crypto libs already in use) |
+| `<f>/views` | `ui`, own `models`, `core/clients/discogs` (release types) |
+| `ui` | `templ` only |
+
+Hard rules:
+
+- A feature never imports another feature's `handlers`, `usecases`, `views` or root package.
+- Subpackages never import their own feature root.
 
 ## Architecture Conventions
 
-- All database access is behind repository interfaces (`UserRepository`, `SessionRepository`, `OAuthTokenRepository`). Inject SQLite implementations at startup.
-- The Discogs HTTP client is hidden behind a `DiscogsClient` interface. Inject it — never instantiate it inside handlers.
+- Handlers handle HTTP only (parsing, cookies, redirects, rendering). Business flows live in use cases; domain rules (password hashing, token generation, expiry checks) live in `models`.
+- All database access is behind repository interfaces (for example `UserRepository`, `SessionRepository`, `OAuthTokenRepository`). Each feature builds its repositories from the injected `*sql.DB` in its `feature.go`.
+- The Discogs HTTP client is hidden behind a `DiscogsClient` interface. Inject it — never instantiate it inside handlers or use cases.
 - All email sending goes through a `Mailer` interface. Never call Resend directly from business logic.
-- Tests use the HTTP handler boundary as the primary seam: spin up the full handler tree with an in-memory SQLite DB and mock `DiscogsClient` + `Mailer`.
+- Tests use the HTTP handler boundary as the primary seam: each feature tests its `Module.Routes` with an in-memory SQLite DB and mock `DiscogsClient` + `Mailer`. Full-tree tests live in `core/web`.
+
+### Feature modules
+
+- Each feature has a root `feature.go` declaring a `Deps` struct and a `Module`. `Deps` holds only shared infrastructure (DB, clients, config values), never another feature's module or repository. A feature that needs another feature's data builds that feature's repository itself from the DB.
+- `New(Deps)` wires repositories, use cases and the handler. `Routes` registers absolute paths; `core/web` only decides grouping and middleware.
+- Repositories take the DB through their constructor, which returns the interface; implementations are unexported and have no `SQLite` prefix.
+- Each use case lives in its own file with its input, output, sentinel errors, unexported local interfaces for dependencies owned by other features, the use case struct with exported dependency fields, and an `Execute` method. Use cases know nothing about HTTP and never call each other; shared logic goes in an unexported helper in a non-use-case file.
+- Unexpected errors are returned as-is and handlers turn unrecognised ones into `500 internal error`. Discogs client errors must stay reachable with `errors.As`; when a use case needs to name the failed step, wrap with both the sentinel and the original error.
+- Handler structs hold concrete use-case pointers named after the use case. Handler methods keep their action names; when a method name collides with a use-case field, the method gets a `Submit` suffix.
 - No specific file paths or code snippets in issue descriptions — they go stale.

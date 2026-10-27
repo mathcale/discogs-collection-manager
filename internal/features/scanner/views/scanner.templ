@@ -1,0 +1,485 @@
+package views
+
+import (
+	"strconv"
+
+	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/ui"
+)
+
+templ ScannerPage() {
+	@ui.AppLayout("Scanner — Discogs Collection Manager", "scanner") {
+		<div class="scanner-shell">
+			<div class="scanner-viewport">
+				<div id="reader"></div>
+			</div>
+
+			<div class="scanner-bar" role="toolbar" aria-label="Scanner controls">
+				<button id="manual-btn" type="button" class="btn btn-secondary scanner-bar-btn">
+					Enter manually
+				</button>
+			</div>
+		</div>
+
+		<!-- Result modal (single match) -->
+		<div id="result-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Scan result">
+			<div class="modal modal-scroll" id="result-modal">
+				<div id="scan-result" aria-live="polite" aria-atomic="true"></div>
+			</div>
+		</div>
+
+		<!-- Conflict modal (multiple matches) -->
+		<div id="conflict-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Choose release">
+			<div class="modal modal-wide modal-scroll" id="conflict-modal">
+				<div id="scan-conflict" aria-live="polite" aria-atomic="true"></div>
+			</div>
+		</div>
+
+		<!-- Manual entry modal -->
+		<div id="manual-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Enter barcode">
+			<div class="modal" id="manual-modal">
+				<h2 class="modal-title">Enter barcode</h2>
+				<form id="manual-form" novalidate>
+					<input
+						type="text"
+						id="manual-input"
+						name="barcode"
+						placeholder="e.g. 5099750442029"
+						class="input"
+						autocomplete="off"
+						inputmode="numeric"
+						aria-label="Barcode"
+					/>
+					<div class="manual-form-actions">
+						<button type="submit" class="btn btn-primary">Search</button>
+						<button type="button" id="manual-close-btn" class="btn btn-secondary">Cancel</button>
+					</div>
+				</form>
+			</div>
+		</div>
+
+		<!-- Cancel confirmation modal -->
+		<div id="cancel-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Cancel scan">
+			<div class="modal">
+				<p class="modal-title">Cancel this scan?</p>
+				<p class="modal-body">Your scan result will be discarded.</p>
+				<div class="modal-actions">
+					<button type="button" id="keep-btn" class="btn btn-secondary">Keep reviewing</button>
+					<button type="button" id="confirm-cancel-btn" class="btn btn-primary">Yes, cancel</button>
+				</div>
+			</div>
+		</div>
+
+		<script>
+			function initScanner() {
+				var submitted = false;
+
+				var resultBackdrop = document.getElementById('result-backdrop');
+				var conflictBackdrop = document.getElementById('conflict-backdrop');
+				var manualBackdrop = document.getElementById('manual-backdrop');
+				var cancelBackdrop = document.getElementById('cancel-backdrop');
+				var scanResult = document.getElementById('scan-result');
+				var scanConflict = document.getElementById('scan-conflict');
+				var manualBtn = document.getElementById('manual-btn');
+				var manualForm = document.getElementById('manual-form');
+				var manualInput = document.getElementById('manual-input');
+				var manualCloseBtn = document.getElementById('manual-close-btn');
+				var keepBtn = document.getElementById('keep-btn');
+				var confirmCancelBtn = document.getElementById('confirm-cancel-btn');
+
+				var scanner = new Html5Qrcode('reader');
+				var config = {
+					fps: 10,
+					qrbox: { width: 250, height: 150 },
+				};
+
+				function openBackdrop(el) {
+					el.classList.add('is-open');
+				}
+
+				function closeBackdrop(el) {
+					el.classList.remove('is-open');
+				}
+
+				function startScanner() {
+					return scanner.start(
+						{ facingMode: 'environment' },
+						config,
+						function (decodedText) {
+							scanner.stop().catch(function () {});
+							postBarcode(decodedText);
+						}
+					).catch(function (err) {
+						showToast('Could not start camera: ' + (err && err.message ? err.message : err), 'error');
+					});
+				}
+
+				function postBarcode(barcode) {
+					if (submitted) return;
+					submitted = true;
+
+					scanResult.innerHTML = '<div class="scan-loading"><span class="spinner scan-loading-spinner"></span><span>Searching\u2026</span></div>';
+					openBackdrop(resultBackdrop);
+
+					htmx.ajax('POST', '/app/scan', {
+						target: '#scan-result',
+						swap: 'innerHTML',
+						values: { barcode },
+					}).then(function () {
+						if (scanResult.querySelector('.scan-loading')) {
+							submitted = false;
+							closeBackdrop(resultBackdrop);
+							startScanner();
+							return;
+						}
+
+						if (scanResult.querySelector('.scan-conflict-list')) {
+							while (scanResult.firstChild) {
+								scanConflict.appendChild(scanResult.firstChild);
+							}
+							closeBackdrop(resultBackdrop);
+							openBackdrop(conflictBackdrop);
+						}
+					}).catch(function () {
+						submitted = false;
+						closeBackdrop(resultBackdrop);
+					});
+				}
+
+				// Backdrop tap → cancel confirmation
+				resultBackdrop.addEventListener('click', function (e) {
+					if (e.target === resultBackdrop) openBackdrop(cancelBackdrop);
+				});
+
+				conflictBackdrop.addEventListener('click', function (e) {
+					if (e.target === conflictBackdrop) openBackdrop(cancelBackdrop);
+				});
+
+				// Intercept Cancel / Try again links inside result and conflict modals
+				document.addEventListener('click', function (e) {
+					var link = e.target.closest('a[href="/app/scanner"]');
+					if (link && (resultBackdrop.classList.contains('is-open') || conflictBackdrop.classList.contains('is-open'))) {
+						e.preventDefault();
+						openBackdrop(cancelBackdrop);
+					}
+				});
+
+				// Warning from a conflict-list confirm is swapped into the hidden result modal
+				document.addEventListener('htmx:afterSwap', function () {
+					if (scanResult.querySelector('.scan-owned-warning')) {
+						closeBackdrop(conflictBackdrop);
+						openBackdrop(resultBackdrop);
+					}
+				});
+
+				// Keep reviewing
+				keepBtn.addEventListener('click', function () {
+					closeBackdrop(cancelBackdrop);
+				});
+
+				// Yes, cancel
+				confirmCancelBtn.addEventListener('click', function () {
+					closeBackdrop(cancelBackdrop);
+					closeBackdrop(resultBackdrop);
+					closeBackdrop(conflictBackdrop);
+					scanResult.innerHTML = '';
+					scanConflict.innerHTML = '';
+					submitted = false;
+					startScanner();
+				});
+
+				// Manual entry
+				manualBtn.addEventListener('click', function () {
+					openBackdrop(manualBackdrop);
+					manualInput.focus();
+				});
+
+				manualCloseBtn.addEventListener('click', function () {
+					closeBackdrop(manualBackdrop);
+				});
+
+				manualBackdrop.addEventListener('click', function (e) {
+					if (e.target === manualBackdrop) closeBackdrop(manualBackdrop);
+				});
+
+				manualForm.addEventListener('submit', function (e) {
+					e.preventDefault();
+					var barcode = manualInput.value.trim();
+					if (!barcode) return;
+
+					closeBackdrop(manualBackdrop);
+					scanner.stop().catch(function () {});
+					manualInput.value = '';
+
+					postBarcode(barcode);
+				});
+
+				// scan-success event fired by HX-Trigger header from confirm response
+				document.addEventListener('scan-success', function () {
+					submitted = false;
+					closeBackdrop(resultBackdrop);
+					closeBackdrop(conflictBackdrop);
+					scanResult.innerHTML = '';
+					scanConflict.innerHTML = '';
+					showToast('Release added to your Discogs collection!', 'success');
+					startScanner();
+				});
+
+				startScanner();
+			}
+
+			if (window.Html5Qrcode) {
+				initScanner();
+			} else {
+				var libraryScript = document.createElement('script');
+				libraryScript.src = '/static/html5-qrcode.min.js';
+				libraryScript.onload = initScanner;
+				document.head.appendChild(libraryScript);
+			}
+		</script>
+	}
+}
+
+templ ScanConfirmPartial(release discogs.Release) {
+	<div class="scan-result-card">
+		if release.Thumb != "" {
+			<img src={ release.Thumb } alt={ release.Title } class="scan-result-thumb"/>
+		}
+
+		<div class="scan-result-body">
+			<h2 class="scan-result-title">{ release.Title }</h2>
+
+			<dl class="scan-result-meta">
+				if release.Country != "" {
+					<dt>Country</dt>
+					<dd>{ release.Country }</dd>
+				}
+
+				if release.Year != "" {
+					<dt>Year</dt>
+					<dd>{ release.Year }</dd>
+				}
+
+				if release.Label() != "" {
+					<dt>Label</dt>
+					<dd>{ release.Label() }</dd>
+				}
+
+				if release.Catno != "" {
+					<dt>Cat. no.</dt>
+					<dd class="scan-result-catno">{ release.Catno }</dd>
+				}
+
+				if release.FormatSummary() != "" {
+					<dt>Format</dt>
+					<dd>{ release.FormatSummary() }</dd>
+				}
+
+				if release.Variant() != "" {
+					<dt>Variant</dt>
+					<dd>{ release.Variant() }</dd>
+				}
+			</dl>
+
+			<a
+				href={ templ.SafeURL(release.URL()) }
+				target="_blank"
+				rel="noopener noreferrer"
+				class="scan-result-link"
+			>
+				View on Discogs ↗
+			</a>
+		</div>
+
+		<div class="scan-result-actions">
+			<form
+				hx-post="/app/scan/confirm"
+				hx-target="#scan-result"
+				hx-swap="innerHTML"
+				hx-disabled-elt="find button[type='submit']"
+			>
+				<input type="hidden" name="release_id" value={ strconv.Itoa(release.ID) }/>
+
+				<button type="submit" class="btn btn-primary scan-result-action-btn">
+					<span class="spinner" aria-hidden="true"></span>
+					Add to Collection
+				</button>
+			</form>
+
+			<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Cancel</a>
+		</div>
+	</div>
+}
+
+templ ScanConflictListPartial(releases []discogs.Release) {
+	<div class="scan-result-card">
+		<div class="scan-result-body">
+			<h2 class="scan-result-title">Multiple releases found</h2>
+			<p class="scan-result-subtitle">Select the correct pressing:</p>
+		</div>
+
+		<form
+			hx-post="/app/scan/confirm"
+			hx-target="#scan-result"
+			hx-swap="innerHTML"
+			hx-disabled-elt="find button[type='submit']"
+		>
+			<ul class="scan-conflict-list">
+				for _, r := range releases {
+					<li class="scan-conflict-item">
+						<label class="scan-conflict-label">
+							<input type="radio" name="release_id" value={ strconv.Itoa(r.ID) } class="scan-conflict-radio"/>
+
+							if r.Thumb != "" {
+								<img src={ r.Thumb } alt={ r.Title } class="scan-conflict-thumb"/>
+							}
+
+							<span class="scan-conflict-info">
+								<strong>{ r.Title }</strong>
+
+								<span class="scan-conflict-meta">
+									if r.Country != "" {
+										<span>{ r.Country }</span>
+									}
+
+									if r.Year != "" {
+										<span>{ r.Year }</span>
+									}
+
+									if r.Label() != "" {
+										<span>{ r.Label() }</span>
+									}
+
+								</span>
+
+								<span class="scan-conflict-detail">
+									if r.Catno != "" {
+										<span class="scan-conflict-catno">{ r.Catno }</span>
+									}
+
+									if r.FormatSummary() != "" {
+										<span>{ r.FormatSummary() }</span>
+									}
+
+									if r.Variant() != "" {
+										<span class="scan-conflict-variant">{ r.Variant() }</span>
+									}
+								</span>
+
+								<a href={ templ.SafeURL(r.URL()) } target="_blank" rel="noopener noreferrer" class="scan-result-link">
+									View on Discogs ↗
+								</a>
+							</span>
+						</label>
+					</li>
+				}
+			</ul>
+
+			<div class="scan-result-actions">
+				<button type="submit" class="btn btn-primary scan-result-action-btn">
+					<span class="spinner" aria-hidden="true"></span>
+					Confirm
+				</button>
+
+				<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Cancel</a>
+			</div>
+		</form>
+	</div>
+}
+
+templ ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) {
+	<div class="scan-result-card scan-owned-warning">
+		<div class="scan-result-body">
+			<h2 class="scan-result-title">
+				if len(matches.Exact) > 0 {
+					Already in your collection
+				} else {
+					You own another edition
+				}
+			</h2>
+
+			if len(matches.Exact) > 0 {
+				<p class="scan-result-subtitle">This exact release is already in your collection:</p>
+				@ownedReleaseList(matches.Exact)
+			}
+
+			if len(matches.Similar) > 0 {
+				<p class="scan-result-subtitle">Other editions of this album you own:</p>
+				@ownedReleaseList(matches.Similar)
+			}
+		</div>
+
+		<div class="scan-result-actions">
+			<form
+				hx-post="/app/scan/confirm"
+				hx-target="#scan-result"
+				hx-swap="innerHTML"
+				hx-disabled-elt="find button[type='submit']"
+			>
+				<input type="hidden" name="release_id" value={ strconv.Itoa(releaseID) }/>
+				<input type="hidden" name="acknowledged" value="1"/>
+
+				<button type="submit" class="btn btn-primary scan-result-action-btn">
+					<span class="spinner" aria-hidden="true"></span>
+					Add anyway
+				</button>
+			</form>
+
+			<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Cancel</a>
+		</div>
+	</div>
+}
+
+templ ownedReleaseList(owned []discogs.OwnedRelease) {
+	<ul class="scan-conflict-list">
+		for _, o := range owned {
+			<li class="scan-conflict-item scan-owned-item">
+				if o.Thumb != "" {
+					<img src={ o.Thumb } alt={ o.Title } class="scan-conflict-thumb"/>
+				}
+
+				<span class="scan-conflict-info">
+					<strong>{ o.PrimaryArtist() } — { o.Title }</strong>
+
+					<span class="scan-conflict-meta">
+						if o.Year != 0 {
+							<span>{ strconv.Itoa(o.Year) }</span>
+						}
+
+						if o.Label() != "" {
+							<span>{ o.Label() }</span>
+						}
+					</span>
+
+					<span class="scan-conflict-detail">
+						if o.FormatSummary() != "" {
+							<span>{ o.FormatSummary() }</span>
+						}
+
+						if o.Variant() != "" {
+							<span class="scan-conflict-variant">{ o.Variant() }</span>
+						}
+					</span>
+				</span>
+			</li>
+		}
+	</ul>
+}
+
+templ ScanSuccessPartial() {}
+
+templ ScanErrorPartial(message string) {
+	<div class="scan-result-card alert alert-error" role="alert">
+		<p>{ message }</p>
+
+		<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Try again</a>
+	</div>
+}
+
+templ ScanReconnectPartial() {
+	<div class="scan-result-card alert alert-error" role="alert">
+		<p>Your Discogs account is no longer connected. Please reconnect to continue.</p>
+
+		<a href="/discogs/connect" class="btn btn-primary scan-result-action-btn">Reconnect Discogs</a>
+	</div>
+}

@@ -3,14 +3,14 @@ package main
 import (
 	"log"
 
-	"github.com/mathcale/discogs-collection-manager/internal/pkg/kernel"
-	"github.com/mathcale/discogs-collection-manager/internal/web"
+	"github.com/mathcale/discogs-collection-manager/internal/core"
+	"github.com/mathcale/discogs-collection-manager/internal/core/web"
 )
 
 func main() {
-	k, err := kernel.New()
+	k, err := core.New()
 	if err != nil {
-		log.Fatalf("failed to initialise kernel: %v", err)
+		log.Fatalf("failed to initialise app: %v", err)
 	}
 
 	defer k.Close()

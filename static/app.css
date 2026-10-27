@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-@source "../internal/templates/*.templ";
+@source "../internal/**/*.templ";
 
 @font-face {
   font-family: "Inter";

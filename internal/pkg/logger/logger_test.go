@@ -115,4 +115,3 @@ func TestLogger_With_AttachesFields(t *testing.T) {
 	assert.Equal(t, "GET", result["method"])
 	assert.Equal(t, "enriched", result["message"])
 }
-
