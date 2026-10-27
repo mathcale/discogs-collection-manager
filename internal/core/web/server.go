@@ -11,17 +11,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/mathcale/discogs-collection-manager/internal/app"
+	"github.com/mathcale/discogs-collection-manager/internal/core"
 )
 
 const shutdownTimeout = 30 * time.Second
 
 type Server struct {
-	http *http.Server
-	app  *app.App
+	http   *http.Server
+	kernel *core.Kernel
 }
 
-func NewServer(a *app.App) *Server {
+func NewServer(k *core.Kernel) *Server {
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -30,9 +30,9 @@ func NewServer(a *app.App) *Server {
 	return &Server{
 		http: &http.Server{
 			Addr:    fmt.Sprintf(":%s", port),
-			Handler: NewRouter(a),
+			Handler: NewRouter(k),
 		},
-		app: a,
+		kernel: k,
 	}
 }
 
@@ -52,16 +52,16 @@ func (s *Server) Run() error {
 			if ip := localIP(); ip != "" {
 				port := s.http.Addr[1:]
 
-				s.app.Logger.Info(
+				s.kernel.Logger.Info(
 					"server listening",
 					"addr", s.http.Addr,
 					"network", fmt.Sprintf("%s://%s:%s", scheme, ip, port),
 				)
 			} else {
-				s.app.Logger.Info("server listening", "addr", s.http.Addr)
+				s.kernel.Logger.Info("server listening", "addr", s.http.Addr)
 			}
 		} else {
-			s.app.Logger.Info("server listening", "addr", s.http.Addr)
+			s.kernel.Logger.Info("server listening", "addr", s.http.Addr)
 		}
 
 		var err error
@@ -72,7 +72,7 @@ func (s *Server) Run() error {
 		}
 
 		if !errors.Is(err, http.ErrServerClosed) {
-			s.app.Logger.Error("server error", "error", err)
+			s.kernel.Logger.Error("server error", "error", err)
 		}
 	}()
 
@@ -80,7 +80,7 @@ func (s *Server) Run() error {
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	s.app.Logger.Info("shutting down server")
+	s.kernel.Logger.Info("shutting down server")
 
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
@@ -89,7 +89,7 @@ func (s *Server) Run() error {
 		return fmt.Errorf("forced shutdown: %w", err)
 	}
 
-	s.app.Logger.Info("server stopped")
+	s.kernel.Logger.Info("server stopped")
 
 	return nil
 }

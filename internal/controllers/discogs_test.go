@@ -18,8 +18,8 @@ import (
 
 	"github.com/dghubble/oauth1"
 
-	"github.com/mathcale/discogs-collection-manager/internal/app/web"
 	"github.com/mathcale/discogs-collection-manager/internal/controllers"
+	"github.com/mathcale/discogs-collection-manager/internal/core/web"
 	"github.com/mathcale/discogs-collection-manager/internal/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )

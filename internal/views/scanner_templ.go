@@ -11,7 +11,7 @@ import templruntime "github.com/a-h/templ/runtime"
 import (
 	"strconv"
 
-	"github.com/mathcale/discogs-collection-manager/internal/app/clients/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
 )
 
 func ScannerPage() templ.Component {

@@ -7,8 +7,8 @@ import (
 	"github.com/a-h/templ"
 	"github.com/dghubble/oauth1"
 
-	"github.com/mathcale/discogs-collection-manager/internal/app/clients/discogs"
-	"github.com/mathcale/discogs-collection-manager/internal/app/clients/mailer"
+	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
 	"github.com/mathcale/discogs-collection-manager/internal/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/ctxkey"
 )

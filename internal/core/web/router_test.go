@@ -10,13 +10,13 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/mathcale/discogs-collection-manager/internal/app"
-	"github.com/mathcale/discogs-collection-manager/internal/app/web"
+	"github.com/mathcale/discogs-collection-manager/internal/core"
+	"github.com/mathcale/discogs-collection-manager/internal/core/web"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/logger"
 )
 
 func TestRouter_CrossSitePostToLogin_Rejected(t *testing.T) {
-	router := web.NewRouter(&app.App{Logger: logger.NewWithWriter("production", io.Discard)})
+	router := web.NewRouter(&core.Kernel{Logger: logger.NewWithWriter("production", io.Discard)})
 
 	form := url.Values{"email": {"victim@example.com"}, "password": {"attacker-password"}}
 	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(form.Encode()))
@@ -30,7 +30,7 @@ func TestRouter_CrossSitePostToLogin_Rejected(t *testing.T) {
 }
 
 func TestRouter_MismatchedOriginPostToLogin_Rejected(t *testing.T) {
-	router := web.NewRouter(&app.App{Logger: logger.NewWithWriter("production", io.Discard)})
+	router := web.NewRouter(&core.Kernel{Logger: logger.NewWithWriter("production", io.Discard)})
 
 	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(""))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")

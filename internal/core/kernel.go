@@ -1,4 +1,4 @@
-package app
+package core
 
 import (
 	"database/sql"
@@ -9,14 +9,14 @@ import (
 	"github.com/dghubble/oauth1"
 	_ "github.com/mattn/go-sqlite3"
 
-	"github.com/mathcale/discogs-collection-manager/internal/app/clients/discogs"
-	"github.com/mathcale/discogs-collection-manager/internal/app/clients/mailer"
+	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
 	"github.com/mathcale/discogs-collection-manager/internal/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/logger"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
 
-type App struct {
+type Kernel struct {
 	DB           *sql.DB
 	Logger       logger.Logger
 	Users        models.UserRepository
@@ -47,7 +47,7 @@ func envBool(name string, defaultValue bool) (bool, error) {
 	return value, nil
 }
 
-func New() (*App, error) {
+func New() (*Kernel, error) {
 	twoStepAuthEnabled, err := envBool("TWO_STEP_AUTH_ENABLED", true)
 	if err != nil {
 		return nil, err
@@ -116,7 +116,7 @@ func New() (*App, error) {
 		baseURL = "http://localhost:8080"
 	}
 
-	return &App{
+	return &Kernel{
 		DB:           db,
 		Logger:       log,
 		Users:        models.NewSQLiteUserRepository(db),
@@ -134,6 +134,6 @@ func New() (*App, error) {
 	}, nil
 }
 
-func (a *App) Close() {
-	a.DB.Close()
+func (k *Kernel) Close() {
+	k.DB.Close()
 }

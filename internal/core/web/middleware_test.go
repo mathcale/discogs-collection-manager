@@ -12,7 +12,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	"github.com/mathcale/discogs-collection-manager/internal/app/web"
+	"github.com/mathcale/discogs-collection-manager/internal/core/web"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/logger"
 )
 

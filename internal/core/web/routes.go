@@ -6,30 +6,30 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
-	"github.com/mathcale/discogs-collection-manager/internal/app"
 	"github.com/mathcale/discogs-collection-manager/internal/controllers"
+	"github.com/mathcale/discogs-collection-manager/internal/core"
 )
 
-func NewRouter(a *app.App) http.Handler {
+func NewRouter(k *core.Kernel) http.Handler {
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
-	r.Use(RequestLogger(a.Logger))
+	r.Use(RequestLogger(k.Logger))
 	r.Use(middleware.Recoverer)
 
 	c := &controllers.Controller{
-		Users:        a.Users,
-		Sessions:     a.Sessions,
-		OTPCodes:     a.OTPCodes,
-		ResetTokens:  a.ResetTokens,
-		OAuthTokens:  a.OAuthTokens,
-		Mailer:       a.Mailer,
-		Discogs:      a.Discogs,
-		DiscogsOAuth: a.DiscogsOAuth,
-		BaseURL:      a.BaseURL,
+		Users:        k.Users,
+		Sessions:     k.Sessions,
+		OTPCodes:     k.OTPCodes,
+		ResetTokens:  k.ResetTokens,
+		OAuthTokens:  k.OAuthTokens,
+		Mailer:       k.Mailer,
+		Discogs:      k.Discogs,
+		DiscogsOAuth: k.DiscogsOAuth,
+		BaseURL:      k.BaseURL,
 
-		TwoStepAuthEnabled: a.TwoStepAuthEnabled,
-		SignupsEnabled:     a.SignupsEnabled,
+		TwoStepAuthEnabled: k.TwoStepAuthEnabled,
+		SignupsEnabled:     k.SignupsEnabled,
 	}
 
 	r.Get("/", c.Landing)
@@ -47,13 +47,13 @@ func NewRouter(a *app.App) http.Handler {
 		r.Post("/reset-password", c.ResetPassword)
 
 		r.Group(func(r chi.Router) {
-			r.Use(RequireAuth(a.Sessions))
+			r.Use(RequireAuth(k.Sessions))
 			r.Post("/logout", c.Logout)
 		})
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(RequireAuth(a.Sessions))
+		r.Use(RequireAuth(k.Sessions))
 		r.Get("/app/settings", c.SettingsPage)
 		r.Get("/app/scanner", c.ScanPage)
 		r.Post("/app/scan", c.Scan)

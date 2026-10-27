@@ -3,19 +3,19 @@ package main
 import (
 	"log"
 
-	"github.com/mathcale/discogs-collection-manager/internal/app"
-	"github.com/mathcale/discogs-collection-manager/internal/app/web"
+	"github.com/mathcale/discogs-collection-manager/internal/core"
+	"github.com/mathcale/discogs-collection-manager/internal/core/web"
 )
 
 func main() {
-	a, err := app.New()
+	k, err := core.New()
 	if err != nil {
 		log.Fatalf("failed to initialise app: %v", err)
 	}
 
-	defer a.Close()
+	defer k.Close()
 
-	if err := web.NewServer(a).Run(); err != nil {
+	if err := web.NewServer(k).Run(); err != nil {
 		log.Fatalf("server error: %v", err)
 	}
 }

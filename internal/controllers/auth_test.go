@@ -16,8 +16,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/suite"
 
-	"github.com/mathcale/discogs-collection-manager/internal/app/web"
 	"github.com/mathcale/discogs-collection-manager/internal/controllers"
+	"github.com/mathcale/discogs-collection-manager/internal/core/web"
 	"github.com/mathcale/discogs-collection-manager/internal/models"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
