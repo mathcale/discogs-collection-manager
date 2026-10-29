@@ -110,7 +110,7 @@ templ ScannerPage() {
 							postBarcode(decodedText);
 						}
 					).catch(function (err) {
-						showToast('Could not start camera: ' + (err && err.message ? err.message : err), 'error');
+						zUIkit.notification({ message: 'Could not start camera: ' + (err && err.message ? err.message : err), status: 'danger' });
 					});
 				}
 
@@ -221,7 +221,6 @@ templ ScannerPage() {
 					closeBackdrop(conflictBackdrop);
 					scanResult.innerHTML = '';
 					scanConflict.innerHTML = '';
-					showToast('Release added to your Discogs collection!', 'success');
 					startScanner();
 				});
 

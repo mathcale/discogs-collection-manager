@@ -42,7 +42,7 @@ func BaseLayout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script>\n\t\t\t\t(function() {\n\t\t\t\t\tvar query = window.matchMedia('(prefers-color-scheme: dark)');\n\n\t\t\t\t\tfunction applyColorScheme() {\n\t\t\t\t\t\tdocument.documentElement.classList.toggle('dark', query.matches);\n\t\t\t\t\t}\n\n\t\t\t\t\tapplyColorScheme();\n\t\t\t\t\tquery.addEventListener('change', applyColorScheme);\n\t\t\t\t})();\n\t\t\t</script><link rel=\"stylesheet\" href=\"/static/vendor/0build/kit.min.css\"><link rel=\"stylesheet\" href=\"/static/app.css\"><noscript><style>.z-not-ready { opacity: 1; visibility: visible; }</style></noscript><meta name=\"htmx-config\" content='{\"responseHandling\":[{\"code\":\"204\",\"swap\":false},{\"code\":\"[23]..\",\"swap\":true},{\"code\":\"[45]..\",\"swap\":false,\"error\":true},{\"code\":\"...\",\"swap\":true}]}'><script src=\"/static/htmx.min.js\"></script><script>\n\t\t\t\tfunction showToast(message, type) {\n\t\t\t\t\tvar container = document.getElementById('toast-container');\n\n\t\t\t\t\tif (!container) return;\n\n\t\t\t\t\tvar toast = document.createElement('div');\n\t\t\t\t\ttoast.className = 'toast toast-' + (type || 'success');\n\t\t\t\t\ttoast.textContent = message;\n\n\t\t\t\t\tcontainer.appendChild(toast);\n\n\t\t\t\t\tsetTimeout(function() {\n\t\t\t\t\t\ttoast.remove();\n\t\t\t\t\t}, 3500);\n\t\t\t\t}\n\n\t\t\t\tdocument.addEventListener('htmx:beforeSwap', function(e) {\n\t\t\t\t\tvar contentType = e.detail.xhr.getResponseHeader('Content-Type') || '';\n\n\t\t\t\t\tif (e.detail.isError && contentType.indexOf('text/html') === 0) {\n\t\t\t\t\t\te.detail.shouldSwap = true;\n\t\t\t\t\t\te.detail.isError = false;\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener('htmx:responseError', function() {\n\t\t\t\t\tshowToast('Something went wrong. Please try again.', 'error');\n\t\t\t\t});\n\t\t\t</script></head><body class=\"z-not-ready\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script>\n\t\t\t\t(function() {\n\t\t\t\t\tvar query = window.matchMedia('(prefers-color-scheme: dark)');\n\n\t\t\t\t\tfunction applyColorScheme() {\n\t\t\t\t\t\tdocument.documentElement.classList.toggle('dark', query.matches);\n\t\t\t\t\t}\n\n\t\t\t\t\tapplyColorScheme();\n\t\t\t\t\tquery.addEventListener('change', applyColorScheme);\n\t\t\t\t})();\n\t\t\t</script><link rel=\"stylesheet\" href=\"/static/vendor/0build/kit.min.css\"><link rel=\"stylesheet\" href=\"/static/app.css\"><noscript><style>.z-not-ready { opacity: 1; visibility: visible; }</style></noscript><meta name=\"htmx-config\" content='{\"responseHandling\":[{\"code\":\"204\",\"swap\":false},{\"code\":\"[23]..\",\"swap\":true},{\"code\":\"[45]..\",\"swap\":false,\"error\":true},{\"code\":\"...\",\"swap\":true}]}'><script src=\"/static/htmx.min.js\"></script><script>\n\t\t\t\tdocument.addEventListener('htmx:beforeSwap', function(e) {\n\t\t\t\t\tvar contentType = e.detail.xhr.getResponseHeader('Content-Type') || '';\n\n\t\t\t\t\tif (e.detail.isError && contentType.indexOf('text/html') === 0) {\n\t\t\t\t\t\te.detail.shouldSwap = true;\n\t\t\t\t\t\te.detail.isError = false;\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener('htmx:responseError', function() {\n\t\t\t\t\tzUIkit.notification({ message: 'Something went wrong. Please try again.', status: 'danger' });\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener('toast', function(e) {\n\t\t\t\t\tzUIkit.notification({ message: e.detail.message, status: e.detail.status });\n\t\t\t\t});\n\t\t\t</script></head><body class=\"z-not-ready\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -79,20 +79,20 @@ func AlertError(msg string) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"alert alert-error alert-dismissible mb-4\"><span>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"z-alert z-alert-danger mb-4\" data-z-alert><button type=\"button\" class=\"z-alert-close\" data-z-close aria-label=\"Dismiss\"></button><p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var4 string
 		templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(msg)
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/layout.templ`, Line: 77, Col: 13}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/layout.templ`, Line: 66, Col: 10}
 		}
 		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</span> <button type=\"button\" class=\"alert-close\" aria-label=\"Dismiss\" onclick=\"this.closest('.alert-dismissible').remove()\"><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"></line> <line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"></line></svg></button></div>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</p></div>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -133,16 +133,16 @@ func AppLayout(title string, activePage string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<nav class=\"hidden sm:flex border-b px-4 py-3 gap-6 text-sm font-medium items-center\"><a href=\"/app/scanner\" class=\"hover:underline\">Scanner</a> <a href=\"/app/settings\" class=\"hover:underline\">Settings</a></nav><nav class=\"tab-bar sm:hidden\" aria-label=\"Main navigation\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<nav class=\"app-nav\" aria-label=\"Main navigation\"><ul class=\"z-nav z-nav-default app-nav-list\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			var templ_7745c5c3_Var7 = []any{"tab-bar-item", templ.KV("is-active", activePage == "scanner")}
+			var templ_7745c5c3_Var7 = []any{templ.KV("z-active", activePage == "scanner")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var7...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<a href=\"/app/scanner\" class=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<li class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -155,24 +155,16 @@ func AppLayout(title string, activePage string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\" aria-label=\"Scanner\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "\"><a href=\"/app/scanner\">Scanner</a></li>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconScanner("w-5 h-5").Render(ctx, templ_7745c5c3_Buffer)
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<span>Scanner</span></a> ")
-			if templ_7745c5c3_Err != nil {
-				return templ_7745c5c3_Err
-			}
-			var templ_7745c5c3_Var9 = []any{"tab-bar-item", templ.KV("is-active", activePage == "settings")}
+			var templ_7745c5c3_Var9 = []any{templ.KV("z-active", activePage == "settings")}
 			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var9...)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "<a href=\"/app/settings\" class=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<li class=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -185,7 +177,59 @@ func AppLayout(title string, activePage string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "\" aria-label=\"Settings\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\"><a href=\"/app/settings\">Settings</a></li></ul></nav><nav class=\"tab-bar sm:hidden\" aria-label=\"Main navigation\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var11 = []any{"tab-bar-item", templ.KV("is-active", activePage == "scanner")}
+			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var11...)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 11, "<a href=\"/app/scanner\" class=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var12 string
+			templ_7745c5c3_Var12, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var11).String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/layout.templ`, Line: 1, Col: 0}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var12)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "\" aria-label=\"Scanner\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = IconScanner("w-5 h-5").Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 13, "<span>Scanner</span></a> ")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var13 = []any{"tab-bar-item", templ.KV("is-active", activePage == "settings")}
+			templ_7745c5c3_Err = templ.RenderCSSItems(ctx, templ_7745c5c3_Buffer, templ_7745c5c3_Var13...)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 14, "<a href=\"/app/settings\" class=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			var templ_7745c5c3_Var14 string
+			templ_7745c5c3_Var14, templ_7745c5c3_Err = templ.ResolveAttributeValue(templ.CSSClasses(templ_7745c5c3_Var13).String())
+			if templ_7745c5c3_Err != nil {
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/layout.templ`, Line: 1, Col: 0}
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var14)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 15, "\" aria-label=\"Settings\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -193,7 +237,7 @@ func AppLayout(title string, activePage string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 12, "<span>Settings</span></a></nav><div id=\"toast-container\" class=\"toast-container\" aria-live=\"polite\" aria-atomic=\"false\"></div>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 16, "<span>Settings</span></a></nav>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
