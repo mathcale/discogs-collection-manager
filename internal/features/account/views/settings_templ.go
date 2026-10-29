@@ -74,17 +74,33 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</strong></p></div><form method=\"POST\" action=\"/discogs/disconnect\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\" hx-on:htmx:response-error=\"document.getElementById('discogs-status').innerHTML='<div class=\\'z-alert z-alert-danger\\'>Disconnection failed. Please try again.</div>'\"><button type=\"submit\" class=\"z-button z-button-secondary\"><span class=\"z-spinner\" aria-hidden=\"true\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 30 30\"><circle fill=\"none\" stroke=\"currentColor\" cx=\"15\" cy=\"15\" r=\"14\"></circle></svg></span> Disconnect</button></form></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</strong></p></div><form method=\"POST\" action=\"/discogs/disconnect\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\" hx-on:htmx:response-error=\"document.getElementById('discogs-status').innerHTML='<div class=\\'z-alert z-alert-danger\\'>Disconnection failed. Please try again.</div>'\"><button type=\"submit\" class=\"z-button z-button-secondary\">")
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+				if templ_7745c5c3_Err != nil {
+					return templ_7745c5c3_Err
+				}
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "Disconnect</button></form></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"stack\"><div class=\"status-row\"><span class=\"status-dot\" aria-hidden=\"true\"></span><p class=\"muted\">Not connected</p></div><div><a href=\"/discogs/connect\" class=\"z-button z-button-primary\">Connect Discogs account</a></div></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "<div class=\"stack\"><div class=\"status-row\"><span class=\"status-dot\" aria-hidden=\"true\"></span><p class=\"muted\">Not connected</p></div><div><a href=\"/discogs/connect\" class=\"z-button z-button-primary\">Connect Discogs account</a></div></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</div></section><section class=\"z-card\"><div class=\"z-card-header\"><h2 class=\"z-card-title\">Session</h2></div><div class=\"z-card-body\"><form method=\"POST\" action=\"/auth/logout\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><button type=\"submit\" class=\"z-button z-button-secondary\"><span class=\"z-spinner\" aria-hidden=\"true\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 30 30\"><circle fill=\"none\" stroke=\"currentColor\" cx=\"15\" cy=\"15\" r=\"14\"></circle></svg></span> Log out</button></form></div></section></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "</div></section><section class=\"z-card\"><div class=\"z-card-header\"><h2 class=\"z-card-title\">Session</h2></div><div class=\"z-card-body\"><form method=\"POST\" action=\"/auth/logout\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><button type=\"submit\" class=\"z-button z-button-secondary\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "Log out</button></form></div></section></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -131,7 +147,7 @@ func DiscogsConnectError(message string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<main class=\"page-center\"><div class=\"page-panel\"><h1 class=\"page-title\">Connection Failed</h1><div class=\"z-card\"><div class=\"z-card-body stack\"><div role=\"alert\" aria-live=\"assertive\"><div class=\"z-alert z-alert-danger\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 9, "<main class=\"page-center\"><div class=\"page-panel\"><h1 class=\"page-title\">Connection Failed</h1><div class=\"z-card\"><div class=\"z-card-body stack\"><div role=\"alert\" aria-live=\"assertive\"><div class=\"z-alert z-alert-danger\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -144,7 +160,7 @@ func DiscogsConnectError(message string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 8, "</div></div><a href=\"/discogs/connect\" class=\"z-button z-button-primary\">Try reconnecting</a> <a href=\"/app/settings\" class=\"z-button z-button-secondary\">Back to Settings</a></div></div></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "</div></div><a href=\"/discogs/connect\" class=\"z-button z-button-primary\">Try reconnecting</a> <a href=\"/app/settings\" class=\"z-button z-button-secondary\">Back to Settings</a></div></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

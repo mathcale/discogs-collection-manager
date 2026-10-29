@@ -53,7 +53,15 @@ func RegisterPage(errorMsg string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><form method=\"POST\" action=\"/auth/register\" class=\"z-form-stacked\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><div class=\"stack\"><div><label class=\"z-form-label\" for=\"email\">Email</label> <input class=\"z-input\" type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"email\"></div><div><label class=\"z-form-label\" for=\"password\">Password</label> <input class=\"z-input\" type=\"password\" id=\"password\" name=\"password\" required minlength=\"8\" autocomplete=\"new-password\"></div><button type=\"submit\" class=\"z-button z-button-primary\"><span class=\"z-spinner\" aria-hidden=\"true\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 30 30\"><circle fill=\"none\" stroke=\"currentColor\" cx=\"15\" cy=\"15\" r=\"14\"></circle></svg></span> Register</button></div></form></div></div><div class=\"page-links\"><a href=\"/auth/login\">Already have an account? Log in</a></div></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><form method=\"POST\" action=\"/auth/register\" class=\"z-form-stacked\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><div class=\"stack\"><div><label class=\"z-form-label\" for=\"email\">Email</label> <input class=\"z-input\" type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"email\"></div><div><label class=\"z-form-label\" for=\"password\">Password</label> <input class=\"z-input\" type=\"password\" id=\"password\" name=\"password\" required minlength=\"8\" autocomplete=\"new-password\"></div><button type=\"submit\" class=\"z-button z-button-primary\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "Register</button></div></form></div></div><div class=\"page-links\"><a href=\"/auth/login\">Already have an account? Log in</a></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

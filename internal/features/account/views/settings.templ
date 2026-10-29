@@ -40,7 +40,7 @@ templ SettingsPage(email string, discogsUsername string) {
 									hx-on:htmx:response-error="document.getElementById('discogs-status').innerHTML='<div class=\'z-alert z-alert-danger\'>Disconnection failed. Please try again.</div>'"
 								>
 									<button type="submit" class="z-button z-button-secondary">
-										<span class="z-spinner" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 30 30"><circle fill="none" stroke="currentColor" cx="15" cy="15" r="14"></circle></svg></span>
+										@ui.Spinner()
 										Disconnect
 									</button>
 								</form>
@@ -65,7 +65,7 @@ templ SettingsPage(email string, discogsUsername string) {
 					<div class="z-card-body">
 						<form method="POST" action="/auth/logout" hx-boost="true" hx-disabled-elt="find button[type='submit']">
 							<button type="submit" class="z-button z-button-secondary">
-								<span class="z-spinner" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 30 30"><circle fill="none" stroke="currentColor" cx="15" cy="15" r="14"></circle></svg></span>
+								@ui.Spinner()
 								Log out
 							</button>
 						</form>

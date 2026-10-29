@@ -66,7 +66,15 @@ func ResetPasswordPage(token, errorMsg string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"><div class=\"stack\"><div><label class=\"z-form-label\" for=\"password\">New password</label> <input class=\"z-input\" type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"new-password\"></div><div><label class=\"z-form-label\" for=\"password_confirm\">Confirm new password</label> <input class=\"z-input\" type=\"password\" id=\"password_confirm\" name=\"password_confirm\" required autocomplete=\"new-password\"></div><button type=\"submit\" class=\"z-button z-button-primary\"><span class=\"z-spinner\" aria-hidden=\"true\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 30 30\"><circle fill=\"none\" stroke=\"currentColor\" cx=\"15\" cy=\"15\" r=\"14\"></circle></svg></span> Reset password</button></div></form></div></div></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"><div class=\"stack\"><div><label class=\"z-form-label\" for=\"password\">New password</label> <input class=\"z-input\" type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"new-password\"></div><div><label class=\"z-form-label\" for=\"password_confirm\">Confirm new password</label> <input class=\"z-input\" type=\"password\" id=\"password_confirm\" name=\"password_confirm\" required autocomplete=\"new-password\"></div><button type=\"submit\" class=\"z-button z-button-primary\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "Reset password</button></div></form></div></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
