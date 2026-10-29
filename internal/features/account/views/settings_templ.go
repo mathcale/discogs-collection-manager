@@ -43,7 +43,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"px-4 py-8 pb-20 sm:pb-8 max-w-2xl mx-auto\"><h1 class=\"text-2xl font-semibold tracking-tight mb-8\">Settings</h1><div class=\"flex flex-col gap-6\"><section class=\"card\"><h2 class=\"text-base font-semibold mb-4\">Account</h2><dl class=\"flex flex-col gap-2 text-sm\"><div class=\"flex flex-col gap-0.5\"><dt class=\"font-medium\" style=\"color: var(--color-muted)\">Email</dt><dd>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"px-4 py-8 pb-20 sm:pb-8 max-w-2xl mx-auto\"><h1 class=\"text-2xl font-semibold tracking-tight mb-8\">Settings</h1><div class=\"flex flex-col gap-6\"><section class=\"card\"><h2 class=\"text-base font-semibold mb-4\">Account</h2><dl class=\"flex flex-col gap-2 text-sm\"><div class=\"flex flex-col gap-0.5\"><dt class=\"font-medium text-muted\">Email</dt><dd>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -61,7 +61,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if discogsUsername != "" {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"flex flex-col gap-4\"><div class=\"flex items-center gap-3\"><span class=\"inline-flex items-center justify-center w-2.5 h-2.5 rounded-full flex-shrink-0\" style=\"background-color: var(--color-success-fg);\" aria-hidden=\"true\"></span><p class=\"text-sm\">Connected as <strong class=\"font-semibold\">")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"flex flex-col gap-4\"><div class=\"flex items-center gap-3\"><span class=\"inline-flex items-center justify-center w-2.5 h-2.5 rounded-full flex-shrink-0\" style=\"background-color: var(--z-success-f);\" aria-hidden=\"true\"></span><p class=\"text-sm\">Connected as <strong class=\"font-semibold\">")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -79,7 +79,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex flex-col gap-4\"><div class=\"flex items-center gap-3\"><span class=\"inline-flex items-center justify-center w-2.5 h-2.5 rounded-full flex-shrink-0\" style=\"background-color: var(--color-muted);\" aria-hidden=\"true\"></span><p class=\"text-sm\" style=\"color: var(--color-muted)\">Not connected</p></div><a href=\"/discogs/connect\" class=\"btn btn-primary self-start\">Connect Discogs account</a></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "<div class=\"flex flex-col gap-4\"><div class=\"flex items-center gap-3\"><span class=\"inline-flex items-center justify-center w-2.5 h-2.5 rounded-full flex-shrink-0\" style=\"background-color: var(--z-muted-f);\" aria-hidden=\"true\"></span><p class=\"text-sm text-muted\">Not connected</p></div><a href=\"/discogs/connect\" class=\"btn btn-primary self-start\">Connect Discogs account</a></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

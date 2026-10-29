@@ -9,7 +9,7 @@ A web app for managing your Discogs record collection, with barcode scanning to 
 - **Templates:** `a-h/templ`
 - **Interactivity:** HTMX
 - **Database:** SQLite
-- **Styling:** Tailwind CSS
+- **Styling:** 0build (vendored, trimmed)
 
 ## Prerequisites
 
@@ -106,9 +106,9 @@ Restart `make dev`. The server now listens on HTTPS and logs its `https://<lan-i
 | --- | --- |
 | `make deps` | Install all dependencies and tools. |
 | `make dev` | Run the dev server with live reload. |
-| `make build` | Generate templates + CSS and build the binary. |
+| `make build` | Generate templates and build the binary. |
 | `make generate` | Regenerate `templ` templates. |
-| `make css` | Rebuild the minified Tailwind CSS. |
+| `make 0build` | Rebuild the vendored 0build kit (needs Node). |
 | `make migrate` | Apply database migrations. |
 | `make migrate-down` | Roll back the last migration. |
 | `make test` | Run the test suite. |
