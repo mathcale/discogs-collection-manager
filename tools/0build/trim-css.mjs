@@ -15,7 +15,9 @@ const keepBy = {
 };
 const prunable = new Set(['alert', 'button', 'card', 'form', 'modal', 'nav', 'notification']);
 const classesIn = selector => [...selector.matchAll(/\.(z-[a-zA-Z0-9_-]+)/g)].map(m => m[1]);
-const usesOnlyKnownClasses = selector => classesIn(selector).every(c => usedClasses.has(c));
+const runtimeBuiltPrefixes = ['z-notification-message-', 'z-notification-top-', 'z-notification-bottom-'];
+const isKnownClass = c => usedClasses.has(c) || runtimeBuiltPrefixes.some(p => c.startsWith(p));
+const usesOnlyKnownClasses = selector => classesIn(selector).every(isKnownClass);
 const read = f => fs.readFileSync(`${src}/src/css/${f}`, 'utf8');
 
 function filterLayer(css, keep) {
