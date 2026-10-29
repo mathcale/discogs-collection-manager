@@ -40,7 +40,7 @@ templ SettingsPage(email string, discogsUsername string) {
 								hx-boost="true"
 								hx-disabled-elt="find button[type='submit']"
 								class="flex"
-								hx-on:htmx:response-error="document.getElementById('discogs-status').innerHTML='<div class=\'alert alert-error\'>Disconnection failed. Please try again.</div>'"
+								hx-on:htmx:response-error="document.getElementById('discogs-status').innerHTML='<div class=\'z-alert z-alert-danger\'>Disconnection failed. Please try again.</div>'"
 							>
 								<button type="submit" class="btn btn-secondary">
 									<span class="spinner mr-1.5" aria-hidden="true"></span>
@@ -85,7 +85,7 @@ templ DiscogsConnectError(message string) {
 
 				<div class="card flex flex-col gap-4">
 					<div role="alert" aria-live="assertive">
-						<div class="alert alert-error">{ message }</div>
+						<div class="z-alert z-alert-danger">{ message }</div>
 					</div>
 
 					<div class="flex flex-col gap-2">

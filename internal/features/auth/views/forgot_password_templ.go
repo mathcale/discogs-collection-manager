@@ -48,7 +48,7 @@ func ForgotPasswordPage(sent bool) templ.Component {
 				return templ_7745c5c3_Err
 			}
 			if sent {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"card\"><div class=\"alert alert-success\" role=\"status\">If an account with that email exists, you'll receive a password reset link shortly.</div></div><p class=\"text-center text-sm mt-4\"><a href=\"/auth/login\">Back to login</a></p>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"card\"><div class=\"z-alert z-alert-success\" role=\"status\">If an account with that email exists, you'll receive a password reset link shortly.</div></div><p class=\"text-center text-sm mt-4\"><a href=\"/auth/login\">Back to login</a></p>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

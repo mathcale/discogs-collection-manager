@@ -74,7 +74,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</strong></p></div><form method=\"POST\" action=\"/discogs/disconnect\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\" class=\"flex\" hx-on:htmx:response-error=\"document.getElementById('discogs-status').innerHTML='<div class=\\'alert alert-error\\'>Disconnection failed. Please try again.</div>'\"><button type=\"submit\" class=\"btn btn-secondary\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Disconnect</button></form></div>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</strong></p></div><form method=\"POST\" action=\"/discogs/disconnect\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\" class=\"flex\" hx-on:htmx:response-error=\"document.getElementById('discogs-status').innerHTML='<div class=\\'z-alert z-alert-danger\\'>Disconnection failed. Please try again.</div>'\"><button type=\"submit\" class=\"btn btn-secondary\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Disconnect</button></form></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -131,14 +131,14 @@ func DiscogsConnectError(message string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<main class=\"min-h-dvh flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm\"><h1 class=\"text-2xl font-semibold tracking-tight mb-8 text-center\">Connection Failed</h1><div class=\"card flex flex-col gap-4\"><div role=\"alert\" aria-live=\"assertive\"><div class=\"alert alert-error\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 7, "<main class=\"min-h-dvh flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm\"><h1 class=\"text-2xl font-semibold tracking-tight mb-8 text-center\">Connection Failed</h1><div class=\"card flex flex-col gap-4\"><div role=\"alert\" aria-live=\"assertive\"><div class=\"z-alert z-alert-danger\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/account/views/settings.templ`, Line: 88, Col: 46}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/account/views/settings.templ`, Line: 88, Col: 51}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {

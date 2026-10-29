@@ -110,7 +110,7 @@ templ ScannerPage() {
 							postBarcode(decodedText);
 						}
 					).catch(function (err) {
-						showToast('Could not start camera: ' + (err && err.message ? err.message : err), 'error');
+						zUIkit.notification({ message: 'Could not start camera: ' + (err && err.message ? err.message : err), status: 'danger' });
 					});
 				}
 
@@ -214,14 +214,12 @@ templ ScannerPage() {
 					postBarcode(barcode);
 				});
 
-				// scan-success event fired by HX-Trigger header from confirm response
 				document.addEventListener('scan-success', function () {
 					submitted = false;
 					closeBackdrop(resultBackdrop);
 					closeBackdrop(conflictBackdrop);
 					scanResult.innerHTML = '';
 					scanConflict.innerHTML = '';
-					showToast('Release added to your Discogs collection!', 'success');
 					startScanner();
 				});
 
@@ -469,7 +467,7 @@ templ ownedReleaseList(owned []discogs.OwnedRelease) {
 templ ScanSuccessPartial() {}
 
 templ ScanErrorPartial(message string) {
-	<div class="scan-result-card alert alert-error" role="alert">
+	<div class="scan-result-card z-alert z-alert-danger" role="alert">
 		<p>{ message }</p>
 
 		<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Try again</a>
@@ -477,7 +475,7 @@ templ ScanErrorPartial(message string) {
 }
 
 templ ScanReconnectPartial() {
-	<div class="scan-result-card alert alert-error" role="alert">
+	<div class="scan-result-card z-alert z-alert-danger" role="alert">
 		<p>Your Discogs account is no longer connected. Please reconnect to continue.</p>
 
 		<a href="/discogs/connect" class="btn btn-primary scan-result-action-btn">Reconnect Discogs</a>

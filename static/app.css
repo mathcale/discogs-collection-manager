@@ -155,51 +155,6 @@
     padding: 1.5rem;
   }
 
-  .alert {
-    padding: 0.75rem 1rem;
-    border-radius: var(--z-global-radius);
-    border: 1px solid transparent;
-    font-size: 0.9375rem;
-    line-height: 1.5;
-  }
-
-  .alert-dismissible {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 0.75rem;
-  }
-
-  .alert-close {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0.125rem;
-    border: none;
-    background: none;
-    cursor: pointer;
-    color: inherit;
-    opacity: 0.6;
-    border-radius: var(--z-global-radius);
-  }
-
-  .alert-close:hover {
-    opacity: 1;
-  }
-
-  .alert-success {
-    background-color: color-mix(in srgb, var(--z-success) 12%, transparent);
-    color: var(--z-success-f);
-    border-color: color-mix(in srgb, var(--z-success) 35%, transparent);
-  }
-
-  .alert-error {
-    background-color: color-mix(in srgb, var(--z-danger) 12%, transparent);
-    color: var(--z-danger-f);
-    border-color: color-mix(in srgb, var(--z-danger) 35%, transparent);
-  }
-
   .spinner {
     display: none;
     width: 1em;
@@ -213,6 +168,51 @@
 
   form.htmx-request .spinner {
     display: inline-block;
+  }
+
+  :root {
+    --app-nav-height: 3.5rem;
+  }
+
+  .app-nav {
+    display: none;
+    border-bottom: 1px solid color-mix(in srgb, var(--z-border) var(--z-border-o), transparent);
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  @media (min-width: 640px) {
+    .app-nav {
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+      height: var(--app-nav-height);
+      padding-block: 0;
+    }
+  }
+
+  .app-nav-list {
+    display: flex;
+    gap: 1.5rem;
+  }
+
+  .app-nav-list > li.z-active > a {
+    box-shadow: 0 2px 0 currentColor;
+  }
+
+  .z-alert-close svg *,
+  .z-notification-close svg *,
+  .z-modal-close svg * {
+    stroke: currentColor;
+  }
+
+  .z-notification-close,
+  .z-notification-close:hover {
+    color: inherit;
+  }
+
+  .z-notification {
+    padding-top: env(safe-area-inset-top);
   }
 
   .tab-bar {
@@ -331,7 +331,7 @@
       max-width: 480px;
       margin-inline: auto;
       height: auto;
-      min-height: 100dvh;
+      min-height: calc(100dvh - var(--app-nav-height));
     }
   }
 
@@ -569,55 +569,6 @@
     flex-shrink: 0;
   }
 
-  .toast-container {
-    position: fixed;
-    bottom: calc(4rem + max(0.75rem, env(safe-area-inset-bottom)));
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: center;
-    z-index: 1000;
-    pointer-events: none;
-    width: max-content;
-    max-width: min(24rem, calc(100vw - 2rem));
-  }
-
-  .toast {
-    padding: 0.75rem 1.25rem;
-    border-radius: var(--z-global-radius);
-    border: 1px solid transparent;
-    font-size: 0.9375rem;
-    font-weight: 500;
-    pointer-events: auto;
-    text-align: center;
-    animation: toast-in 0.2s ease forwards, toast-out 0.2s ease forwards;
-    animation-delay: 0s, 3.1s;
-  }
-
-  .toast-success {
-    background-color: color-mix(in srgb, var(--z-success) 12%, transparent);
-    color: var(--z-success-f);
-    border-color: color-mix(in srgb, var(--z-success) 35%, transparent);
-  }
-
-  @media (min-width: 640px) {
-    .toast-container {
-      bottom: 0.75rem;
-    }
-  }
-
-  @keyframes toast-in {
-    from { opacity: 0; transform: translateY(0.5rem); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  @keyframes toast-out {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(-0.25rem); }
-  }
-
   .block {
     display: block;
   }
@@ -758,10 +709,6 @@
     padding-inline: 1rem;
   }
 
-  .py-3 {
-    padding-block: 0.75rem;
-  }
-
   .py-8 {
     padding-block: 2rem;
   }
@@ -830,14 +777,6 @@
     cursor: pointer;
   }
 
-  .border-b {
-    border-bottom: 1px solid color-mix(in srgb, var(--z-border) var(--z-border-o), transparent);
-  }
-
-  .hover\:underline:hover {
-    text-decoration: underline;
-  }
-
   .empty\:mb-0:empty {
     margin-bottom: 0;
   }
@@ -847,10 +786,6 @@
   }
 
   @media (min-width: 640px) {
-    .sm\:flex {
-      display: flex;
-    }
-
     .sm\:hidden {
       display: none;
     }
