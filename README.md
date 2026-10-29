@@ -9,12 +9,13 @@ A web app for managing your Discogs record collection, with barcode scanning to 
 - **Templates:** `a-h/templ`
 - **Interactivity:** HTMX
 - **Database:** SQLite
-- **Styling:** Tailwind CSS
+- **Styling:** 0build (vendored, trimmed)
 
 ## Prerequisites
 
 - Go 1.24+
 - `make`
+- Node.js (only needed to rebuild the vendored 0build kit with `make 0build`)
 - `curl`
 - [`mkcert`](https://github.com/FiloSottile/mkcert) (only needed for HTTPS / camera scanning — see below)
 
@@ -22,7 +23,7 @@ A web app for managing your Discogs record collection, with barcode scanning to 
 
 ### 1. Install dependencies
 
-This downloads Go modules and installs the required tools (`templ`, `air`, `migrate`), the Tailwind CLI, and fonts:
+This downloads Go modules and installs the required tools (`templ`, `air`, `migrate`), and fonts:
 
 ```sh
 make deps
@@ -106,9 +107,9 @@ Restart `make dev`. The server now listens on HTTPS and logs its `https://<lan-i
 | --- | --- |
 | `make deps` | Install all dependencies and tools. |
 | `make dev` | Run the dev server with live reload. |
-| `make build` | Generate templates + CSS and build the binary. |
+| `make build` | Generate templates and build the binary. |
 | `make generate` | Regenerate `templ` templates. |
-| `make css` | Rebuild the minified Tailwind CSS. |
+| `make 0build` | Rebuild the vendored 0build kit (needs Node). |
 | `make migrate` | Apply database migrations. |
 | `make migrate-down` | Roll back the last migration. |
 | `make test` | Run the test suite. |

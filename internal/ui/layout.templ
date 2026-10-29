@@ -9,7 +9,22 @@ templ BaseLayout(title string) {
 
 			<title>{ title }</title>
 
-			<link rel="stylesheet" href="/static/app.min.css" />
+			<script>
+				(function() {
+					var query = window.matchMedia('(prefers-color-scheme: dark)');
+
+					function applyColorScheme() {
+						document.documentElement.classList.toggle('dark', query.matches);
+					}
+
+					applyColorScheme();
+					query.addEventListener('change', applyColorScheme);
+				})();
+			</script>
+
+			<link rel="stylesheet" href="/static/vendor/0build/kit.min.css" />
+			<link rel="stylesheet" href="/static/app.css" />
+			<noscript><style>.z-not-ready { opacity: 1; visibility: visible; }</style></noscript>
 
 			<meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"[45]..","swap":false,"error":true},{"code":"...","swap":true}]}'/>
 			<script src="/static/htmx.min.js"></script>
@@ -45,8 +60,14 @@ templ BaseLayout(title string) {
 			</script>
 		</head>
 
-		<body>
+		<body class="z-not-ready">
 			{ children... }
+
+			<script src="/static/vendor/0build/uikit.min.js"></script>
+			<script src="/static/vendor/0build/pin.min.js" type="module"></script>
+			<script>
+				document.body.classList.replace('z-not-ready', 'z-ready');
+			</script>
 		</body>
 	</html>
 }
@@ -71,7 +92,7 @@ templ AlertError(msg string) {
 
 templ AppLayout(title string, activePage string) {
 	@BaseLayout(title) {
-		<nav class="hidden sm:flex border-b px-4 py-3 gap-6 text-sm font-medium items-center" style="border-color: var(--color-border);">
+		<nav class="hidden sm:flex border-b px-4 py-3 gap-6 text-sm font-medium items-center">
 			<a href="/app/scanner" class="hover:underline">Scanner</a>
 			<a href="/app/settings" class="hover:underline">Settings</a>
 		</nav>

@@ -43,7 +43,7 @@ func OTPPage(errorMsg string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-dvh flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm\"><h1 class=\"text-3xl font-bold tracking-tight mb-2 text-center\">Check your email</h1><p class=\"text-sm text-center mb-10\" style=\"color: var(--color-muted)\">We sent a 6-digit code to your email address. Enter it below to continue.</p><div class=\"card\"><div role=\"alert\" aria-live=\"polite\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-dvh flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm\"><h1 class=\"text-3xl font-bold tracking-tight mb-2 text-center\">Check your email</h1><p class=\"text-sm text-center mb-10 text-muted\">We sent a 6-digit code to your email address. Enter it below to continue.</p><div class=\"card\"><div role=\"alert\" aria-live=\"polite\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
