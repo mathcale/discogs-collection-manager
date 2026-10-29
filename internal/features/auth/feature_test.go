@@ -287,6 +287,24 @@ func (s *AuthSuite) TestVerifyOTP_ValidCode_IssuesSession() {
 	s.NotEmpty(sessionCookie.Value)
 }
 
+func (s *AuthSuite) TestVerifyOTP_CodeWithNonDigits_IssuesSession() {
+	user := s.registerUser("otpdashes@example.com", "password123")
+
+	_, err := s.otpCodes.Create(context.Background(), user.ID, authmodels.HashToken("123456"), time.Now().Add(10*time.Minute))
+	s.Require().NoError(err)
+
+	form := url.Values{"code": {" 123-456 "}}
+	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "pending_login", Value: user.ID + ":0"})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusFound, rr.Code)
+	s.Equal("/app/scanner", rr.Header().Get("Location"))
+}
+
 func (s *AuthSuite) TestVerifyOTP_ValidCode_StayLoggedIn_PersistentSession() {
 	user := s.registerUser("otppersist@example.com", "password123")
 

@@ -43,22 +43,22 @@ func ForgotPasswordPage(sent bool) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-dvh flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm\"><h1 class=\"text-3xl font-bold tracking-tight mb-10 text-center\">Forgot password</h1>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"page-center\"><div class=\"page-panel\"><h1 class=\"page-title\">Forgot password</h1>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if sent {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"card\"><div class=\"z-alert z-alert-success\" role=\"status\">If an account with that email exists, you'll receive a password reset link shortly.</div></div><p class=\"text-center text-sm mt-4\"><a href=\"/auth/login\">Back to login</a></p>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<div class=\"z-card\"><div class=\"z-card-body\"><div class=\"z-alert z-alert-success\" role=\"status\">If an account with that email exists, you'll receive a password reset link shortly.</div></div></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			} else {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"card\"><form method=\"POST\" action=\"/auth/forgot-password\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><div class=\"flex flex-col gap-4\"><div><label class=\"block text-sm font-medium mb-1.5\" for=\"email\">Email</label> <input class=\"input\" type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"email\"></div><button type=\"submit\" class=\"btn btn-primary w-full mt-2\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Send reset link</button></div></form></div><p class=\"text-center text-sm mt-4\"><a href=\"/auth/login\">Back to login</a></p>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<div class=\"z-card\"><div class=\"z-card-body\"><form method=\"POST\" action=\"/auth/forgot-password\" class=\"z-form-stacked\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><div class=\"stack\"><div><label class=\"z-form-label\" for=\"email\">Email</label> <input class=\"z-input\" type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"email\"></div><button type=\"submit\" class=\"z-button z-button-primary\"><span class=\"z-spinner\" aria-hidden=\"true\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 30 30\"><circle fill=\"none\" stroke=\"currentColor\" cx=\"15\" cy=\"15\" r=\"14\"></circle></svg></span> Send reset link</button></div></form></div></div>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"page-links\"><a href=\"/auth/login\">Back to login</a></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
