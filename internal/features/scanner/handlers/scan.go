@@ -98,7 +98,8 @@ func (h *Handler) Confirm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"scan-success":true,"toast":{"message":"Release added to your Discogs collection!","status":"success"}}`)
+	w.Header().Set("HX-Trigger", `{"toast":{"message":"Release added to your Discogs collection!","status":"success"}}`)
+	w.Header().Set("HX-Trigger-After-Swap", `{"scan-success":true}`)
 	ui.Render(w, r, http.StatusOK, views.ScanSuccessPartial())
 }
 
