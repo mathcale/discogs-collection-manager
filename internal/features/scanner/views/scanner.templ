@@ -12,74 +12,112 @@ templ ScannerPage() {
 		<div class="scanner-shell">
 			<div class="scanner-viewport">
 				<div id="reader"></div>
+				<p id="camera-error" class="scan-camera-error" role="alert" hidden></p>
 			</div>
 
 			<div class="scanner-bar" role="toolbar" aria-label="Scanner controls">
-				<button id="manual-btn" type="button" class="btn btn-secondary scanner-bar-btn">
+				<button id="manual-btn" type="button" class="z-button z-button-large z-button-secondary scanner-bar-btn">
 					Enter manually
 				</button>
 			</div>
 		</div>
 
-		<!-- Result modal (single match) -->
-		<div id="result-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Scan result">
-			<div class="modal modal-scroll" id="result-modal">
-				<div id="scan-result" aria-live="polite" aria-atomic="true"></div>
-			</div>
+		<div
+			id="result-modal"
+			class="z-modal scan-modal"
+			data-z-modal="container: false; bg-close: false; esc-close: false"
+			role="dialog"
+			aria-modal="true"
+			aria-label="Scan result"
+		>
+			<div id="scan-result" class="z-modal-dialog scan-dialog-narrow" aria-live="polite" aria-atomic="true"></div>
 		</div>
 
-		<!-- Conflict modal (multiple matches) -->
-		<div id="conflict-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Choose release">
-			<div class="modal modal-wide modal-scroll" id="conflict-modal">
-				<div id="scan-conflict" aria-live="polite" aria-atomic="true"></div>
-			</div>
+		<div
+			id="conflict-modal"
+			class="z-modal scan-modal"
+			data-z-modal="container: false; bg-close: false; esc-close: false"
+			role="dialog"
+			aria-modal="true"
+			aria-label="Choose release"
+		>
+			<div id="scan-conflict" class="z-modal-dialog" aria-live="polite" aria-atomic="true"></div>
 		</div>
 
-		<!-- Manual entry modal -->
-		<div id="manual-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Enter barcode">
-			<div class="modal" id="manual-modal">
-				<h2 class="modal-title">Enter barcode</h2>
+		<div
+			id="manual-modal"
+			class="z-modal scan-modal"
+			data-z-modal="container: false"
+			role="dialog"
+			aria-modal="true"
+			aria-label="Enter barcode"
+		>
+			<div class="z-modal-dialog scan-dialog-narrow">
 				<form id="manual-form" novalidate>
-					<input
-						type="text"
-						id="manual-input"
-						name="barcode"
-						placeholder="e.g. 5099750442029"
-						class="input"
-						autocomplete="off"
-						inputmode="numeric"
-						aria-label="Barcode"
-					/>
-					<div class="manual-form-actions">
-						<button type="submit" class="btn btn-primary">Search</button>
-						<button type="button" id="manual-close-btn" class="btn btn-secondary">Cancel</button>
+					<div class="z-modal-header">
+						<h2 class="z-modal-title">Enter barcode</h2>
+					</div>
+					<div class="z-modal-body">
+						<input
+							type="text"
+							id="manual-input"
+							name="barcode"
+							placeholder="e.g. 5099750442029"
+							class="z-input"
+							autocomplete="off"
+							inputmode="numeric"
+							aria-label="Barcode"
+						/>
+					</div>
+					<div class="z-modal-footer scan-dialog-actions">
+						<button type="button" id="manual-close-btn" class="z-button z-button-secondary">Cancel</button>
+						<button type="submit" class="z-button z-button-primary">Search</button>
 					</div>
 				</form>
 			</div>
 		</div>
 
-		<!-- Cancel confirmation modal -->
-		<div id="cancel-backdrop" class="modal-backdrop" role="dialog" aria-modal="true" aria-label="Cancel scan">
-			<div class="modal">
-				<p class="modal-title">Cancel this scan?</p>
-				<p class="modal-body">Your scan result will be discarded.</p>
-				<div class="modal-actions">
-					<button type="button" id="keep-btn" class="btn btn-secondary">Keep reviewing</button>
-					<button type="button" id="confirm-cancel-btn" class="btn btn-primary">Yes, cancel</button>
+		<div
+			id="cancel-modal"
+			class="z-modal scan-modal"
+			data-z-modal="container: false; stack: true; bg-close: false"
+			role="dialog"
+			aria-modal="true"
+			aria-label="Cancel scan"
+		>
+			<div class="z-modal-dialog scan-dialog-narrow">
+				<div class="z-modal-header">
+					<h2 class="z-modal-title">Cancel this scan?</h2>
+				</div>
+				<div class="z-modal-body">
+					<p class="muted">Your scan result will be discarded.</p>
+				</div>
+				<div class="z-modal-footer scan-dialog-actions">
+					<button type="button" id="keep-btn" class="z-button z-button-secondary">Keep reviewing</button>
+					<button type="button" id="confirm-cancel-btn" class="z-button z-button-primary">Yes, cancel</button>
 				</div>
 			</div>
 		</div>
+
+		<template id="scan-loading-template">
+			<div class="scan-loading">
+				@ui.Spinner()
+				<span>Searching…</span>
+			</div>
+		</template>
 
 		<script>
 			function initScanner() {
 				var submitted = false;
 
-				var resultBackdrop = document.getElementById('result-backdrop');
-				var conflictBackdrop = document.getElementById('conflict-backdrop');
-				var manualBackdrop = document.getElementById('manual-backdrop');
-				var cancelBackdrop = document.getElementById('cancel-backdrop');
+				var resultModal = document.getElementById('result-modal');
+				var conflictModal = document.getElementById('conflict-modal');
+				var manualModal = document.getElementById('manual-modal');
+				var cancelModal = document.getElementById('cancel-modal');
+				var cameraError = document.getElementById('camera-error');
 				var scanResult = document.getElementById('scan-result');
 				var scanConflict = document.getElementById('scan-conflict');
+				var loadingTemplate = document.getElementById('scan-loading-template');
 				var manualBtn = document.getElementById('manual-btn');
 				var manualForm = document.getElementById('manual-form');
 				var manualInput = document.getElementById('manual-input');
@@ -93,12 +131,21 @@ templ ScannerPage() {
 					qrbox: { width: 250, height: 150 },
 				};
 
-				function openBackdrop(el) {
-					el.classList.add('is-open');
+				function showModal(el) {
+					zUIkit.modal(el).show();
 				}
 
-				function closeBackdrop(el) {
-					el.classList.remove('is-open');
+				function hideModal(el) {
+					zUIkit.modal(el).hide();
+				}
+
+				function isOpen(el) {
+					return el.classList.contains('z-open');
+				}
+
+				function stopScanner() {
+					if (scanner.getState() === Html5QrcodeScannerState.NOT_STARTED) return;
+					scanner.stop().catch(function () {});
 				}
 
 				function startScanner() {
@@ -106,20 +153,32 @@ templ ScannerPage() {
 						{ facingMode: 'environment' },
 						config,
 						function (decodedText) {
-							scanner.stop().catch(function () {});
+							stopScanner();
 							postBarcode(decodedText);
 						}
-					).catch(function (err) {
-						zUIkit.notification({ message: 'Could not start camera: ' + (err && err.message ? err.message : err), status: 'danger' });
+					).then(function () {
+						cameraError.hidden = true;
+					}).catch(function (err) {
+						cameraError.textContent = 'Could not start camera: ' + (err && err.message ? err.message : err);
+						cameraError.hidden = false;
 					});
+				}
+
+				function resetScan() {
+					hideModal(resultModal);
+					hideModal(conflictModal);
+					scanResult.innerHTML = '';
+					scanConflict.innerHTML = '';
+					submitted = false;
+					startScanner();
 				}
 
 				function postBarcode(barcode) {
 					if (submitted) return;
 					submitted = true;
 
-					scanResult.innerHTML = '<div class="scan-loading"><span class="spinner scan-loading-spinner"></span><span>Searching\u2026</span></div>';
-					openBackdrop(resultBackdrop);
+					scanResult.replaceChildren(loadingTemplate.content.cloneNode(true));
+					showModal(resultModal);
 
 					htmx.ajax('POST', '/app/scan', {
 						target: '#scan-result',
@@ -128,7 +187,7 @@ templ ScannerPage() {
 					}).then(function () {
 						if (scanResult.querySelector('.scan-loading')) {
 							submitted = false;
-							closeBackdrop(resultBackdrop);
+							hideModal(resultModal);
 							startScanner();
 							return;
 						}
@@ -137,69 +196,52 @@ templ ScannerPage() {
 							while (scanResult.firstChild) {
 								scanConflict.appendChild(scanResult.firstChild);
 							}
-							closeBackdrop(resultBackdrop);
-							openBackdrop(conflictBackdrop);
+							hideModal(resultModal);
+							showModal(conflictModal);
 						}
 					}).catch(function () {
 						submitted = false;
-						closeBackdrop(resultBackdrop);
+						hideModal(resultModal);
 					});
 				}
 
-				// Backdrop tap → cancel confirmation
-				resultBackdrop.addEventListener('click', function (e) {
-					if (e.target === resultBackdrop) openBackdrop(cancelBackdrop);
+				[resultModal, conflictModal].forEach(function (modal) {
+					modal.addEventListener('click', function (e) {
+						if (e.target === modal) showModal(cancelModal);
+					});
 				});
 
-				conflictBackdrop.addEventListener('click', function (e) {
-					if (e.target === conflictBackdrop) openBackdrop(cancelBackdrop);
-				});
-
-				// Intercept Cancel / Try again links inside result and conflict modals
 				document.addEventListener('click', function (e) {
 					var link = e.target.closest('a[href="/app/scanner"]');
-					if (link && (resultBackdrop.classList.contains('is-open') || conflictBackdrop.classList.contains('is-open'))) {
+					if (link && (isOpen(resultModal) || isOpen(conflictModal))) {
 						e.preventDefault();
-						openBackdrop(cancelBackdrop);
+						showModal(cancelModal);
 					}
 				});
 
-				// Warning from a conflict-list confirm is swapped into the hidden result modal
 				document.addEventListener('htmx:afterSwap', function () {
 					if (scanResult.querySelector('.scan-owned-warning')) {
-						closeBackdrop(conflictBackdrop);
-						openBackdrop(resultBackdrop);
+						hideModal(conflictModal);
+						showModal(resultModal);
 					}
 				});
 
-				// Keep reviewing
 				keepBtn.addEventListener('click', function () {
-					closeBackdrop(cancelBackdrop);
+					hideModal(cancelModal);
 				});
 
-				// Yes, cancel
 				confirmCancelBtn.addEventListener('click', function () {
-					closeBackdrop(cancelBackdrop);
-					closeBackdrop(resultBackdrop);
-					closeBackdrop(conflictBackdrop);
-					scanResult.innerHTML = '';
-					scanConflict.innerHTML = '';
-					submitted = false;
-					startScanner();
+					hideModal(cancelModal);
+					resetScan();
 				});
 
-				// Manual entry
 				manualBtn.addEventListener('click', function () {
-					openBackdrop(manualBackdrop);
+					showModal(manualModal);
 					manualInput.focus();
 				});
 
 				manualCloseBtn.addEventListener('click', function () {
-					closeBackdrop(manualBackdrop);
-				});
-
-				manualBackdrop.addEventListener('click', function (e) {
-					if (e.target === manualBackdrop) closeBackdrop(manualBackdrop);
+					hideModal(manualModal);
 				});
 
 				manualForm.addEventListener('submit', function (e) {
@@ -207,21 +249,14 @@ templ ScannerPage() {
 					var barcode = manualInput.value.trim();
 					if (!barcode) return;
 
-					closeBackdrop(manualBackdrop);
-					scanner.stop().catch(function () {});
+					hideModal(manualModal);
+					stopScanner();
 					manualInput.value = '';
 
 					postBarcode(barcode);
 				});
 
-				document.addEventListener('scan-success', function () {
-					submitted = false;
-					closeBackdrop(resultBackdrop);
-					closeBackdrop(conflictBackdrop);
-					scanResult.innerHTML = '';
-					scanConflict.innerHTML = '';
-					startScanner();
-				});
+				document.addEventListener('scan-success', resetScan);
 
 				startScanner();
 			}
@@ -239,94 +274,93 @@ templ ScannerPage() {
 }
 
 templ ScanConfirmPartial(release discogs.Release) {
-	<div class="scan-result-card">
+	<div class="z-modal-header">
+		<h2 class="z-modal-title">{ release.Title }</h2>
+	</div>
+
+	<div class="z-modal-body" data-z-overflow-auto>
 		if release.Thumb != "" {
 			<img src={ release.Thumb } alt={ release.Title } class="scan-result-thumb"/>
 		}
 
-		<div class="scan-result-body">
-			<h2 class="scan-result-title">{ release.Title }</h2>
+		<dl class="scan-result-meta">
+			if release.Country != "" {
+				<dt>Country</dt>
+				<dd>{ release.Country }</dd>
+			}
 
-			<dl class="scan-result-meta">
-				if release.Country != "" {
-					<dt>Country</dt>
-					<dd>{ release.Country }</dd>
-				}
+			if release.Year != "" {
+				<dt>Year</dt>
+				<dd>{ release.Year }</dd>
+			}
 
-				if release.Year != "" {
-					<dt>Year</dt>
-					<dd>{ release.Year }</dd>
-				}
+			if release.Label() != "" {
+				<dt>Label</dt>
+				<dd>{ release.Label() }</dd>
+			}
 
-				if release.Label() != "" {
-					<dt>Label</dt>
-					<dd>{ release.Label() }</dd>
-				}
+			if release.Catno != "" {
+				<dt>Cat. no.</dt>
+				<dd class="scan-result-catno">{ release.Catno }</dd>
+			}
 
-				if release.Catno != "" {
-					<dt>Cat. no.</dt>
-					<dd class="scan-result-catno">{ release.Catno }</dd>
-				}
+			if release.FormatSummary() != "" {
+				<dt>Format</dt>
+				<dd>{ release.FormatSummary() }</dd>
+			}
 
-				if release.FormatSummary() != "" {
-					<dt>Format</dt>
-					<dd>{ release.FormatSummary() }</dd>
-				}
+			if release.Variant() != "" {
+				<dt>Variant</dt>
+				<dd>{ release.Variant() }</dd>
+			}
+		</dl>
 
-				if release.Variant() != "" {
-					<dt>Variant</dt>
-					<dd>{ release.Variant() }</dd>
-				}
-			</dl>
-
-			<a
-				href={ templ.SafeURL(release.URL()) }
-				target="_blank"
-				rel="noopener noreferrer"
-				class="scan-result-link"
-			>
-				View on Discogs ↗
-			</a>
-		</div>
-
-		<div class="scan-result-actions">
-			<form
-				hx-post="/app/scan/confirm"
-				hx-target="#scan-result"
-				hx-swap="innerHTML"
-				hx-disabled-elt="find button[type='submit']"
-			>
-				<input type="hidden" name="release_id" value={ strconv.Itoa(release.ID) }/>
-
-				<button type="submit" class="btn btn-primary scan-result-action-btn">
-					<span class="spinner" aria-hidden="true"></span>
-					Add to Collection
-				</button>
-			</form>
-
-			<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Cancel</a>
-		</div>
+		<a
+			href={ templ.SafeURL(release.URL()) }
+			target="_blank"
+			rel="noopener noreferrer"
+		>
+			View on Discogs ↗
+		</a>
 	</div>
-}
 
-templ ScanConflictListPartial(releases []discogs.Release) {
-	<div class="scan-result-card">
-		<div class="scan-result-body">
-			<h2 class="scan-result-title">Multiple releases found</h2>
-			<p class="scan-result-subtitle">Select the correct pressing:</p>
-		</div>
-
+	<div class="z-modal-footer scan-actions">
 		<form
 			hx-post="/app/scan/confirm"
 			hx-target="#scan-result"
 			hx-swap="innerHTML"
 			hx-disabled-elt="find button[type='submit']"
 		>
+			<input type="hidden" name="release_id" value={ strconv.Itoa(release.ID) }/>
+
+			<button type="submit" class="z-button z-button-primary">
+				@ui.Spinner()
+				Add to Collection
+			</button>
+		</form>
+
+		<a href="/app/scanner" class="z-button z-button-secondary">Cancel</a>
+	</div>
+}
+
+templ ScanConflictListPartial(releases []discogs.Release) {
+	<form
+		hx-post="/app/scan/confirm"
+		hx-target="#scan-result"
+		hx-swap="innerHTML"
+		hx-disabled-elt="find button[type='submit']"
+	>
+		<div class="z-modal-header">
+			<h2 class="z-modal-title">Multiple releases found</h2>
+			<p class="muted">Select the correct pressing:</p>
+		</div>
+
+		<div class="z-modal-body" data-z-overflow-auto>
 			<ul class="scan-conflict-list">
 				for _, r := range releases {
 					<li class="scan-conflict-item">
 						<label class="scan-conflict-label">
-							<input type="radio" name="release_id" value={ strconv.Itoa(r.ID) } class="scan-conflict-radio"/>
+							<input type="radio" name="release_id" value={ strconv.Itoa(r.ID) } class="z-radio"/>
 
 							if r.Thumb != "" {
 								<img src={ r.Thumb } alt={ r.Title } class="scan-conflict-thumb"/>
@@ -364,7 +398,7 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 									}
 								</span>
 
-								<a href={ templ.SafeURL(r.URL()) } target="_blank" rel="noopener noreferrer" class="scan-result-link">
+								<a href={ templ.SafeURL(r.URL()) } target="_blank" rel="noopener noreferrer">
 									View on Discogs ↗
 								</a>
 							</span>
@@ -372,42 +406,44 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 					</li>
 				}
 			</ul>
+		</div>
 
-			<div class="scan-result-actions">
-				<button type="submit" class="btn btn-primary scan-result-action-btn">
-					<span class="spinner" aria-hidden="true"></span>
-					Confirm
-				</button>
+		<div class="z-modal-footer scan-actions">
+			<button type="submit" class="z-button z-button-primary">
+				@ui.Spinner()
+				Confirm
+			</button>
 
-				<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Cancel</a>
-			</div>
-		</form>
-	</div>
+			<a href="/app/scanner" class="z-button z-button-secondary">Cancel</a>
+		</div>
+	</form>
 }
 
 templ ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) {
-	<div class="scan-result-card scan-owned-warning">
-		<div class="scan-result-body">
-			<h2 class="scan-result-title">
+	<div class="scan-owned-warning">
+		<div class="z-modal-header">
+			<h2 class="z-modal-title">
 				if len(matches.Exact) > 0 {
 					Already in your collection
 				} else {
 					You own another edition
 				}
 			</h2>
+		</div>
 
+		<div class="z-modal-body" data-z-overflow-auto>
 			if len(matches.Exact) > 0 {
-				<p class="scan-result-subtitle">This exact release is already in your collection:</p>
+				<p class="muted">This exact release is already in your collection:</p>
 				@ownedReleaseList(matches.Exact)
 			}
 
 			if len(matches.Similar) > 0 {
-				<p class="scan-result-subtitle">Other editions of this album you own:</p>
+				<p class="muted">Other editions of this album you own:</p>
 				@ownedReleaseList(matches.Similar)
 			}
 		</div>
 
-		<div class="scan-result-actions">
+		<div class="z-modal-footer scan-actions">
 			<form
 				hx-post="/app/scan/confirm"
 				hx-target="#scan-result"
@@ -417,13 +453,13 @@ templ ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) {
 				<input type="hidden" name="release_id" value={ strconv.Itoa(releaseID) }/>
 				<input type="hidden" name="acknowledged" value="1"/>
 
-				<button type="submit" class="btn btn-primary scan-result-action-btn">
-					<span class="spinner" aria-hidden="true"></span>
+				<button type="submit" class="z-button z-button-primary">
+					@ui.Spinner()
 					Add anyway
 				</button>
 			</form>
 
-			<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Cancel</a>
+			<a href="/app/scanner" class="z-button z-button-secondary">Cancel</a>
 		</div>
 	</div>
 }
@@ -467,17 +503,21 @@ templ ownedReleaseList(owned []discogs.OwnedRelease) {
 templ ScanSuccessPartial() {}
 
 templ ScanErrorPartial(message string) {
-	<div class="scan-result-card z-alert z-alert-danger" role="alert">
-		<p>{ message }</p>
+	<div class="z-modal-body stack">
+		<div class="z-alert z-alert-danger" role="alert">
+			<p>{ message }</p>
+		</div>
 
-		<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Try again</a>
+		<a href="/app/scanner" class="z-button z-button-secondary">Try again</a>
 	</div>
 }
 
 templ ScanReconnectPartial() {
-	<div class="scan-result-card z-alert z-alert-danger" role="alert">
-		<p>Your Discogs account is no longer connected. Please reconnect to continue.</p>
+	<div class="z-modal-body stack">
+		<div class="z-alert z-alert-danger" role="alert">
+			<p>Your Discogs account is no longer connected. Please reconnect to continue.</p>
+		</div>
 
-		<a href="/discogs/connect" class="btn btn-primary scan-result-action-btn">Reconnect Discogs</a>
+		<a href="/discogs/connect" class="z-button z-button-primary">Reconnect Discogs</a>
 	</div>
 }

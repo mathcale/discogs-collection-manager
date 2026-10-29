@@ -79,7 +79,7 @@ func AlertError(msg string) templ.Component {
 			templ_7745c5c3_Var3 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"z-alert z-alert-danger mb-4\" data-z-alert><button type=\"button\" class=\"z-alert-close\" data-z-close aria-label=\"Dismiss\"></button><p>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<div class=\"z-alert z-alert-danger alert-spaced\" data-z-alert><button type=\"button\" class=\"z-alert-close\" data-z-close aria-label=\"Dismiss\"></button><p>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -177,7 +177,7 @@ func AppLayout(title string, activePage string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\"><a href=\"/app/settings\">Settings</a></li></ul></nav><nav class=\"tab-bar sm:hidden\" aria-label=\"Main navigation\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 10, "\"><a href=\"/app/settings\">Settings</a></li></ul></nav><nav class=\"tab-bar\" aria-label=\"Main navigation\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -203,7 +203,7 @@ func AppLayout(title string, activePage string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconScanner("w-5 h-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = IconScanner("").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -233,7 +233,7 @@ func AppLayout(title string, activePage string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = IconSettings("w-5 h-5").Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = IconSettings("").Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

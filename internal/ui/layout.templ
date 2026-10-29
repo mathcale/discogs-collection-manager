@@ -61,7 +61,7 @@ templ BaseLayout(title string) {
 }
 
 templ AlertError(msg string) {
-	<div class="z-alert z-alert-danger mb-4" data-z-alert>
+	<div class="z-alert z-alert-danger alert-spaced" data-z-alert>
 		<button type="button" class="z-alert-close" data-z-close aria-label="Dismiss"></button>
 		<p>{ msg }</p>
 	</div>
@@ -76,13 +76,13 @@ templ AppLayout(title string, activePage string) {
 			</ul>
 		</nav>
 
-		<nav class="tab-bar sm:hidden" aria-label="Main navigation">
+		<nav class="tab-bar" aria-label="Main navigation">
 			<a href="/app/scanner" class={ "tab-bar-item", templ.KV("is-active", activePage == "scanner") } aria-label="Scanner">
-				@IconScanner("w-5 h-5")
+				@IconScanner("")
 				<span>Scanner</span>
 			</a>
 			<a href="/app/settings" class={ "tab-bar-item", templ.KV("is-active", activePage == "settings") } aria-label="Settings">
-				@IconSettings("w-5 h-5")
+				@IconSettings("")
 				<span>Settings</span>
 			</a>
 		</nav>
