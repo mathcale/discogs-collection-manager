@@ -3,12 +3,21 @@ import postcss from 'postcss';
 
 const src = process.argv[2];
 const out = process.argv[3];
+const usedClasses = new Set(
+  fs.readFileSync(process.argv[4], 'utf8').split('\n').filter(Boolean),
+);
 const components = ['alert', 'button', 'card', 'form', 'modal', 'nav', 'notification', 'webc', 'static'];
 const keepBy = {
   webc: s => /\.z-input-pin\b/.test(s),
   static: s =>
-    /\.z-(spinner|transition|animation|position|overflow)/.test(s),
+    /\.z-(spinner|transition|animation)/.test(s) ||
+    (/\.z-(position|overflow)/.test(s) && usesOnlyKnownClasses(s)),
 };
+const prunable = new Set(['alert', 'button', 'card', 'form', 'modal', 'nav', 'notification']);
+const classesIn = selector => [...selector.matchAll(/\.(z-[a-zA-Z0-9_-]+)/g)].map(m => m[1]);
+const runtimeBuiltPrefixes = ['z-notification-message-', 'z-notification-top-', 'z-notification-bottom-'];
+const isKnownClass = c => usedClasses.has(c) || runtimeBuiltPrefixes.some(p => c.startsWith(p));
+const usesOnlyKnownClasses = selector => classesIn(selector).every(isKnownClass);
 const read = f => fs.readFileSync(`${src}/src/css/${f}`, 'utf8');
 
 function filterLayer(css, keep) {
@@ -32,6 +41,7 @@ css += read('kit-core.css') + '\n';
 for (const c of components) {
   let f = read(`kit-components/${c}.css`);
   if (keepBy[c]) f = filterLayer(f, keepBy[c]);
+  if (prunable.has(c)) f = filterLayer(f, usesOnlyKnownClasses);
   css += f + '\n';
 }
 fs.writeFileSync(out, css);
