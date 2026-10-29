@@ -40,14 +40,18 @@
     color: var(--z-bg-f);
   }
 
-  a:not(.z-button) {
+  a:where(:not(.z-button)) {
     color: var(--z-info-f);
     text-decoration-thickness: 1px;
     text-underline-offset: 2px;
   }
 
-  a:not(.z-button):hover {
+  a:where(:not(.z-button)):hover {
     color: var(--z-info);
+  }
+
+  z-input-pin input:disabled {
+    pointer-events: none;
   }
 
   z-input-pin:not(:defined) {
@@ -294,7 +298,12 @@
     gap: 1.5rem;
   }
 
+  .app-nav-list a {
+    color: var(--z-muted-f);
+  }
+
   .app-nav-list > li.z-active > a {
+    color: var(--z-bg-f);
     box-shadow: 0 2px 0 currentColor;
   }
 

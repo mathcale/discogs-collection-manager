@@ -40,6 +40,21 @@ templ OTPPage(errorMsg string) {
 								var form = document.currentScript.closest('.z-card').querySelector('form');
 								var pin = form.querySelector('z-input-pin');
 
+								function focusFirstEmptyCell() {
+									var empty = Array.from(pin.querySelectorAll('input')).find(function (cell) {
+										return !cell.value;
+									});
+
+									if (empty) {
+										empty.focus();
+									}
+								}
+
+								customElements.whenDefined('z-input-pin').then(function () {
+									return pin.updateComplete;
+								}).then(focusFirstEmptyCell);
+								pin.addEventListener('click', focusFirstEmptyCell);
+
 								pin.addEventListener('beforeinput', function (event) {
 									if (event.data && /\D/.test(event.data)) {
 										event.preventDefault();
