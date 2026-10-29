@@ -170,6 +170,10 @@
     display: inline-block;
   }
 
+  :root {
+    --app-nav-height: 3.5rem;
+  }
+
   .app-nav {
     display: none;
     border-bottom: 1px solid color-mix(in srgb, var(--z-border) var(--z-border-o), transparent);
@@ -179,7 +183,11 @@
 
   @media (min-width: 640px) {
     .app-nav {
-      display: block;
+      display: flex;
+      align-items: center;
+      box-sizing: border-box;
+      height: var(--app-nav-height);
+      padding-block: 0;
     }
   }
 
@@ -190,6 +198,12 @@
 
   .app-nav-list > li.z-active > a {
     box-shadow: 0 2px 0 currentColor;
+  }
+
+  .z-alert-close svg *,
+  .z-notification-close svg *,
+  .z-modal-close svg * {
+    stroke: currentColor;
   }
 
   .z-notification {
@@ -312,7 +326,7 @@
       max-width: 480px;
       margin-inline: auto;
       height: auto;
-      min-height: 100dvh;
+      min-height: calc(100dvh - var(--app-nav-height));
     }
   }
 
