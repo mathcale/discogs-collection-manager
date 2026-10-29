@@ -15,6 +15,7 @@ A web app for managing your Discogs record collection, with barcode scanning to 
 
 - Go 1.24+
 - `make`
+- Node.js (only needed to rebuild the vendored 0build kit with `make 0build`)
 - `curl`
 - [`mkcert`](https://github.com/FiloSottile/mkcert) (only needed for HTTPS / camera scanning — see below)
 
@@ -22,7 +23,7 @@ A web app for managing your Discogs record collection, with barcode scanning to 
 
 ### 1. Install dependencies
 
-This downloads Go modules and installs the required tools (`templ`, `air`, `migrate`), the Tailwind CLI, and fonts:
+This downloads Go modules and installs the required tools (`templ`, `air`, `migrate`), and fonts:
 
 ```sh
 make deps
