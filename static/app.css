@@ -206,6 +206,11 @@
     stroke: currentColor;
   }
 
+  .z-notification-close,
+  .z-notification-close:hover {
+    color: inherit;
+  }
+
   .z-notification {
     padding-top: env(safe-area-inset-top);
   }
