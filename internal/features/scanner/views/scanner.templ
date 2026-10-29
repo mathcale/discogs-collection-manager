@@ -214,7 +214,6 @@ templ ScannerPage() {
 					postBarcode(barcode);
 				});
 
-				// scan-success event fired by HX-Trigger header from confirm response
 				document.addEventListener('scan-success', function () {
 					submitted = false;
 					closeBackdrop(resultBackdrop);
@@ -468,7 +467,7 @@ templ ownedReleaseList(owned []discogs.OwnedRelease) {
 templ ScanSuccessPartial() {}
 
 templ ScanErrorPartial(message string) {
-	<div class="scan-result-card alert alert-error" role="alert">
+	<div class="scan-result-card z-alert z-alert-danger" role="alert">
 		<p>{ message }</p>
 
 		<a href="/app/scanner" class="btn btn-secondary scan-result-action-btn">Try again</a>
@@ -476,7 +475,7 @@ templ ScanErrorPartial(message string) {
 }
 
 templ ScanReconnectPartial() {
-	<div class="scan-result-card alert alert-error" role="alert">
+	<div class="scan-result-card z-alert z-alert-danger" role="alert">
 		<p>Your Discogs account is no longer connected. Please reconnect to continue.</p>
 
 		<a href="/discogs/connect" class="btn btn-primary scan-result-action-btn">Reconnect Discogs</a>
