@@ -447,12 +447,22 @@
     padding: 0.875rem 0.75rem;
   }
 
+  .scan-conflict-label .z-radio {
+    flex: none;
+    box-sizing: border-box;
+    width: 1.125rem;
+    height: 1.125rem;
+    border: 1.5px solid var(--z-muted-f);
+  }
+
   .scan-conflict-thumb {
+    flex: none;
+    box-sizing: border-box;
     width: 3rem;
+    min-width: 3rem;
     height: 3rem;
     object-fit: cover;
     border-radius: calc(var(--z-global-radius) / 2);
-    flex-shrink: 0;
   }
 
   .scan-conflict-info {

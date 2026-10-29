@@ -185,9 +185,10 @@ func (s *ScanSuite) TestScanConfirm_POST_CallsAddToCollection() {
 	s.Equal(http.StatusOK, rr.Code)
 	s.True(s.mockDiscogs.addToCollectionCalled)
 	s.JSONEq(
-		`{"scan-success":true,"toast":{"message":"Release added to your Discogs collection!","status":"success"}}`,
+		`{"toast":{"message":"Release added to your Discogs collection!","status":"success"}}`,
 		rr.Header().Get("HX-Trigger"),
 	)
+	s.JSONEq(`{"scan-success":true}`, rr.Header().Get("HX-Trigger-After-Swap"))
 }
 
 func (s *ScanSuite) postConfirm(userID string, form url.Values) *httptest.ResponseRecorder {
