@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -30,7 +31,17 @@ func (o *OTPCode) IsExpired() bool {
 }
 
 func (o *OTPCode) Matches(code string) bool {
-	return HashToken(code) == o.CodeHash
+	return HashToken(digitsOnly(code)) == o.CodeHash
+}
+
+func digitsOnly(value string) string {
+	return strings.Map(func(r rune) rune {
+		if r >= '0' && r <= '9' {
+			return r
+		}
+
+		return -1
+	}, value)
 }
 
 type OTPRepository interface {

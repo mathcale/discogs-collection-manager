@@ -43,12 +43,12 @@ func LandingPage(signupsEnabled bool) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-dvh flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm text-center\"><h1 class=\"text-3xl font-semibold tracking-tight mb-3\">Discogs Collection Manager</h1><p class=\"text-sm mb-8 text-muted\">Connect your Discogs account to start scanning your vinyl collection.</p><div class=\"flex flex-col gap-3\"><a href=\"/auth/login\" class=\"btn btn-primary\">Log in</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"page-center\"><div class=\"page-panel z-text-center\"><h1 class=\"page-title\">Discogs Collection Manager</h1><p class=\"page-subtitle\">Connect your Discogs account to start scanning your vinyl collection.</p><div class=\"stack\"><a href=\"/auth/login\" class=\"z-button z-button-primary z-button-large\">Log in</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if signupsEnabled {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<a href=\"/auth/register\" class=\"btn btn-secondary\">Create account</a>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "<a href=\"/auth/register\" class=\"z-button z-button-secondary z-button-large\">Create account</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}

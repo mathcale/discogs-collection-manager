@@ -43,7 +43,7 @@ func ResetPasswordPage(token, errorMsg string) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-dvh flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm\"><h1 class=\"text-3xl font-bold tracking-tight mb-10 text-center\">Reset password</h1><div class=\"card\"><div role=\"alert\" aria-live=\"polite\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"page-center\"><div class=\"page-panel\"><h1 class=\"page-title\">Reset password</h1><div class=\"z-card\"><div class=\"z-card-body\"><div role=\"alert\" aria-live=\"polite\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -53,20 +53,28 @@ func ResetPasswordPage(token, errorMsg string) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><form method=\"POST\" action=\"/auth/reset-password\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><input type=\"hidden\" name=\"token\" value=\"")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><form method=\"POST\" action=\"/auth/reset-password\" class=\"z-form-stacked\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><input type=\"hidden\" name=\"token\" value=\"")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(token)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/auth/views/reset_password.templ`, Line: 26, Col: 53}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/auth/views/reset_password.templ`, Line: 24, Col: 54}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"><div class=\"flex flex-col gap-4\"><div><label class=\"block text-sm font-medium mb-1.5\" for=\"password\">New password</label> <input class=\"input\" type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"new-password\"></div><div><label class=\"block text-sm font-medium mb-1.5\" for=\"password_confirm\">Confirm new password</label> <input class=\"input\" type=\"password\" id=\"password_confirm\" name=\"password_confirm\" required autocomplete=\"new-password\"></div><button type=\"submit\" class=\"btn btn-primary w-full mt-2\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Reset password</button></div></form></div></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "\"><div class=\"stack\"><div><label class=\"z-form-label\" for=\"password\">New password</label> <input class=\"z-input\" type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"new-password\"></div><div><label class=\"z-form-label\" for=\"password_confirm\">Confirm new password</label> <input class=\"z-input\" type=\"password\" id=\"password_confirm\" name=\"password_confirm\" required autocomplete=\"new-password\"></div><button type=\"submit\" class=\"z-button z-button-primary\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "Reset password</button></div></form></div></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

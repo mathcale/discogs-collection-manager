@@ -43,7 +43,7 @@ func LoginPage(errorMsg string, signupsEnabled bool) templ.Component {
 				}()
 			}
 			ctx = templ.InitializeContext(ctx)
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"min-h-dvh flex items-center justify-center px-4 py-12\"><div class=\"w-full max-w-sm\"><h1 class=\"text-3xl font-bold tracking-tight mb-10 text-center\">Log in</h1><div class=\"card\"><div role=\"alert\" aria-live=\"polite\">")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<main class=\"page-center\"><div class=\"page-panel\"><h1 class=\"page-title\">Log in</h1><div class=\"z-card\"><div class=\"z-card-body\"><div role=\"alert\" aria-live=\"polite\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -53,17 +53,25 @@ func LoginPage(errorMsg string, signupsEnabled bool) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><form method=\"POST\" action=\"/auth/login\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><div class=\"flex flex-col gap-4\"><div><label class=\"block text-sm font-medium mb-1.5\" for=\"email\">Email</label> <input class=\"input\" type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"email\"></div><div><label class=\"block text-sm font-medium mb-1.5\" for=\"password\">Password</label> <input class=\"input\" type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"current-password\"></div><label class=\"flex items-center gap-2 text-sm select-none cursor-pointer\"><input type=\"checkbox\" name=\"stay_logged_in\" value=\"1\" class=\"w-4 h-4 rounded\"> Stay logged in</label> <button type=\"submit\" class=\"btn btn-primary w-full mt-2\"><span class=\"spinner mr-1.5\" aria-hidden=\"true\"></span> Log in</button></div></form></div><div class=\"flex flex-col items-center gap-3 mt-4 text-sm\"><a href=\"/auth/forgot-password\">Forgot password?</a> ")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</div><form method=\"POST\" action=\"/auth/login\" class=\"z-form-stacked\" hx-boost=\"true\" hx-disabled-elt=\"find button[type='submit']\"><div class=\"stack\"><div><label class=\"z-form-label\" for=\"email\">Email</label> <input class=\"z-input\" type=\"email\" id=\"email\" name=\"email\" required autocomplete=\"email\"></div><div><label class=\"z-form-label\" for=\"password\">Password</label> <input class=\"z-input\" type=\"password\" id=\"password\" name=\"password\" required autocomplete=\"current-password\"></div><label class=\"check-row\"><input type=\"checkbox\" name=\"stay_logged_in\" value=\"1\" class=\"z-checkbox\"> Stay logged in</label> <button type=\"submit\" class=\"z-button z-button-primary\">")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "Log in</button></div></form></div></div><div class=\"page-links\"><a href=\"/auth/forgot-password\">Forgot password?</a> ")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			if signupsEnabled {
-				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<a href=\"/auth/register\">No account? Register</a>")
+				templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<a href=\"/auth/register\">No account? Register</a>")
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "</div></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, "</div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

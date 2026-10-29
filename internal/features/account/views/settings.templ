@@ -4,71 +4,72 @@ import "github.com/mathcale/discogs-collection-manager/internal/ui"
 
 templ SettingsPage(email string, discogsUsername string) {
 	@ui.AppLayout("Settings — Discogs Collection Manager", "settings") {
-		<main class="px-4 py-8 pb-20 sm:pb-8 max-w-2xl mx-auto">
-			<h1 class="text-2xl font-semibold tracking-tight mb-8">Settings</h1>
-
-			<div class="flex flex-col gap-6">
-				<section class="card">
-					<h2 class="text-base font-semibold mb-4">Account</h2>
-
-					<dl class="flex flex-col gap-2 text-sm">
-						<div class="flex flex-col gap-0.5">
-							<dt class="font-medium text-muted">Email</dt>
+		<main class="page-settings">
+			<h1 class="page-title">Settings</h1>
+			<div class="stack">
+				<section class="z-card">
+					<div class="z-card-header">
+						<h2 class="z-card-title">Account</h2>
+					</div>
+					<div class="z-card-body">
+						<dl class="detail">
+							<dt>Email</dt>
 							<dd>{ email }</dd>
-						</div>
-					</dl>
+						</dl>
+					</div>
 				</section>
-
-				<section class="card">
-					<h2 class="text-base font-semibold mb-4">Discogs Connection</h2>
-
-					<div id="discogs-status" role="status" aria-live="polite" class="mb-4 empty:mb-0"></div>
-
-					if discogsUsername != "" {
-						<div class="flex flex-col gap-4">
-							<div class="flex items-center gap-3">
-								<span class="inline-flex items-center justify-center w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: var(--z-success-f);" aria-hidden="true"></span>
-
-								<p class="text-sm">
-									Connected as <strong class="font-semibold">{ discogsUsername }</strong>
-								</p>
+				<section class="z-card">
+					<div class="z-card-header">
+						<h2 class="z-card-title">Discogs Connection</h2>
+					</div>
+					<div class="z-card-body">
+						<div id="discogs-status" role="status" aria-live="polite"></div>
+						if discogsUsername != "" {
+							<div class="stack">
+								<div class="status-row">
+									<span class="status-dot status-dot-connected" aria-hidden="true"></span>
+									<p>
+										Connected as <strong>{ discogsUsername }</strong>
+									</p>
+								</div>
+								<form
+									method="POST"
+									action="/discogs/disconnect"
+									hx-boost="true"
+									hx-disabled-elt="find button[type='submit']"
+									hx-on:htmx:response-error="document.getElementById('discogs-status').innerHTML='<div class=\'z-alert z-alert-danger\'>Disconnection failed. Please try again.</div>'"
+								>
+									<button type="submit" class="z-button z-button-secondary">
+										@ui.Spinner()
+										Disconnect
+									</button>
+								</form>
 							</div>
-
-							<form
-								method="POST"
-								action="/discogs/disconnect"
-								hx-boost="true"
-								hx-disabled-elt="find button[type='submit']"
-								class="flex"
-								hx-on:htmx:response-error="document.getElementById('discogs-status').innerHTML='<div class=\'z-alert z-alert-danger\'>Disconnection failed. Please try again.</div>'"
-							>
-								<button type="submit" class="btn btn-secondary">
-									<span class="spinner mr-1.5" aria-hidden="true"></span>
-									Disconnect
-								</button>
-							</form>
-						</div>
-					} else {
-						<div class="flex flex-col gap-4">
-							<div class="flex items-center gap-3">
-								<span class="inline-flex items-center justify-center w-2.5 h-2.5 rounded-full flex-shrink-0" style="background-color: var(--z-muted-f);" aria-hidden="true"></span>
-
-								<p class="text-sm text-muted">Not connected</p>
+						} else {
+							<div class="stack">
+								<div class="status-row">
+									<span class="status-dot" aria-hidden="true"></span>
+									<p class="muted">Not connected</p>
+								</div>
+								<div>
+									<a href="/discogs/connect" class="z-button z-button-primary">Connect Discogs account</a>
+								</div>
 							</div>
-
-							<a href="/discogs/connect" class="btn btn-primary self-start">Connect Discogs account</a>
-						</div>
-					}
+						}
+					</div>
 				</section>
-
-				<section class="card">
-					<h2 class="text-base font-semibold mb-4">Session</h2>
-					<form method="POST" action="/auth/logout" hx-boost="true" hx-disabled-elt="find button[type='submit']">
-						<button type="submit" class="btn btn-secondary">
-							<span class="spinner mr-1.5" aria-hidden="true"></span>
-							Log out
-						</button>
-					</form>
+				<section class="z-card">
+					<div class="z-card-header">
+						<h2 class="z-card-title">Session</h2>
+					</div>
+					<div class="z-card-body">
+						<form method="POST" action="/auth/logout" hx-boost="true" hx-disabled-elt="find button[type='submit']">
+							<button type="submit" class="z-button z-button-secondary">
+								@ui.Spinner()
+								Log out
+							</button>
+						</form>
+					</div>
 				</section>
 			</div>
 		</main>
@@ -77,20 +78,16 @@ templ SettingsPage(email string, discogsUsername string) {
 
 templ DiscogsConnectError(message string) {
 	@ui.BaseLayout("Discogs Connection — Discogs Collection Manager") {
-		<main class="min-h-dvh flex items-center justify-center px-4 py-12">
-			<div class="w-full max-w-sm">
-				<h1 class="text-2xl font-semibold tracking-tight mb-8 text-center">
-					Connection Failed
-				</h1>
-
-				<div class="card flex flex-col gap-4">
-					<div role="alert" aria-live="assertive">
-						<div class="z-alert z-alert-danger">{ message }</div>
-					</div>
-
-					<div class="flex flex-col gap-2">
-						<a href="/discogs/connect" class="btn btn-primary w-full">Try reconnecting</a>
-						<a href="/app/settings" class="btn btn-secondary w-full">Back to Settings</a>
+		<main class="page-center">
+			<div class="page-panel">
+				<h1 class="page-title">Connection Failed</h1>
+				<div class="z-card">
+					<div class="z-card-body stack">
+						<div role="alert" aria-live="assertive">
+							<div class="z-alert z-alert-danger">{ message }</div>
+						</div>
+						<a href="/discogs/connect" class="z-button z-button-primary">Try reconnecting</a>
+						<a href="/app/settings" class="z-button z-button-secondary">Back to Settings</a>
 					</div>
 				</div>
 			</div>
