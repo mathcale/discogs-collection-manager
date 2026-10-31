@@ -2,7 +2,7 @@ package views
 
 import "github.com/mathcale/discogs-collection-manager/internal/ui"
 
-templ LoginPage(errorMsg string, signupsEnabled bool) {
+templ LoginPage(errorMsg string, email string, signupsEnabled bool) {
 	@ui.BaseLayout("Log in — Discogs Collection Manager") {
 		<main class="page-center">
 			<div class="page-panel">
@@ -24,7 +24,7 @@ templ LoginPage(errorMsg string, signupsEnabled bool) {
 							<div class="stack">
 								<div>
 									<label class="z-form-label" for="email">Email</label>
-									<input class="z-input" type="email" id="email" name="email" required autocomplete="email"/>
+									<input class="z-input" type="email" id="email" name="email" value={ email } required autocomplete="email"/>
 								</div>
 								<div>
 									<label class="z-form-label" for="password">Password</label>

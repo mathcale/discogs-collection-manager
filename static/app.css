@@ -230,6 +230,19 @@
     stroke: currentColor;
   }
 
+  .z-alert:has(> .z-alert-close) {
+    padding-right: 3rem;
+  }
+
+  .z-alert-close {
+    inset: 0.25rem 0.25rem auto auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
   .z-notification-close,
   .z-notification-close:hover {
     color: inherit;
