@@ -236,6 +236,21 @@ func (s *AuthSuite) TestLogin_POST_InvalidCredentials() {
 	s.Empty(s.mailer.Sent)
 }
 
+func (s *AuthSuite) TestLogin_POST_InvalidCredentials_KeepsEmail() {
+	s.registerUser("keepme@example.com", "correctpass")
+
+	form := url.Values{"email": {"keepme@example.com"}, "password": {"wrongpass"}}
+	req := httptest.NewRequest(http.MethodPost, "/auth/login", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusUnauthorized, rr.Code)
+	s.Contains(rr.Body.String(), `value="keepme@example.com"`)
+	s.NotContains(rr.Body.String(), `value="wrongpass"`)
+}
+
 func (s *AuthSuite) TestOTPPage_NoPendingCookie_RedirectsToLogin() {
 	req := httptest.NewRequest(http.MethodGet, "/auth/login/otp", nil)
 	rr := httptest.NewRecorder()

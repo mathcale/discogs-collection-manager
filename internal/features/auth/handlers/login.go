@@ -10,7 +10,7 @@ import (
 )
 
 func (h *Handler) LoginPage(w http.ResponseWriter, r *http.Request) {
-	ui.Render(w, r, http.StatusOK, views.LoginPage("", h.SignupsEnabled))
+	ui.Render(w, r, http.StatusOK, views.LoginPage("", "", h.SignupsEnabled))
 }
 
 func (h *Handler) LoginSubmit(w http.ResponseWriter, r *http.Request) {
@@ -28,7 +28,7 @@ func (h *Handler) LoginSubmit(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if errors.Is(err, usecases.ErrInvalidCredentials) {
-			ui.Render(w, r, http.StatusUnauthorized, views.LoginPage("Invalid email or password.", h.SignupsEnabled))
+			ui.Render(w, r, http.StatusUnauthorized, views.LoginPage("Invalid email or password.", r.FormValue("email"), h.SignupsEnabled))
 			return
 		}
 
