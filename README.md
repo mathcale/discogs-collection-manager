@@ -109,7 +109,7 @@ Restart `make dev`. The server now listens on HTTPS and logs its `https://<lan-i
 | `make dev` | Run the dev server with live reload. |
 | `make build` | Generate templates and build the binary. |
 | `make generate` | Regenerate `templ` templates. |
-| `make 0build` | Rebuild the vendored 0build kit (needs Node). |
+| `make 0build` | Rebuild the vendored 0build kit (needs Node). Run it after using a new `z-*` class or bumping `ZEROBUILD_VERSION`, then commit `static/vendor/0build/`. `go test ./...` fails while the kit is stale. |
 | `make migrate` | Apply database migrations. |
 | `make migrate-down` | Roll back the last migration. |
 | `make test` | Run the test suite. |

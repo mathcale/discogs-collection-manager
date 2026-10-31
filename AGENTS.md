@@ -30,6 +30,7 @@ When filing issues, referencing work, or picking up tasks, always use that Linea
 - **Router:** `chi`
 - **Templates:** `a-h/templ`
 - **Interactivity:** HTMX (no frontend framework)
+- **Styling:** 0build UI kit, vendored in `static/vendor/0build/` and trimmed to the `z-*` classes in use. After adding a `z-*` class to a template or `static/app.css`, or bumping `ZEROBUILD_VERSION`, run `make 0build` and commit `static/vendor/0build/`. `TestVendoredZerobuildKit_HasEveryUsedClass` goes red when the kit is stale. Classes that UIkit JS builds at runtime never appear in templates, so add their prefix to the runtime list in `tools/0build/trim-css.mjs`.
 - **Database:** SQLite via `database/sql` + `mattn/go-sqlite3`
 - **Migrations:** `golang-migrate`
 - **Email:** `Mailer` interface, Resend implementation
