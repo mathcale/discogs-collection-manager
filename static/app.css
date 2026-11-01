@@ -375,6 +375,14 @@
     font-size: 0.875rem;
   }
 
+  .z-modal.z-open {
+    display: flex !important;
+  }
+
+  .z-modal.z-open > .z-modal-dialog {
+    margin: auto;
+  }
+
   .scan-dialog-narrow {
     --z-modal-dialog-width: 22rem;
   }
