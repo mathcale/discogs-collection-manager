@@ -4,12 +4,13 @@ import (
 	"strconv"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
 	"github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
 )
 
 templ ScannerPage() {
-	@layouts.AppLayout("Scanner — Discogs Collection Manager", "scanner") {
+	@layouts.AppLayout(i18n.T(ctx, "Scanner") + " — Discogs Collection Manager", "scanner") {
 		<div class="scanner-shell">
 			<div class="scanner-viewport">
 				<div id="reader"></div>
@@ -22,9 +23,9 @@ templ ScannerPage() {
 					<p id="camera-error-message" class="scan-camera-error-message"></p>
 				</div>
 			</div>
-			<div class="scanner-bar" role="toolbar" aria-label="Scanner controls">
+			<div class="scanner-bar" role="toolbar" aria-label={ i18n.T(ctx, "Scanner controls") }>
 				<button id="manual-btn" type="button" class="z-button z-button-large z-button-secondary scanner-bar-btn">
-					Enter manually
+					{ i18n.T(ctx, "Enter manually") }
 				</button>
 			</div>
 		</div>
@@ -34,7 +35,7 @@ templ ScannerPage() {
 			data-z-modal="container: false; bg-close: false; esc-close: false"
 			role="dialog"
 			aria-modal="true"
-			aria-label="Scan result"
+			aria-label={ i18n.T(ctx, "Scan result") }
 		>
 			<div id="scan-result" class="z-modal-dialog scan-dialog-narrow" aria-live="polite" aria-atomic="true"></div>
 		</div>
@@ -44,7 +45,7 @@ templ ScannerPage() {
 			data-z-modal="container: false; bg-close: false; esc-close: false"
 			role="dialog"
 			aria-modal="true"
-			aria-label="Choose release"
+			aria-label={ i18n.T(ctx, "Choose release") }
 		>
 			<div id="scan-conflict" class="z-modal-dialog" aria-live="polite" aria-atomic="true"></div>
 		</div>
@@ -54,31 +55,31 @@ templ ScannerPage() {
 			data-z-modal="container: false"
 			role="dialog"
 			aria-modal="true"
-			aria-label="Enter barcode"
+			aria-label={ i18n.T(ctx, "Enter barcode") }
 		>
 			<div class="z-modal-dialog scan-dialog-narrow">
 				<form id="manual-form" novalidate>
 					<div class="z-modal-header">
-						<h2 class="z-modal-title">Enter barcode</h2>
+						<h2 class="z-modal-title">{ i18n.T(ctx, "Enter barcode") }</h2>
 					</div>
 					<div class="z-modal-body">
 						<input
 							type="text"
 							id="manual-input"
 							name="barcode"
-							placeholder="e.g. 5099750442029"
+							placeholder={ i18n.T(ctx, "e.g. 5099750442029") }
 							class="z-input"
 							autocomplete="off"
 							data-1p-ignore
 							data-lpignore="true"
 							data-bwignore
 							inputmode="numeric"
-							aria-label="Barcode"
+							aria-label={ i18n.T(ctx, "Barcode") }
 						/>
 					</div>
 					<div class="z-modal-footer scan-dialog-actions">
-						<button type="submit" class="z-button z-button-primary">Search</button>
-						<button type="button" id="manual-close-btn" class="z-button z-button-secondary">Cancel</button>
+						<button type="submit" class="z-button z-button-primary">{ i18n.T(ctx, "Search") }</button>
+						<button type="button" id="manual-close-btn" class="z-button z-button-secondary">{ i18n.T(ctx, "Cancel") }</button>
 					</div>
 				</form>
 			</div>
@@ -89,25 +90,25 @@ templ ScannerPage() {
 			data-z-modal="container: false; stack: true; bg-close: false"
 			role="dialog"
 			aria-modal="true"
-			aria-label="Cancel scan"
+			aria-label={ i18n.T(ctx, "Cancel scan") }
 		>
 			<div class="z-modal-dialog scan-dialog-narrow">
 				<div class="z-modal-header">
-					<h2 class="z-modal-title">Cancel this scan?</h2>
+					<h2 class="z-modal-title">{ i18n.T(ctx, "Cancel this scan?") }</h2>
 				</div>
 				<div class="z-modal-body">
-					<p class="muted">Your scan result will be discarded.</p>
+					<p class="muted">{ i18n.T(ctx, "Your scan result will be discarded.") }</p>
 				</div>
 				<div class="z-modal-footer scan-dialog-actions">
-					<button type="button" id="keep-btn" class="z-button z-button-secondary">Keep reviewing</button>
-					<button type="button" id="confirm-cancel-btn" class="z-button z-button-primary">Yes, cancel</button>
+					<button type="button" id="keep-btn" class="z-button z-button-secondary">{ i18n.T(ctx, "Keep reviewing") }</button>
+					<button type="button" id="confirm-cancel-btn" class="z-button z-button-primary">{ i18n.T(ctx, "Yes, cancel") }</button>
 				</div>
 			</div>
 		</div>
 		<template id="scan-loading-template">
 			<div class="scan-loading">
 				@components.Spinner()
-				<span>Searching…</span>
+				<span>{ i18n.T(ctx, "Searching…") }</span>
 			</div>
 		</template>
 		<script>
@@ -155,17 +156,17 @@ templ ScannerPage() {
 				}
 
 				var cameraErrors = {
-					NotAllowedError: ['Camera access blocked', 'Allow camera access in your browser settings and reload the page, or enter the barcode manually.'],
-					PermissionDeniedError: ['Camera access blocked', 'Allow camera access in your browser settings and reload the page, or enter the barcode manually.'],
-					NotFoundError: ['No camera found', 'We could not find a camera on this device. You can still enter the barcode manually.'],
-					NotReadableError: ['Camera unavailable', 'Another app may be using your camera. Close it and reload the page, or enter the barcode manually.'],
-					OverconstrainedError: ['Camera unavailable', 'Your camera does not support scanning. You can enter the barcode manually.'],
+					NotAllowedError: [{{ i18n.T(ctx, "Camera access blocked") }}, {{ i18n.T(ctx, "Allow camera access in your browser settings and reload the page, or enter the barcode manually.") }}],
+					PermissionDeniedError: [{{ i18n.T(ctx, "Camera access blocked") }}, {{ i18n.T(ctx, "Allow camera access in your browser settings and reload the page, or enter the barcode manually.") }}],
+					NotFoundError: [{{ i18n.T(ctx, "No camera found") }}, {{ i18n.T(ctx, "We could not find a camera on this device. You can still enter the barcode manually.") }}],
+					NotReadableError: [{{ i18n.T(ctx, "Camera unavailable") }}, {{ i18n.T(ctx, "Another app may be using your camera. Close it and reload the page, or enter the barcode manually.") }}],
+					OverconstrainedError: [{{ i18n.T(ctx, "Camera unavailable") }}, {{ i18n.T(ctx, "Your camera does not support scanning. You can enter the barcode manually.") }}],
 				};
 
 				function showCameraError(err) {
 					var text = String(err && err.name ? err.name + ' ' + (err.message || '') : err);
 					var key = Object.keys(cameraErrors).find(function (name) { return text.indexOf(name) !== -1; });
-					var copy = cameraErrors[key] || ['Could not start the camera', 'Something went wrong while starting the camera. Reload the page or enter the barcode manually.'];
+					var copy = cameraErrors[key] || [{{ i18n.T(ctx, "Could not start the camera") }}, {{ i18n.T(ctx, "Something went wrong while starting the camera. Reload the page or enter the barcode manually.") }}];
 					cameraErrorTitle.textContent = copy[0];
 					cameraErrorMessage.textContent = copy[1];
 					cameraError.hidden = false;
@@ -305,27 +306,27 @@ templ ScanConfirmPartial(release discogs.Release) {
 		}
 		<dl class="scan-result-meta">
 			if release.Country != "" {
-				<dt>Country</dt>
+				<dt>{ i18n.T(ctx, "Country") }</dt>
 				<dd>{ release.Country }</dd>
 			}
 			if release.Year != "" {
-				<dt>Year</dt>
+				<dt>{ i18n.T(ctx, "Year") }</dt>
 				<dd>{ release.Year }</dd>
 			}
 			if release.Label() != "" {
-				<dt>Label</dt>
+				<dt>{ i18n.T(ctx, "Label") }</dt>
 				<dd>{ release.Label() }</dd>
 			}
 			if release.Catno != "" {
-				<dt>Cat. no.</dt>
+				<dt>{ i18n.T(ctx, "Cat. no.") }</dt>
 				<dd class="scan-result-catno">{ release.Catno }</dd>
 			}
 			if release.FormatSummary() != "" {
-				<dt>Format</dt>
+				<dt>{ i18n.T(ctx, "Format") }</dt>
 				<dd>{ release.FormatSummary() }</dd>
 			}
 			if release.Variant() != "" {
-				<dt>Variant</dt>
+				<dt>{ i18n.T(ctx, "Variant") }</dt>
 				<dd>{ release.Variant() }</dd>
 			}
 		</dl>
@@ -334,7 +335,7 @@ templ ScanConfirmPartial(release discogs.Release) {
 			target="_blank"
 			rel="noopener noreferrer"
 		>
-			View on Discogs ↗
+			{ i18n.T(ctx, "View on Discogs") } ↗
 		</a>
 	</div>
 	<div class="z-modal-footer scan-actions">
@@ -347,10 +348,10 @@ templ ScanConfirmPartial(release discogs.Release) {
 			<input type="hidden" name="release_id" value={ strconv.Itoa(release.ID) }/>
 			<button type="submit" class="z-button z-button-primary">
 				@components.Spinner()
-				Add to Collection
+				{ i18n.T(ctx, "Add to Collection") }
 			</button>
 		</form>
-		<a href="/app/scanner" class="z-button z-button-secondary">Cancel</a>
+		<a href="/app/scanner" class="z-button z-button-secondary">{ i18n.T(ctx, "Cancel") }</a>
 	</div>
 }
 
@@ -362,8 +363,8 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 		hx-disabled-elt="find button[type='submit']"
 	>
 		<div class="z-modal-header">
-			<h2 class="z-modal-title">Multiple releases found</h2>
-			<p class="muted">Select the correct pressing:</p>
+			<h2 class="z-modal-title">{ i18n.T(ctx, "Multiple releases found") }</h2>
+			<p class="muted">{ i18n.T(ctx, "Select the correct pressing:") }</p>
 		</div>
 		<div class="z-modal-body" data-z-overflow-auto>
 			<ul class="scan-conflict-list">
@@ -399,7 +400,7 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 									}
 								</span>
 								<a href={ templ.SafeURL(r.URL()) } target="_blank" rel="noopener noreferrer">
-									View on Discogs ↗
+									{ i18n.T(ctx, "View on Discogs") } ↗
 								</a>
 							</span>
 						</label>
@@ -410,9 +411,9 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 		<div class="z-modal-footer scan-actions">
 			<button type="submit" class="z-button z-button-primary">
 				@components.Spinner()
-				Confirm
+				{ i18n.T(ctx, "Confirm") }
 			</button>
-			<a href="/app/scanner" class="z-button z-button-secondary">Cancel</a>
+			<a href="/app/scanner" class="z-button z-button-secondary">{ i18n.T(ctx, "Cancel") }</a>
 		</div>
 	</form>
 }
@@ -422,19 +423,19 @@ templ ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) {
 		<div class="z-modal-header">
 			<h2 class="z-modal-title">
 				if len(matches.Exact) > 0 {
-					Already in your collection
+					{ i18n.T(ctx, "Already in your collection") }
 				} else {
-					You own another edition
+					{ i18n.T(ctx, "You own another edition") }
 				}
 			</h2>
 		</div>
 		<div class="z-modal-body" data-z-overflow-auto>
 			if len(matches.Exact) > 0 {
-				<p class="muted">This exact release is already in your collection:</p>
+				<p class="muted">{ i18n.T(ctx, "This exact release is already in your collection:") }</p>
 				@ownedReleaseList(matches.Exact)
 			}
 			if len(matches.Similar) > 0 {
-				<p class="muted">Other editions of this album you own:</p>
+				<p class="muted">{ i18n.T(ctx, "Other editions of this album you own:") }</p>
 				@ownedReleaseList(matches.Similar)
 			}
 		</div>
@@ -449,10 +450,10 @@ templ ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) {
 				<input type="hidden" name="acknowledged" value="1"/>
 				<button type="submit" class="z-button z-button-primary">
 					@components.Spinner()
-					Add anyway
+					{ i18n.T(ctx, "Add anyway") }
 				</button>
 			</form>
-			<a href="/app/scanner" class="z-button z-button-secondary">Cancel</a>
+			<a href="/app/scanner" class="z-button z-button-secondary">{ i18n.T(ctx, "Cancel") }</a>
 		</div>
 	</div>
 }
@@ -496,15 +497,15 @@ templ ScanErrorPartial(message string) {
 		<div class="z-alert z-alert-danger" role="alert">
 			<p>{ message }</p>
 		</div>
-		<a href="/app/scanner" class="z-button z-button-secondary">Try again</a>
+		<a href="/app/scanner" class="z-button z-button-secondary">{ i18n.T(ctx, "Try again") }</a>
 	</div>
 }
 
 templ ScanReconnectPartial() {
 	<div class="z-modal-body stack">
 		<div class="z-alert z-alert-danger" role="alert">
-			<p>Your Discogs account is no longer connected. Please reconnect to continue.</p>
+			<p>{ i18n.T(ctx, "Your Discogs account is no longer connected. Please reconnect to continue.") }</p>
 		</div>
-		<a href="/discogs/connect" class="z-button z-button-primary">Reconnect Discogs</a>
+		<a href="/discogs/connect" class="z-button z-button-primary">{ i18n.T(ctx, "Reconnect Discogs") }</a>
 	</div>
 }

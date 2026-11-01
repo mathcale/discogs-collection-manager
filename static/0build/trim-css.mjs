@@ -6,14 +6,14 @@ const out = process.argv[3];
 const usedClasses = new Set(
   fs.readFileSync(process.argv[4], 'utf8').split('\n').filter(Boolean),
 );
-const components = ['alert', 'button', 'card', 'form', 'modal', 'nav', 'notification', 'webc', 'static'];
+const components = ['alert', 'button', 'card', 'drop', 'form', 'modal', 'nav', 'notification', 'webc', 'static'];
 const keepBy = {
-  webc: s => /\.z-input-pin\b/.test(s),
+  webc: s => /\.z-(input-pin|custom-select)\b/.test(s),
   static: s =>
     /\.z-(spinner|transition|animation)/.test(s) ||
     (/\.z-(position|overflow)/.test(s) && usesOnlyKnownClasses(s)),
 };
-const prunable = new Set(['alert', 'button', 'card', 'form', 'modal', 'nav', 'notification']);
+const prunable = new Set(['alert', 'button', 'card', 'drop', 'form', 'modal', 'nav', 'notification']);
 const classesIn = selector => [...selector.matchAll(/\.(z-[a-zA-Z0-9_-]+)/g)].map(m => m[1]);
 const runtimeBuiltPrefixes = ['z-notification-message-', 'z-notification-top-', 'z-notification-bottom-'];
 const isKnownClass = c => usedClasses.has(c) || runtimeBuiltPrefixes.some(p => c.startsWith(p));

@@ -180,8 +180,17 @@
     color: var(--z-muted-f);
   }
 
-  #discogs-status:not(:empty) {
+  #discogs-status:has(> :not([hidden])) {
     margin-bottom: 1rem;
+  }
+
+  #lang-button {
+    justify-content: space-between;
+  }
+
+  #lang-listbox {
+    --z-dropdown-width: 100%;
+    z-index: 1020;
   }
 
   .z-alert-close svg *,

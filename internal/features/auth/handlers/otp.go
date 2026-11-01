@@ -7,6 +7,7 @@ import (
 
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/usecases"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/views"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 	"github.com/mathcale/discogs-collection-manager/internal/ui"
 )
 
@@ -47,11 +48,11 @@ func (h *Handler) VerifyOTPSubmit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, usecases.ErrOTPNotFound):
-			ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid or expired code. Please log in again."))
+			ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage(i18n.T(r.Context(), "Invalid or expired code. Please log in again.")))
 		case errors.Is(err, usecases.ErrOTPExpired):
-			ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Code has expired. Please log in again."))
+			ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage(i18n.T(r.Context(), "Code has expired. Please log in again.")))
 		case errors.Is(err, usecases.ErrOTPMismatch):
-			ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage("Invalid code. Please try again."))
+			ui.Render(w, r, http.StatusUnprocessableEntity, views.OTPPage(i18n.T(r.Context(), "Invalid code. Please try again.")))
 		default:
 			http.Error(w, "internal error", http.StatusInternalServerError)
 		}

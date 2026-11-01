@@ -6,6 +6,7 @@ import (
 
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/usecases"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/views"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 	"github.com/mathcale/discogs-collection-manager/internal/ui"
 )
 
@@ -28,7 +29,7 @@ func (h *Handler) LoginSubmit(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if errors.Is(err, usecases.ErrInvalidCredentials) {
-			ui.Render(w, r, http.StatusUnauthorized, views.LoginPage("Invalid email or password.", r.FormValue("email"), h.SignupsEnabled))
+			ui.Render(w, r, http.StatusUnauthorized, views.LoginPage(i18n.T(r.Context(), "Invalid email or password."), r.FormValue("email"), h.SignupsEnabled))
 			return
 		}
 

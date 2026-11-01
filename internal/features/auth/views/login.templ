@@ -1,15 +1,16 @@
 package views
 
 import (
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
 	"github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
 )
 
 templ LoginPage(errorMsg string, email string, signupsEnabled bool) {
-	@layouts.BaseLayout("Log in — Discogs Collection Manager") {
+	@layouts.BaseLayout(i18n.T(ctx, "Log in") + " — Discogs Collection Manager") {
 		<main class="page-center">
 			<div class="page-panel">
-				<h1 class="page-title">Log in</h1>
+				<h1 class="page-title">{ i18n.T(ctx, "Log in") }</h1>
 				<div class="z-card">
 					<div class="z-card-body">
 						<div role="alert" aria-live="polite">
@@ -26,29 +27,29 @@ templ LoginPage(errorMsg string, email string, signupsEnabled bool) {
 						>
 							<div class="stack">
 								<div>
-									<label class="z-form-label" for="email">Email</label>
+									<label class="z-form-label" for="email">{ i18n.T(ctx, "Email") }</label>
 									<input class="z-input" type="email" id="email" name="email" value={ email } required autocomplete="email"/>
 								</div>
 								<div>
-									<label class="z-form-label" for="password">Password</label>
+									<label class="z-form-label" for="password">{ i18n.T(ctx, "Password") }</label>
 									<input class="z-input" type="password" id="password" name="password" required autocomplete="current-password"/>
 								</div>
 								<label class="check-row">
 									<input type="checkbox" name="stay_logged_in" value="1" class="z-checkbox"/>
-									Stay logged in
+									{ i18n.T(ctx, "Stay logged in") }
 								</label>
 								<button type="submit" class="z-button z-button-primary">
 									@components.Spinner()
-									Log in
+									{ i18n.T(ctx, "Log in") }
 								</button>
 							</div>
 						</form>
 					</div>
 				</div>
 				<div class="page-links">
-					<a href="/auth/forgot-password">Forgot password?</a>
+					<a href="/auth/forgot-password">{ i18n.T(ctx, "Forgot password?") }</a>
 					if signupsEnabled {
-						<a href="/auth/register">No account? Register</a>
+						<a href="/auth/register">{ i18n.T(ctx, "No account? Register") }</a>
 					}
 				</div>
 			</div>

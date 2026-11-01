@@ -6,6 +6,7 @@ import (
 
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/usecases"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/views"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 	"github.com/mathcale/discogs-collection-manager/internal/ui"
 )
 
@@ -38,7 +39,7 @@ func (h *Handler) ResetPasswordPage(w http.ResponseWriter, r *http.Request) {
 
 	if _, err := h.ValidateResetToken.Execute(r.Context(), usecases.ValidateResetTokenInput{Token: rawToken}); err != nil {
 		if errors.Is(err, usecases.ErrResetTokenInvalid) {
-			ui.Render(w, r, http.StatusOK, views.ResetPasswordPage("", "This reset link is invalid or has expired."))
+			ui.Render(w, r, http.StatusOK, views.ResetPasswordPage("", i18n.T(r.Context(), "This reset link is invalid or has expired.")))
 			return
 		}
 
@@ -65,9 +66,9 @@ func (h *Handler) ResetPasswordSubmit(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, usecases.ErrPasswordMismatch):
-			ui.Render(w, r, http.StatusUnprocessableEntity, views.ResetPasswordPage(rawToken, "Passwords do not match."))
+			ui.Render(w, r, http.StatusUnprocessableEntity, views.ResetPasswordPage(rawToken, i18n.T(r.Context(), "Passwords do not match.")))
 		case errors.Is(err, usecases.ErrResetTokenInvalid):
-			ui.Render(w, r, http.StatusUnprocessableEntity, views.ResetPasswordPage("", "This reset link is invalid or has expired."))
+			ui.Render(w, r, http.StatusUnprocessableEntity, views.ResetPasswordPage("", i18n.T(r.Context(), "This reset link is invalid or has expired.")))
 		default:
 			http.Error(w, "internal error", http.StatusInternalServerError)
 		}

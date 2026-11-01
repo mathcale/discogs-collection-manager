@@ -30,10 +30,11 @@ When filing issues, referencing work, or picking up tasks, always use that Linea
 - **Router:** `chi`
 - **Templates:** `a-h/templ`
 - **Interactivity:** HTMX (no frontend framework)
-- **Styling:** 0build UI kit, vendored in `static/vendor/0build/` and trimmed to the `z-*` classes in use. After adding a `z-*` class to a template or `static/app.css`, or bumping `ZEROBUILD_VERSION`, run `make 0build` and commit `static/vendor/0build/`. `TestVendoredZerobuildKit_HasEveryUsedClass` goes red when the kit is stale. Classes that UIkit JS builds at runtime never appear in templates, so add their prefix to the runtime list in `static/0build/trim-css.mjs`.
+- **Styling:** 0build UI kit, vendored in `static/vendor/0build/` and trimmed to the `z-*` classes in use. After adding a `z-*` class to a template or `static/app.css`, or bumping `ZEROBUILD_VERSION`, run `make 0build` and commit `static/vendor/0build/`. `TestVendoredZerobuildKit_HasEveryUsedClass` goes red when the kit is stale. Classes that UIkit JS builds at runtime never appear in templates, so add their prefix to the runtime list in `static/0build/trim-css.mjs`. 0build web components (`<z-input-pin>`, `<z-select>`) are bundled into `pin.min.js` from `static/0build/pin-entry.ts`; the trimmer scans that bundle, so their runtime classes are kept automatically.
 - **Database:** SQLite via `database/sql` + `mattn/go-sqlite3`
 - **Migrations:** `golang-migrate`
 - **Email:** `Mailer` interface, Resend implementation
+- **i18n:** `pkg/i18n`, English (default) and `pt-BR`. Wrap every user-facing string in `i18n.T` with the English text as key and add its pt-BR entry to `internal/pkg/i18n/locales/pt-BR.json`; `TestI18nCatalog_*` goes red otherwise.
 - **Discogs auth:** OAuth 1.0a via `dghubble/oauth1`
 - **Live reload:** `cosmtrek/air`
 - **Tests:** `testify/suite` against `net/http/httptest`
@@ -66,7 +67,7 @@ internal/
     scanner/        feature.go, handlers/, usecases/, views/
 
   ui/                                   BaseLayout, AppLayout, AlertError, icons, Render
-  pkg/                                  ctxkey/  logger/  migrate/
+  pkg/                                  ctxkey/  i18n/  logger/  migrate/
 
 migrations/
 ```
@@ -81,11 +82,11 @@ migrations/
 | `core` (kernel) | feature **root** packages, `core/clients/*`, `pkg/*`, and `features/account/models` (only to build the Discogs client) |
 | `core/clients/discogs` | `features/account/models`, `pkg/ctxkey` |
 | feature root (`feature.go`) | its own subpackages, other features' `models`, `core/clients/*`, `chi` |
-| `<f>/handlers` | own `usecases`, own `views`, `ui`, `pkg/ctxkey`, `core/clients/discogs` (error types only) |
-| `<f>/usecases` | own `models`, other features' `models`, `core/clients/*` |
+| `<f>/handlers` | own `usecases`, own `views`, `ui`, `pkg/ctxkey`, `pkg/i18n`, `core/clients/discogs` (error types only) |
+| `<f>/usecases` | own `models`, other features' `models`, `core/clients/*`, `pkg/i18n` |
 | `<f>/models` | stdlib only (plus crypto libs already in use) |
-| `<f>/views` | `ui`, own `models`, `core/clients/discogs` (release types) |
-| `ui` | `templ` only |
+| `<f>/views` | `ui`, own `models`, `core/clients/discogs` (release types), `pkg/i18n` |
+| `ui` | `templ`, `pkg/i18n` |
 
 Hard rules:
 

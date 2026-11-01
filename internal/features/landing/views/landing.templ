@@ -1,6 +1,9 @@
 package views
 
-import "github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
+import (
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
+)
 
 templ LandingPage(signupsEnabled bool) {
 	@layouts.BaseLayout("Discogs Collection Manager") {
@@ -8,12 +11,12 @@ templ LandingPage(signupsEnabled bool) {
 			<div class="page-panel z-text-center">
 				<h1 class="page-title">Discogs Collection Manager</h1>
 				<p class="page-subtitle">
-					Connect your Discogs account to start scanning your vinyl collection.
+					{ i18n.T(ctx, "Connect your Discogs account to start scanning your vinyl collection.") }
 				</p>
 				<div class="stack">
-					<a href="/auth/login" class="z-button z-button-primary z-button-large">Log in</a>
+					<a href="/auth/login" class="z-button z-button-primary z-button-large">{ i18n.T(ctx, "Log in") }</a>
 					if signupsEnabled {
-						<a href="/auth/register" class="z-button z-button-secondary z-button-large">Create account</a>
+						<a href="/auth/register" class="z-button z-button-secondary z-button-large">{ i18n.T(ctx, "Create account") }</a>
 					}
 				</div>
 			</div>
