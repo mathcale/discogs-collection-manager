@@ -24,8 +24,8 @@ func Middleware(next http.Handler) http.Handler {
 }
 
 func resolve(r *http.Request) string {
-	if cookie, err := r.Cookie(CookieName); err == nil && IsSupported(cookie.Value) {
-		return cookie.Value
+	if lang := CookieLang(r); lang != "" {
+		return lang
 	}
 
 	preferred, _, _ := language.ParseAcceptLanguage(r.Header.Get("Accept-Language"))

@@ -27,7 +27,7 @@ func Lang(ctx context.Context) string {
 	if tag, ok := ctx.Value(contextKey{}).(string); ok {
 		return tag
 	}
-	return "en"
+	return Supported[0].Tag
 }
 
 func T(ctx context.Context, key string, args ...any) string {

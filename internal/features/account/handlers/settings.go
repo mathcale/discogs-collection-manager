@@ -17,12 +17,7 @@ func (h *Handler) SettingsPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	selectedLang := ""
-	if cookie, err := r.Cookie(i18n.CookieName); err == nil && i18n.IsSupported(cookie.Value) {
-		selectedLang = cookie.Value
-	}
-
-	ui.Render(w, r, http.StatusOK, views.SettingsPage(out.Email, out.DiscogsUsername, selectedLang))
+	ui.Render(w, r, http.StatusOK, views.SettingsPage(out.Email, out.DiscogsUsername, i18n.CookieLang(r)))
 }
 
 func (h *Handler) LanguageSubmit(w http.ResponseWriter, r *http.Request) {

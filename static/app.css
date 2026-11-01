@@ -180,7 +180,7 @@
     color: var(--z-muted-f);
   }
 
-  #discogs-status:not(:empty) {
+  #discogs-status:has(> :not([hidden])) {
     margin-bottom: 1rem;
   }
 
