@@ -13,7 +13,7 @@ MIGRATE=$(GOBIN)/migrate
 
 0build:
 	mkdir -p $(ZEROBUILD_OUTPUT)
-	tools/0build/build.sh $(ZEROBUILD_VERSION) $(ZEROBUILD_OUTPUT)
+	static/0build/build.sh $(ZEROBUILD_VERSION) $(ZEROBUILD_OUTPUT)
 
 fonts:
 	mkdir -p static/fonts

@@ -1,0 +1,11 @@
+package layouts
+
+import "github.com/mathcale/discogs-collection-manager/internal/ui/components"
+
+templ AppLayout(title string, activePage string) {
+	@BaseLayout(title) {
+		@components.TabBar(activePage)
+
+		{ children... }
+	}
+}

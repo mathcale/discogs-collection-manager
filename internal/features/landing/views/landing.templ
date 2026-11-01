@@ -1,9 +1,9 @@
 package views
 
-import "github.com/mathcale/discogs-collection-manager/internal/ui"
+import "github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
 
 templ LandingPage(signupsEnabled bool) {
-	@ui.BaseLayout("Discogs Collection Manager") {
+	@layouts.BaseLayout("Discogs Collection Manager") {
 		<main class="page-center">
 			<div class="page-panel z-text-center">
 				<h1 class="page-title">Discogs Collection Manager</h1>

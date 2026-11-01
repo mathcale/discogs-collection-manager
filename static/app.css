@@ -119,12 +119,6 @@
     text-align: left;
   }
 
-  @media (min-width: 640px) {
-    .page-settings {
-      padding-bottom: 2rem;
-    }
-  }
-
   .stack {
     display: flex;
     flex-direction: column;
@@ -190,41 +184,6 @@
     margin-bottom: 1rem;
   }
 
-  :root {
-    --app-nav-height: 3.5rem;
-  }
-
-  .app-nav {
-    display: none;
-    border-bottom: 1px solid color-mix(in srgb, var(--z-border) var(--z-border-o), transparent);
-    padding: 0.75rem 1rem;
-    font-size: 0.875rem;
-  }
-
-  @media (min-width: 640px) {
-    .app-nav {
-      display: flex;
-      align-items: center;
-      box-sizing: border-box;
-      height: var(--app-nav-height);
-      padding-block: 0;
-    }
-  }
-
-  .app-nav-list {
-    display: flex;
-    gap: 1.5rem;
-  }
-
-  .app-nav-list a {
-    color: var(--z-muted-f);
-  }
-
-  .app-nav-list > li.z-active > a {
-    color: var(--z-bg-f);
-    box-shadow: 0 2px 0 currentColor;
-  }
-
   .z-alert-close svg *,
   .z-notification-close svg * {
     stroke: currentColor;
@@ -263,12 +222,6 @@
     background-color: var(--z-bg);
     border-top: 1px solid color-mix(in srgb, var(--z-border) var(--z-border-o), transparent);
     padding-bottom: env(safe-area-inset-bottom);
-  }
-
-  @media (min-width: 640px) {
-    .tab-bar {
-      display: none;
-    }
   }
 
   .tab-bar-item {
@@ -310,11 +263,10 @@
 
   @media (min-width: 640px) {
     .scanner-shell {
-      padding-bottom: 0;
       max-width: 480px;
       margin-inline: auto;
       height: auto;
-      min-height: calc(100dvh - var(--app-nav-height));
+      min-height: calc(100dvh - 4rem);
     }
   }
 
@@ -346,13 +298,36 @@
     position: absolute;
     inset: 0;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
-    margin: 0;
+    gap: 0.5rem;
     padding: 1.5rem;
     text-align: center;
-    font-size: 0.9375rem;
     color: #fff;
+  }
+
+  .scan-camera-error[hidden] {
+    display: none;
+  }
+
+  .scan-camera-error-icon {
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+  }
+
+  .scan-camera-error-title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+  }
+
+  .scan-camera-error-message {
+    margin: 0;
+    max-width: 22rem;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    opacity: 0.75;
   }
 
   #reader__scan_region {

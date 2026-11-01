@@ -8,7 +8,10 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/mathcale/discogs-collection-manager/internal/ui"
+import (
+	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
+)
 
 func SettingsPage(email string, discogsUsername string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -50,7 +53,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/account/views/settings.templ`, Line: 17, Col: 18}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/account/views/settings.templ`, Line: 20, Col: 18}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
 			if templ_7745c5c3_Err != nil {
@@ -68,7 +71,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 				var templ_7745c5c3_Var4 string
 				templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(discogsUsername)
 				if templ_7745c5c3_Err != nil {
-					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/account/views/settings.templ`, Line: 32, Col: 48}
+					return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/account/views/settings.templ`, Line: 35, Col: 48}
 				}
 				_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 				if templ_7745c5c3_Err != nil {
@@ -78,7 +81,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.Spinner().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -96,7 +99,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.Spinner().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -106,7 +109,7 @@ func SettingsPage(email string, discogsUsername string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ui.AppLayout("Settings — Discogs Collection Manager", "settings").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.AppLayout("Settings — Discogs Collection Manager", "settings").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -154,7 +157,7 @@ func DiscogsConnectError(message string) templ.Component {
 			var templ_7745c5c3_Var7 string
 			templ_7745c5c3_Var7, templ_7745c5c3_Err = templ.JoinStringErrs(message)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/account/views/settings.templ`, Line: 87, Col: 52}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/account/views/settings.templ`, Line: 90, Col: 52}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var7))
 			if templ_7745c5c3_Err != nil {
@@ -166,7 +169,7 @@ func DiscogsConnectError(message string) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ui.BaseLayout("Discogs Connection — Discogs Collection Manager").Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.BaseLayout("Discogs Connection — Discogs Collection Manager").Render(templ.WithChildren(ctx, templ_7745c5c3_Var6), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

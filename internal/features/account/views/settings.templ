@@ -1,9 +1,12 @@
 package views
 
-import "github.com/mathcale/discogs-collection-manager/internal/ui"
+import (
+	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
+)
 
 templ SettingsPage(email string, discogsUsername string) {
-	@ui.AppLayout("Settings — Discogs Collection Manager", "settings") {
+	@layouts.AppLayout("Settings — Discogs Collection Manager", "settings") {
 		<main class="page-settings">
 			<h1 class="page-title">Settings</h1>
 			<div class="stack">
@@ -40,7 +43,7 @@ templ SettingsPage(email string, discogsUsername string) {
 									hx-on:htmx:response-error="document.getElementById('discogs-status').innerHTML='<div class=\'z-alert z-alert-danger\'>Disconnection failed. Please try again.</div>'"
 								>
 									<button type="submit" class="z-button z-button-secondary">
-										@ui.Spinner()
+										@components.Spinner()
 										Disconnect
 									</button>
 								</form>
@@ -65,7 +68,7 @@ templ SettingsPage(email string, discogsUsername string) {
 					<div class="z-card-body">
 						<form method="POST" action="/auth/logout" hx-boost="true" hx-disabled-elt="find button[type='submit']">
 							<button type="submit" class="z-button z-button-secondary">
-								@ui.Spinner()
+								@components.Spinner()
 								Log out
 							</button>
 						</form>
@@ -77,7 +80,7 @@ templ SettingsPage(email string, discogsUsername string) {
 }
 
 templ DiscogsConnectError(message string) {
-	@ui.BaseLayout("Discogs Connection — Discogs Collection Manager") {
+	@layouts.BaseLayout("Discogs Connection — Discogs Collection Manager") {
 		<main class="page-center">
 			<div class="page-panel">
 				<h1 class="page-title">Connection Failed</h1>

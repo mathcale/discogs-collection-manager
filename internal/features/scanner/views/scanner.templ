@@ -4,24 +4,30 @@ import (
 	"strconv"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
-	"github.com/mathcale/discogs-collection-manager/internal/ui"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
 )
 
 templ ScannerPage() {
-	@ui.AppLayout("Scanner — Discogs Collection Manager", "scanner") {
+	@layouts.AppLayout("Scanner — Discogs Collection Manager", "scanner") {
 		<div class="scanner-shell">
 			<div class="scanner-viewport">
 				<div id="reader"></div>
-				<p id="camera-error" class="scan-camera-error" role="alert" hidden></p>
+				<div id="camera-error" class="scan-camera-error" role="alert" hidden>
+					<svg class="scan-camera-error-icon" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M1 1l22 22"></path>
+						<path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56"></path>
+					</svg>
+					<p id="camera-error-title" class="scan-camera-error-title"></p>
+					<p id="camera-error-message" class="scan-camera-error-message"></p>
+				</div>
 			</div>
-
 			<div class="scanner-bar" role="toolbar" aria-label="Scanner controls">
 				<button id="manual-btn" type="button" class="z-button z-button-large z-button-secondary scanner-bar-btn">
 					Enter manually
 				</button>
 			</div>
 		</div>
-
 		<div
 			id="result-modal"
 			class="z-modal"
@@ -32,7 +38,6 @@ templ ScannerPage() {
 		>
 			<div id="scan-result" class="z-modal-dialog scan-dialog-narrow" aria-live="polite" aria-atomic="true"></div>
 		</div>
-
 		<div
 			id="conflict-modal"
 			class="z-modal"
@@ -43,7 +48,6 @@ templ ScannerPage() {
 		>
 			<div id="scan-conflict" class="z-modal-dialog" aria-live="polite" aria-atomic="true"></div>
 		</div>
-
 		<div
 			id="manual-modal"
 			class="z-modal"
@@ -76,7 +80,6 @@ templ ScannerPage() {
 				</form>
 			</div>
 		</div>
-
 		<div
 			id="cancel-modal"
 			class="z-modal"
@@ -98,14 +101,12 @@ templ ScannerPage() {
 				</div>
 			</div>
 		</div>
-
 		<template id="scan-loading-template">
 			<div class="scan-loading">
-				@ui.Spinner()
+				@components.Spinner()
 				<span>Searching…</span>
 			</div>
 		</template>
-
 		<script>
 			function initScanner() {
 				var submitted = false;
@@ -115,6 +116,8 @@ templ ScannerPage() {
 				var manualModal = document.getElementById('manual-modal');
 				var cancelModal = document.getElementById('cancel-modal');
 				var cameraError = document.getElementById('camera-error');
+				var cameraErrorTitle = document.getElementById('camera-error-title');
+				var cameraErrorMessage = document.getElementById('camera-error-message');
 				var scanResult = document.getElementById('scan-result');
 				var scanConflict = document.getElementById('scan-conflict');
 				var loadingTemplate = document.getElementById('scan-loading-template');
@@ -148,6 +151,23 @@ templ ScannerPage() {
 					scanner.stop().catch(function () {});
 				}
 
+				var cameraErrors = {
+					NotAllowedError: ['Camera access blocked', 'Allow camera access in your browser settings and reload the page, or enter the barcode manually.'],
+					PermissionDeniedError: ['Camera access blocked', 'Allow camera access in your browser settings and reload the page, or enter the barcode manually.'],
+					NotFoundError: ['No camera found', 'We could not find a camera on this device. You can still enter the barcode manually.'],
+					NotReadableError: ['Camera unavailable', 'Another app may be using your camera. Close it and reload the page, or enter the barcode manually.'],
+					OverconstrainedError: ['Camera unavailable', 'Your camera does not support scanning. You can enter the barcode manually.'],
+				};
+
+				function showCameraError(err) {
+					var text = String(err && err.name ? err.name + ' ' + (err.message || '') : err);
+					var key = Object.keys(cameraErrors).find(function (name) { return text.indexOf(name) !== -1; });
+					var copy = cameraErrors[key] || ['Could not start the camera', 'Something went wrong while starting the camera. Reload the page or enter the barcode manually.'];
+					cameraErrorTitle.textContent = copy[0];
+					cameraErrorMessage.textContent = copy[1];
+					cameraError.hidden = false;
+				}
+
 				function startScanner() {
 					return scanner.start(
 						{ facingMode: 'environment' },
@@ -159,8 +179,7 @@ templ ScannerPage() {
 					).then(function () {
 						cameraError.hidden = true;
 					}).catch(function (err) {
-						cameraError.textContent = 'Could not start camera: ' + (err && err.message ? err.message : err);
-						cameraError.hidden = false;
+						showCameraError(err);
 					});
 				}
 
@@ -277,44 +296,36 @@ templ ScanConfirmPartial(release discogs.Release) {
 	<div class="z-modal-header">
 		<h2 class="z-modal-title">{ release.Title }</h2>
 	</div>
-
 	<div class="z-modal-body" data-z-overflow-auto>
 		if release.Thumb != "" {
 			<img src={ release.Thumb } alt={ release.Title } class="scan-result-thumb"/>
 		}
-
 		<dl class="scan-result-meta">
 			if release.Country != "" {
 				<dt>Country</dt>
 				<dd>{ release.Country }</dd>
 			}
-
 			if release.Year != "" {
 				<dt>Year</dt>
 				<dd>{ release.Year }</dd>
 			}
-
 			if release.Label() != "" {
 				<dt>Label</dt>
 				<dd>{ release.Label() }</dd>
 			}
-
 			if release.Catno != "" {
 				<dt>Cat. no.</dt>
 				<dd class="scan-result-catno">{ release.Catno }</dd>
 			}
-
 			if release.FormatSummary() != "" {
 				<dt>Format</dt>
 				<dd>{ release.FormatSummary() }</dd>
 			}
-
 			if release.Variant() != "" {
 				<dt>Variant</dt>
 				<dd>{ release.Variant() }</dd>
 			}
 		</dl>
-
 		<a
 			href={ templ.SafeURL(release.URL()) }
 			target="_blank"
@@ -323,7 +334,6 @@ templ ScanConfirmPartial(release discogs.Release) {
 			View on Discogs ↗
 		</a>
 	</div>
-
 	<div class="z-modal-footer scan-actions">
 		<form
 			hx-post="/app/scan/confirm"
@@ -332,13 +342,11 @@ templ ScanConfirmPartial(release discogs.Release) {
 			hx-disabled-elt="find button[type='submit']"
 		>
 			<input type="hidden" name="release_id" value={ strconv.Itoa(release.ID) }/>
-
 			<button type="submit" class="z-button z-button-primary">
-				@ui.Spinner()
+				@components.Spinner()
 				Add to Collection
 			</button>
 		</form>
-
 		<a href="/app/scanner" class="z-button z-button-secondary">Cancel</a>
 	</div>
 }
@@ -354,50 +362,39 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 			<h2 class="z-modal-title">Multiple releases found</h2>
 			<p class="muted">Select the correct pressing:</p>
 		</div>
-
 		<div class="z-modal-body" data-z-overflow-auto>
 			<ul class="scan-conflict-list">
 				for _, r := range releases {
 					<li class="scan-conflict-item">
 						<label class="scan-conflict-label">
 							<input type="radio" name="release_id" value={ strconv.Itoa(r.ID) } class="z-radio"/>
-
 							if r.Thumb != "" {
 								<img src={ r.Thumb } alt={ r.Title } class="scan-conflict-thumb"/>
 							}
-
 							<span class="scan-conflict-info">
 								<strong>{ r.Title }</strong>
-
 								<span class="scan-conflict-meta">
 									if r.Country != "" {
 										<span>{ r.Country }</span>
 									}
-
 									if r.Year != "" {
 										<span>{ r.Year }</span>
 									}
-
 									if r.Label() != "" {
 										<span>{ r.Label() }</span>
 									}
-
 								</span>
-
 								<span class="scan-conflict-detail">
 									if r.Catno != "" {
 										<span class="scan-conflict-catno">{ r.Catno }</span>
 									}
-
 									if r.FormatSummary() != "" {
 										<span>{ r.FormatSummary() }</span>
 									}
-
 									if r.Variant() != "" {
 										<span class="scan-conflict-variant">{ r.Variant() }</span>
 									}
 								</span>
-
 								<a href={ templ.SafeURL(r.URL()) } target="_blank" rel="noopener noreferrer">
 									View on Discogs ↗
 								</a>
@@ -407,13 +404,11 @@ templ ScanConflictListPartial(releases []discogs.Release) {
 				}
 			</ul>
 		</div>
-
 		<div class="z-modal-footer scan-actions">
 			<button type="submit" class="z-button z-button-primary">
-				@ui.Spinner()
+				@components.Spinner()
 				Confirm
 			</button>
-
 			<a href="/app/scanner" class="z-button z-button-secondary">Cancel</a>
 		</div>
 	</form>
@@ -430,19 +425,16 @@ templ ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) {
 				}
 			</h2>
 		</div>
-
 		<div class="z-modal-body" data-z-overflow-auto>
 			if len(matches.Exact) > 0 {
 				<p class="muted">This exact release is already in your collection:</p>
 				@ownedReleaseList(matches.Exact)
 			}
-
 			if len(matches.Similar) > 0 {
 				<p class="muted">Other editions of this album you own:</p>
 				@ownedReleaseList(matches.Similar)
 			}
 		</div>
-
 		<div class="z-modal-footer scan-actions">
 			<form
 				hx-post="/app/scan/confirm"
@@ -452,13 +444,11 @@ templ ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) {
 			>
 				<input type="hidden" name="release_id" value={ strconv.Itoa(releaseID) }/>
 				<input type="hidden" name="acknowledged" value="1"/>
-
 				<button type="submit" class="z-button z-button-primary">
-					@ui.Spinner()
+					@components.Spinner()
 					Add anyway
 				</button>
 			</form>
-
 			<a href="/app/scanner" class="z-button z-button-secondary">Cancel</a>
 		</div>
 	</div>
@@ -471,25 +461,20 @@ templ ownedReleaseList(owned []discogs.OwnedRelease) {
 				if o.Thumb != "" {
 					<img src={ o.Thumb } alt={ o.Title } class="scan-conflict-thumb"/>
 				}
-
 				<span class="scan-conflict-info">
 					<strong>{ o.PrimaryArtist() } — { o.Title }</strong>
-
 					<span class="scan-conflict-meta">
 						if o.Year != 0 {
 							<span>{ strconv.Itoa(o.Year) }</span>
 						}
-
 						if o.Label() != "" {
 							<span>{ o.Label() }</span>
 						}
 					</span>
-
 					<span class="scan-conflict-detail">
 						if o.FormatSummary() != "" {
 							<span>{ o.FormatSummary() }</span>
 						}
-
 						if o.Variant() != "" {
 							<span class="scan-conflict-variant">{ o.Variant() }</span>
 						}
@@ -500,14 +485,14 @@ templ ownedReleaseList(owned []discogs.OwnedRelease) {
 	</ul>
 }
 
-templ ScanSuccessPartial() {}
+templ ScanSuccessPartial() {
+}
 
 templ ScanErrorPartial(message string) {
 	<div class="z-modal-body stack">
 		<div class="z-alert z-alert-danger" role="alert">
 			<p>{ message }</p>
 		</div>
-
 		<a href="/app/scanner" class="z-button z-button-secondary">Try again</a>
 	</div>
 }
@@ -517,7 +502,6 @@ templ ScanReconnectPartial() {
 		<div class="z-alert z-alert-danger" role="alert">
 			<p>Your Discogs account is no longer connected. Please reconnect to continue.</p>
 		</div>
-
 		<a href="/discogs/connect" class="z-button z-button-primary">Reconnect Discogs</a>
 	</div>
 }

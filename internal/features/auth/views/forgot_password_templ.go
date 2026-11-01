@@ -8,7 +8,10 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/mathcale/discogs-collection-manager/internal/ui"
+import (
+	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
+)
 
 func ForgotPasswordPage(sent bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -57,7 +60,7 @@ func ForgotPasswordPage(sent bool) templ.Component {
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
-				templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.Spinner().Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -72,7 +75,7 @@ func ForgotPasswordPage(sent bool) templ.Component {
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ui.BaseLayout("Forgot password — Discogs Collection Manager").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.BaseLayout("Forgot password — Discogs Collection Manager").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

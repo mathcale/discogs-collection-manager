@@ -1,9 +1,12 @@
 package views
 
-import "github.com/mathcale/discogs-collection-manager/internal/ui"
+import (
+	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
+)
 
 templ LoginPage(errorMsg string, email string, signupsEnabled bool) {
-	@ui.BaseLayout("Log in — Discogs Collection Manager") {
+	@layouts.BaseLayout("Log in — Discogs Collection Manager") {
 		<main class="page-center">
 			<div class="page-panel">
 				<h1 class="page-title">Log in</h1>
@@ -11,7 +14,7 @@ templ LoginPage(errorMsg string, email string, signupsEnabled bool) {
 					<div class="z-card-body">
 						<div role="alert" aria-live="polite">
 							if errorMsg != "" {
-								@ui.AlertError(errorMsg)
+								@components.AlertError(errorMsg)
 							}
 						</div>
 						<form
@@ -35,7 +38,7 @@ templ LoginPage(errorMsg string, email string, signupsEnabled bool) {
 									Stay logged in
 								</label>
 								<button type="submit" class="z-button z-button-primary">
-									@ui.Spinner()
+									@components.Spinner()
 									Log in
 								</button>
 							</div>

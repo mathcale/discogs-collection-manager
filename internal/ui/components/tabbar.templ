@@ -1,0 +1,14 @@
+package components
+
+templ TabBar(activePage string) {
+	<nav class="tab-bar" aria-label="Main navigation">
+		<a href="/app/scanner" class={ "tab-bar-item", templ.KV("is-active", activePage == "scanner") } aria-label="Scanner">
+			@IconScanner("")
+			<span>Scanner</span>
+		</a>
+		<a href="/app/settings" class={ "tab-bar-item", templ.KV("is-active", activePage == "settings") } aria-label="Settings">
+			@IconSettings("")
+			<span>Settings</span>
+		</a>
+	</nav>
+}

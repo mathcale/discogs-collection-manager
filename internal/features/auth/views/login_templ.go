@@ -8,7 +8,10 @@ package views
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/mathcale/discogs-collection-manager/internal/ui"
+import (
+	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
+)
 
 func LoginPage(errorMsg string, email string, signupsEnabled bool) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
@@ -48,7 +51,7 @@ func LoginPage(errorMsg string, email string, signupsEnabled bool) templ.Compone
 				return templ_7745c5c3_Err
 			}
 			if errorMsg != "" {
-				templ_7745c5c3_Err = ui.AlertError(errorMsg).Render(ctx, templ_7745c5c3_Buffer)
+				templ_7745c5c3_Err = components.AlertError(errorMsg).Render(ctx, templ_7745c5c3_Buffer)
 				if templ_7745c5c3_Err != nil {
 					return templ_7745c5c3_Err
 				}
@@ -60,7 +63,7 @@ func LoginPage(errorMsg string, email string, signupsEnabled bool) templ.Compone
 			var templ_7745c5c3_Var3 string
 			templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.ResolveAttributeValue(email)
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/auth/views/login.templ`, Line: 27, Col: 82}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/auth/views/login.templ`, Line: 30, Col: 82}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var3)
 			if templ_7745c5c3_Err != nil {
@@ -70,7 +73,7 @@ func LoginPage(errorMsg string, email string, signupsEnabled bool) templ.Compone
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = ui.Spinner().Render(ctx, templ_7745c5c3_Buffer)
+			templ_7745c5c3_Err = components.Spinner().Render(ctx, templ_7745c5c3_Buffer)
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -90,7 +93,7 @@ func LoginPage(errorMsg string, email string, signupsEnabled bool) templ.Compone
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = ui.BaseLayout("Log in — Discogs Collection Manager").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.BaseLayout("Log in — Discogs Collection Manager").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

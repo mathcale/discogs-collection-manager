@@ -1,0 +1,73 @@
+package layouts
+
+templ BaseLayout(title string) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+			<title>{ title }</title>
+
+			<script>
+				(function() {
+					var query = window.matchMedia('(prefers-color-scheme: dark)');
+
+					function applyColorScheme() {
+						document.documentElement.classList.toggle('dark', query.matches);
+					}
+
+					applyColorScheme();
+
+					query.addEventListener('change', applyColorScheme);
+				})();
+			</script>
+
+			<link rel="stylesheet" href="/static/vendor/0build/kit.min.css"/>
+			<link rel="stylesheet" href="/static/app.css"/>
+
+			<noscript>
+				<style>.z-not-ready { opacity: 1; visibility: visible; }</style>
+			</noscript>
+
+			<meta name="htmx-config" content='{"responseHandling":[{"code":"204","swap":false},{"code":"[23]..","swap":true},{"code":"[45]..","swap":false,"error":true},{"code":"...","swap":true}]}'/>
+		</head>
+
+		<body class="z-not-ready">
+			{ children... }
+
+			<script src="/static/htmx.min.js"></script>
+			<script>
+				document.addEventListener('htmx:beforeSwap', function(e) {
+					var contentType = e.detail.xhr.getResponseHeader('Content-Type') || '';
+
+					if (e.detail.isError && contentType.indexOf('text/html') === 0) {
+						e.detail.shouldSwap = true;
+						e.detail.isError = false;
+					}
+				});
+
+				document.addEventListener('htmx:responseError', function() {
+					zUIkit.notification({
+						status: 'danger',
+						message: 'Something went wrong. Please try again.',
+					});
+				});
+
+				document.addEventListener('toast', function(e) {
+					zUIkit.notification({
+						status: e.detail.status,
+						message: e.detail.message,
+					});
+				});
+			</script>
+
+			<script src="/static/vendor/0build/uikit.min.js"></script>
+			<script src="/static/vendor/0build/pin.min.js" type="module"></script>
+
+			<script>
+				document.body.classList.replace('z-not-ready', 'z-ready');
+			</script>
+		</body>
+	</html>
+}

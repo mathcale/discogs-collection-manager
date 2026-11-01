@@ -1,9 +1,12 @@
 package views
 
-import "github.com/mathcale/discogs-collection-manager/internal/ui"
+import (
+	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
+)
 
 templ OTPPage(errorMsg string) {
-	@ui.BaseLayout("Verify code — Discogs Collection Manager") {
+	@layouts.BaseLayout("Verify code — Discogs Collection Manager") {
 		<main class="page-center">
 			<div class="page-panel">
 				<h1 class="page-title">Check your email</h1>
@@ -14,7 +17,7 @@ templ OTPPage(errorMsg string) {
 					<div class="z-card-body">
 						<div role="alert" aria-live="polite">
 							if errorMsg != "" {
-								@ui.AlertError(errorMsg)
+								@components.AlertError(errorMsg)
 							}
 						</div>
 						<form
@@ -30,7 +33,7 @@ templ OTPPage(errorMsg string) {
 									<z-input-pin name="code" length="6" input-mode="numeric" autofocus></z-input-pin>
 								</div>
 								<button type="submit" class="z-button z-button-primary">
-									@ui.Spinner()
+									@components.Spinner()
 									Verify
 								</button>
 							</div>
