@@ -369,8 +369,7 @@ func (s *DiscogsOAuthSuite) TestSettingsPage_PreselectsLanguageFromCookie() {
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusOK, rr.Code)
-	s.Contains(rr.Body.String(), `<option value="pt-BR" selected>`)
-	s.Contains(rr.Body.String(), `<option value="">`)
+	s.Contains(rr.Body.String(), `name="lang" value="pt-BR"`)
 }
 
 func (s *DiscogsOAuthSuite) createUser(email string) *authmodels.User {

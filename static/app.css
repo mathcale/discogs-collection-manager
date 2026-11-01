@@ -184,6 +184,15 @@
     margin-bottom: 1rem;
   }
 
+  #lang-button {
+    justify-content: space-between;
+  }
+
+  #lang-listbox {
+    --z-dropdown-width: 100%;
+    z-index: 1020;
+  }
+
   .z-alert-close svg *,
   .z-notification-close svg * {
     stroke: currentColor;

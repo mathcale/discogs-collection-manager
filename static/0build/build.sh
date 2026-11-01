@@ -38,15 +38,16 @@ cp "$HERE/trim-css.mjs" "$HERE/pin.config.js" .
 mkdir -p src/js
 cp "$HERE/pin-entry.ts" src/js/pin-entry.ts
 
+node_modules/.bin/vite -c pin.config.js build
+
 REPO="$(cd "$HERE/../.." && pwd)"
 {
   find "$REPO/internal" -name '*.templ' -print0 | xargs -0 cat
-  cat "$REPO/static/app.css" dist/js/uikit.min.js
+  cat "$REPO/static/app.css" dist/js/uikit.min.js out/pin.iife.js
 } | grep -oE 'z-[a-zA-Z0-9_-]+' | sort -u > used-classes.txt
 
 node trim-css.mjs . kit.trim.src.css used-classes.txt
 "$LIGHTNINGCSS" --minify kit.trim.src.css -o kit.trim.min.css
-node_modules/.bin/vite -c pin.config.js build
 
 cp kit.trim.min.css "$OUT/kit.min.css"
 cp dist/js/uikit.min.js "$OUT/uikit.min.js"

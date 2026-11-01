@@ -30,17 +30,23 @@ templ SettingsPage(email string, discogsUsername string, selectedLang string) {
 						<form method="POST" action="/app/settings/language" class="z-form-stacked">
 							<div class="stack">
 								<div>
-									<label class="z-form-label" for="lang">{ i18n.T(ctx, "Display language") }</label>
-									<select class="z-select" id="lang" name="lang" onchange="this.form.requestSubmit()">
-										<option value="" selected?={ selectedLang == "" }>{ i18n.T(ctx, "System default") }</option>
-										for _, language := range i18n.Supported {
-											<option value={ language.Tag } selected?={ selectedLang == language.Tag }>{ language.Name }</option>
-										}
-									</select>
+									<label class="z-form-label" for="lang-button">{ i18n.T(ctx, "Display language") }</label>
+									<z-select
+										id="lang"
+										name="lang"
+										value={ selectedLang }
+										cls="button: z-input-fake; dropdown: z-dropdown"
+										i18n={ templ.JSONString(map[string]string{"button-label": i18n.T(ctx, "Display language"), "list-label": i18n.T(ctx, "Display language")}) }
+										hx-on:z-select:input="if (event.detail.value !== this.getAttribute('value')) this.closest('form').requestSubmit()"
+									>
+										<select data-fn="data-source" hidden>
+											<option value="">{ i18n.T(ctx, "System default") }</option>
+											for _, language := range i18n.Supported {
+												<option value={ language.Tag }>{ language.Name }</option>
+											}
+										</select>
+									</z-select>
 								</div>
-								<noscript>
-									<button type="submit" class="z-button z-button-secondary">{ i18n.T(ctx, "Save") }</button>
-								</noscript>
 							</div>
 						</form>
 					</div>
