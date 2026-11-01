@@ -1,8 +1,10 @@
 package components
 
+import "github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
+
 templ AlertError(msg string) {
 	<div class="z-alert z-alert-danger alert-spaced" data-z-alert>
-		<button type="button" class="z-alert-close" data-z-close aria-label="Dismiss"></button>
+		<button type="button" class="z-alert-close" data-z-close aria-label={ i18n.T(ctx, "Dismiss") }></button>
 
 		<p>{ msg }</p>
 	</div>

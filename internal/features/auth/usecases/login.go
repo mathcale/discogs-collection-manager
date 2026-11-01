@@ -3,11 +3,11 @@ package usecases
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 )
 
 type LoginInput struct {
@@ -64,7 +64,7 @@ func (uc *Login) Execute(ctx context.Context, in LoginInput) (LoginOutput, error
 		return LoginOutput{}, err
 	}
 
-	if err := uc.Mailer.Send(user.Email, "Your login code", fmt.Sprintf("Your verification code is: <strong>%s</strong>. It expires in 10 minutes.", code)); err != nil {
+	if err := uc.Mailer.Send(user.Email, i18n.T(ctx, "Your login code"), i18n.T(ctx, "Your verification code is: <strong>%s</strong>. It expires in 10 minutes.", code)); err != nil {
 		return LoginOutput{}, err
 	}
 

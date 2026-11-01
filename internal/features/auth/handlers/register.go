@@ -6,6 +6,7 @@ import (
 
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/usecases"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/views"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 	"github.com/mathcale/discogs-collection-manager/internal/ui"
 )
 
@@ -35,7 +36,7 @@ func (h *Handler) RegisterSubmit(w http.ResponseWriter, r *http.Request) {
 	})
 	if err != nil {
 		if errors.Is(err, usecases.ErrEmailTaken) {
-			ui.Render(w, r, http.StatusUnprocessableEntity, views.RegisterPage("This email is already registered."))
+			ui.Render(w, r, http.StatusUnprocessableEntity, views.RegisterPage(i18n.T(r.Context(), "This email is already registered.")))
 			return
 		}
 

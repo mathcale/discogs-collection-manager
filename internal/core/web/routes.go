@@ -7,6 +7,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 )
 
 func NewRouter(k *core.Kernel) http.Handler {
@@ -14,6 +15,7 @@ func NewRouter(k *core.Kernel) http.Handler {
 
 	r.Use(middleware.RequestID)
 	r.Use(RequestLogger(k.Logger))
+	r.Use(i18n.Middleware)
 	r.Use(middleware.Recoverer)
 
 	r.Group(func(r chi.Router) {

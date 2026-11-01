@@ -2,11 +2,11 @@ package usecases
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 )
 
 type RequestPasswordResetInput struct {
@@ -48,8 +48,8 @@ func (uc *RequestPasswordReset) Execute(ctx context.Context, in RequestPasswordR
 	}
 
 	resetLink := uc.BaseURL + "/auth/reset-password?token=" + rawToken
-	body := fmt.Sprintf("Click the link below to reset your password:<br><a href=\"%s\">%s</a><br>This link expires in 1 hour.", resetLink, resetLink)
-	if err := uc.Mailer.Send(user.Email, "Reset your password", body); err != nil {
+	body := i18n.T(ctx, "Click the link below to reset your password:<br><a href=\"%s\">%s</a><br>This link expires in 1 hour.", resetLink, resetLink)
+	if err := uc.Mailer.Send(user.Email, i18n.T(ctx, "Reset your password"), body); err != nil {
 		return RequestPasswordResetOutput{}, err
 	}
 

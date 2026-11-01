@@ -508,7 +508,7 @@ func (s *AuthSuite) TestForgotPassword_POST_KnownEmail_SendsEmail() {
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusOK, rr.Code)
-	s.Contains(rr.Body.String(), "you'll receive")
+	s.Contains(rr.Body.String(), "receive a password reset link shortly")
 	s.Require().Len(s.mailer.Sent, 1)
 	s.Equal("reset@example.com", s.mailer.Sent[0].To)
 	s.Contains(s.mailer.Sent[0].Body, "auth/reset-password?token=")
@@ -523,7 +523,7 @@ func (s *AuthSuite) TestForgotPassword_POST_UnknownEmail_SilentSuccess() {
 	s.router.ServeHTTP(rr, req)
 
 	s.Equal(http.StatusOK, rr.Code)
-	s.Contains(rr.Body.String(), "you'll receive")
+	s.Contains(rr.Body.String(), "receive a password reset link shortly")
 	s.Empty(s.mailer.Sent)
 }
 

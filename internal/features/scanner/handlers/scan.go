@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -9,6 +10,7 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/features/scanner/usecases"
 	"github.com/mathcale/discogs-collection-manager/internal/features/scanner/views"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/ctxkey"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 	"github.com/mathcale/discogs-collection-manager/internal/ui"
 )
 
@@ -37,7 +39,7 @@ func (h *Handler) Scan(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, usecases.ErrDiscogsNotConnected):
 			ui.Render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
 		case errors.Is(err, usecases.ErrSearchFailed):
-			renderDiscogsError(w, r, err, "Could not search Discogs. Please try again.")
+			renderDiscogsError(w, r, err, i18n.T(r.Context(), "Could not search Discogs. Please try again."))
 		default:
 			http.Error(w, "internal error", http.StatusInternalServerError)
 		}
@@ -45,7 +47,7 @@ func (h *Handler) Scan(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if len(out.Releases) == 0 {
-		ui.Render(w, r, http.StatusOK, views.ScanErrorPartial("No releases found for this barcode."))
+		ui.Render(w, r, http.StatusOK, views.ScanErrorPartial(i18n.T(r.Context(), "No releases found for this barcode.")))
 		return
 	}
 	if len(out.Releases) > 1 {
@@ -64,7 +66,7 @@ func (h *Handler) Confirm(w http.ResponseWriter, r *http.Request) {
 
 	releaseIDStr := r.FormValue("release_id")
 	if releaseIDStr == "" {
-		ui.Render(w, r, http.StatusUnprocessableEntity, views.ScanErrorPartial("Please select a release before confirming."))
+		ui.Render(w, r, http.StatusUnprocessableEntity, views.ScanErrorPartial(i18n.T(r.Context(), "Please select a release before confirming.")))
 		return
 	}
 
@@ -84,9 +86,9 @@ func (h *Handler) Confirm(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, usecases.ErrDiscogsNotConnected):
 			ui.Render(w, r, http.StatusUnauthorized, views.ScanReconnectPartial())
 		case errors.Is(err, usecases.ErrCollectionCheckFailed):
-			renderDiscogsError(w, r, err, "Could not check your collection. Please try again.")
+			renderDiscogsError(w, r, err, i18n.T(r.Context(), "Could not check your collection. Please try again."))
 		case errors.Is(err, usecases.ErrAddToCollectionFailed):
-			renderDiscogsError(w, r, err, "Could not add release to collection. Please try again.")
+			renderDiscogsError(w, r, err, i18n.T(r.Context(), "Could not add release to collection. Please try again."))
 		default:
 			http.Error(w, "internal error", http.StatusInternalServerError)
 		}
@@ -98,7 +100,12 @@ func (h *Handler) Confirm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("HX-Trigger", `{"toast":{"message":"Release added to your Discogs collection!","status":"success"}}`)
+	toast, _ := json.Marshal(map[string]any{"toast": map[string]string{
+		"message": i18n.T(r.Context(), "Release added to your Discogs collection!"),
+		"status":  "success",
+	}})
+
+	w.Header().Set("HX-Trigger", string(toast))
 	w.Header().Set("HX-Trigger-After-Swap", `{"scan-success":true}`)
 	ui.Render(w, r, http.StatusOK, views.ScanSuccessPartial())
 }
@@ -110,7 +117,7 @@ func (h *Handler) Cancel(w http.ResponseWriter, r *http.Request) {
 func renderDiscogsError(w http.ResponseWriter, r *http.Request, err error, fallbackMessage string) {
 	var rle *discogs.RateLimitError
 	if errors.As(err, &rle) {
-		ui.Render(w, r, http.StatusTooManyRequests, views.ScanErrorPartial("Discogs rate limit reached. Please wait a moment and try again."))
+		ui.Render(w, r, http.StatusTooManyRequests, views.ScanErrorPartial(i18n.T(r.Context(), "Discogs rate limit reached. Please wait a moment and try again.")))
 		return
 	}
 

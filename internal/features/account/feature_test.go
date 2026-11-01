@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -304,6 +305,72 @@ func (s *DiscogsOAuthSuite) TestSettingsPage_ShowsNavigation() {
 	body := rr.Body.String()
 	s.Contains(body, "/app/settings")
 	s.Contains(body, "/app/scanner")
+}
+
+func (s *DiscogsOAuthSuite) postLanguage(value string) *httptest.ResponseRecorder {
+	user := s.createUser("lang@example.com")
+	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
+
+	form := url.Values{"lang": {value}}
+	req := httptest.NewRequest(http.MethodPost, "/app/settings/language", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+	return rr
+}
+
+func (s *DiscogsOAuthSuite) langCookie(rr *httptest.ResponseRecorder) *http.Cookie {
+	for _, c := range rr.Result().Cookies() {
+		if c.Name == "lang" {
+			return c
+		}
+	}
+	return nil
+}
+
+func (s *DiscogsOAuthSuite) TestLanguage_SupportedValue_SetsCookieAndRedirects() {
+	rr := s.postLanguage("pt-BR")
+
+	s.Equal(http.StatusSeeOther, rr.Code)
+	s.Equal("/app/settings", rr.Header().Get("Location"))
+	cookie := s.langCookie(rr)
+	s.Require().NotNil(cookie)
+	s.Equal("pt-BR", cookie.Value)
+	s.Greater(cookie.MaxAge, 0)
+}
+
+func (s *DiscogsOAuthSuite) TestLanguage_SystemDefault_ClearsCookie() {
+	rr := s.postLanguage("")
+
+	s.Equal(http.StatusSeeOther, rr.Code)
+	cookie := s.langCookie(rr)
+	s.Require().NotNil(cookie)
+	s.Less(cookie.MaxAge, 0)
+}
+
+func (s *DiscogsOAuthSuite) TestLanguage_UnsupportedValue_IsRejected() {
+	rr := s.postLanguage("xx")
+
+	s.Equal(http.StatusBadRequest, rr.Code)
+	s.Nil(s.langCookie(rr))
+}
+
+func (s *DiscogsOAuthSuite) TestSettingsPage_PreselectsLanguageFromCookie() {
+	user := s.createUser("preselect@example.com")
+	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
+
+	req := httptest.NewRequest(http.MethodGet, "/app/settings", nil)
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
+	req.AddCookie(&http.Cookie{Name: "lang", Value: "pt-BR"})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusOK, rr.Code)
+	s.Contains(rr.Body.String(), `<option value="pt-BR" selected>`)
+	s.Contains(rr.Body.String(), `<option value="">`)
 }
 
 func (s *DiscogsOAuthSuite) createUser(email string) *authmodels.User {

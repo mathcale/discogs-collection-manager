@@ -1,8 +1,10 @@
 package layouts
 
+import "github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
+
 templ BaseLayout(title string) {
 	<!DOCTYPE html>
-	<html lang="en">
+	<html lang={ i18n.Lang(ctx) }>
 		<head>
 			<meta charset="UTF-8"/>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -50,7 +52,7 @@ templ BaseLayout(title string) {
 				document.addEventListener('htmx:responseError', function() {
 					zUIkit.notification({
 						status: 'danger',
-						message: 'Something went wrong. Please try again.',
+						message: {{ i18n.T(ctx, "Something went wrong. Please try again.") }},
 					});
 				});
 

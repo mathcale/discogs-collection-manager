@@ -37,6 +37,7 @@ func New(d Deps) *Module {
 
 func (m *Module) Routes(r chi.Router) {
 	r.Get("/app/settings", m.handler.SettingsPage)
+	r.Post("/app/settings/language", m.handler.LanguageSubmit)
 	r.Get("/discogs/connect", m.handler.Connect)
 	r.Get("/discogs/callback", m.handler.Callback)
 	r.Post("/discogs/disconnect", m.handler.Disconnect)

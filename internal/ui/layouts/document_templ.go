@@ -8,6 +8,8 @@ package layouts
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
+import "github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
+
 func BaseLayout(title string) templ.Component {
 	return templruntime.GeneratedTemplate(func(templ_7745c5c3_Input templruntime.GeneratedComponentInput) (templ_7745c5c3_Err error) {
 		templ_7745c5c3_W, ctx := templ_7745c5c3_Input.Writer, templ_7745c5c3_Input.Context
@@ -29,20 +31,33 @@ func BaseLayout(title string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"en\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 1, "<!doctype html><html lang=\"")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
 		var templ_7745c5c3_Var2 string
-		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		templ_7745c5c3_Var2, templ_7745c5c3_Err = templ.ResolveAttributeValue(i18n.Lang(ctx))
 		if templ_7745c5c3_Err != nil {
-			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/layouts/document.templ`, Line: 10, Col: 17}
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/layouts/document.templ`, Line: 7, Col: 28}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var2))
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var2)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "</title><script>\n\t\t\t\t(function() {\n\t\t\t\t\tvar query = window.matchMedia('(prefers-color-scheme: dark)');\n\n\t\t\t\t\tfunction applyColorScheme() {\n\t\t\t\t\t\tdocument.documentElement.classList.toggle('dark', query.matches);\n\t\t\t\t\t}\n\n\t\t\t\t\tapplyColorScheme();\n\n\t\t\t\t\tquery.addEventListener('change', applyColorScheme);\n\t\t\t\t})();\n\t\t\t</script><link rel=\"stylesheet\" href=\"/static/vendor/0build/kit.min.css\"><link rel=\"stylesheet\" href=\"/static/app.css\"><noscript><style>.z-not-ready { opacity: 1; visibility: visible; }</style></noscript><meta name=\"htmx-config\" content='{\"responseHandling\":[{\"code\":\"204\",\"swap\":false},{\"code\":\"[23]..\",\"swap\":true},{\"code\":\"[45]..\",\"swap\":false,\"error\":true},{\"code\":\"...\",\"swap\":true}]}'></head><body class=\"z-not-ready\">")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 2, "\"><head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"><title>")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		var templ_7745c5c3_Var3 string
+		templ_7745c5c3_Var3, templ_7745c5c3_Err = templ.JoinStringErrs(title)
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/layouts/document.templ`, Line: 12, Col: 17}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var3))
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "</title><script>\n\t\t\t\t(function() {\n\t\t\t\t\tvar query = window.matchMedia('(prefers-color-scheme: dark)');\n\n\t\t\t\t\tfunction applyColorScheme() {\n\t\t\t\t\t\tdocument.documentElement.classList.toggle('dark', query.matches);\n\t\t\t\t\t}\n\n\t\t\t\t\tapplyColorScheme();\n\n\t\t\t\t\tquery.addEventListener('change', applyColorScheme);\n\t\t\t\t})();\n\t\t\t</script><link rel=\"stylesheet\" href=\"/static/vendor/0build/kit.min.css\"><link rel=\"stylesheet\" href=\"/static/app.css\"><noscript><style>.z-not-ready { opacity: 1; visibility: visible; }</style></noscript><meta name=\"htmx-config\" content='{\"responseHandling\":[{\"code\":\"204\",\"swap\":false},{\"code\":\"[23]..\",\"swap\":true},{\"code\":\"[45]..\",\"swap\":false,\"error\":true},{\"code\":\"...\",\"swap\":true}]}'></head><body class=\"z-not-ready\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
@@ -50,7 +65,19 @@ func BaseLayout(title string) templ.Component {
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
-		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 3, "<script src=\"/static/htmx.min.js\"></script><script>\n\t\t\t\tdocument.addEventListener('htmx:beforeSwap', function(e) {\n\t\t\t\t\tvar contentType = e.detail.xhr.getResponseHeader('Content-Type') || '';\n\n\t\t\t\t\tif (e.detail.isError && contentType.indexOf('text/html') === 0) {\n\t\t\t\t\t\te.detail.shouldSwap = true;\n\t\t\t\t\t\te.detail.isError = false;\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener('htmx:responseError', function() {\n\t\t\t\t\tzUIkit.notification({\n\t\t\t\t\t\tstatus: 'danger',\n\t\t\t\t\t\tmessage: 'Something went wrong. Please try again.',\n\t\t\t\t\t});\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener('toast', function(e) {\n\t\t\t\t\tzUIkit.notification({\n\t\t\t\t\t\tstatus: e.detail.status,\n\t\t\t\t\t\tmessage: e.detail.message,\n\t\t\t\t\t});\n\t\t\t\t});\n\t\t\t</script><script src=\"/static/vendor/0build/uikit.min.js\"></script><script src=\"/static/vendor/0build/pin.min.js\" type=\"module\"></script><script>\n\t\t\t\tdocument.body.classList.replace('z-not-ready', 'z-ready');\n\t\t\t</script></body></html>")
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 4, "<script src=\"/static/htmx.min.js\"></script><script>\n\t\t\t\tdocument.addEventListener('htmx:beforeSwap', function(e) {\n\t\t\t\t\tvar contentType = e.detail.xhr.getResponseHeader('Content-Type') || '';\n\n\t\t\t\t\tif (e.detail.isError && contentType.indexOf('text/html') === 0) {\n\t\t\t\t\t\te.detail.shouldSwap = true;\n\t\t\t\t\t\te.detail.isError = false;\n\t\t\t\t\t}\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener('htmx:responseError', function() {\n\t\t\t\t\tzUIkit.notification({\n\t\t\t\t\t\tstatus: 'danger',\n\t\t\t\t\t\tmessage: ")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Var4, templ_7745c5c3_Err := templruntime.ScriptContentOutsideStringLiteral(i18n.T(ctx, "Something went wrong. Please try again."))
+		if templ_7745c5c3_Err != nil {
+			return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/ui/layouts/document.templ`, Line: 55, Col: 72}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ_7745c5c3_Var4)
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 5, ",\n\t\t\t\t\t});\n\t\t\t\t});\n\n\t\t\t\tdocument.addEventListener('toast', function(e) {\n\t\t\t\t\tzUIkit.notification({\n\t\t\t\t\t\tstatus: e.detail.status,\n\t\t\t\t\t\tmessage: e.detail.message,\n\t\t\t\t\t});\n\t\t\t\t});\n\t\t\t</script><script src=\"/static/vendor/0build/uikit.min.js\"></script><script src=\"/static/vendor/0build/pin.min.js\" type=\"module\"></script><script>\n\t\t\t\tdocument.body.classList.replace('z-not-ready', 'z-ready');\n\t\t\t</script></body></html>")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

@@ -1,14 +1,16 @@
 package components
 
+import "github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
+
 templ TabBar(activePage string) {
-	<nav class="tab-bar" aria-label="Main navigation">
-		<a href="/app/scanner" class={ "tab-bar-item", templ.KV("is-active", activePage == "scanner") } aria-label="Scanner">
+	<nav class="tab-bar" aria-label={ i18n.T(ctx, "Main navigation") }>
+		<a href="/app/scanner" class={ "tab-bar-item", templ.KV("is-active", activePage == "scanner") } aria-label={ i18n.T(ctx, "Scanner") }>
 			@IconScanner("")
-			<span>Scanner</span>
+			<span>{ i18n.T(ctx, "Scanner") }</span>
 		</a>
-		<a href="/app/settings" class={ "tab-bar-item", templ.KV("is-active", activePage == "settings") } aria-label="Settings">
+		<a href="/app/settings" class={ "tab-bar-item", templ.KV("is-active", activePage == "settings") } aria-label={ i18n.T(ctx, "Settings") }>
 			@IconSettings("")
-			<span>Settings</span>
+			<span>{ i18n.T(ctx, "Settings") }</span>
 		</a>
 	</nav>
 }
