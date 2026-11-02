@@ -3,7 +3,6 @@ package usecases
 import (
 	"context"
 	"errors"
-	"time"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
@@ -44,7 +43,7 @@ func (uc *RequestPasswordReset) Execute(ctx context.Context, in RequestPasswordR
 	}
 
 	tokenHash := domain.HashToken(rawToken)
-	if _, err := uc.ResetTokens.Create(ctx, user.ID, tokenHash, time.Now().Add(domain.ResetTokenExpiry)); err != nil {
+	if err := uc.ResetTokens.Save(ctx, domain.NewPasswordResetToken(user.ID, tokenHash)); err != nil {
 		return RequestPasswordResetOutput{}, err
 	}
 
