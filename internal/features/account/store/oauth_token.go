@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/mathcale/discogs-collection-manager/internal/features/account/domain"
 )
 
@@ -20,34 +18,20 @@ func NewOAuthTokenRepository(db *sql.DB) domain.OAuthTokenRepository {
 	}
 }
 
-func (r *oauthTokenRepository) Upsert(
-	ctx context.Context,
-	userID, accessToken, accessTokenSecret, discogsUsername string,
-) (*domain.OAuthToken, error) {
-	id := uuid.NewString()
-	now := time.Now().UTC()
-
+func (r *oauthTokenRepository) Save(ctx context.Context, token *domain.OAuthToken) error {
 	_, err := r.db.ExecContext(ctx, `
 		INSERT INTO oauth_tokens (id, user_id, access_token, access_token_secret, discogs_username, created_at)
 		VALUES (?, ?, ?, ?, ?, ?)
 		ON CONFLICT(user_id) DO UPDATE SET
+			id = excluded.id,
 			access_token = excluded.access_token,
 			access_token_secret = excluded.access_token_secret,
-			discogs_username = excluded.discogs_username`,
-		id, userID, accessToken, accessTokenSecret, discogsUsername, now.Format(time.DateTime),
+			discogs_username = excluded.discogs_username,
+			created_at = excluded.created_at`,
+		token.ID, token.UserID, token.AccessToken, token.AccessTokenSecret, token.DiscogsUsername, token.CreatedAt.Format(time.DateTime),
 	)
-	if err != nil {
-		return nil, err
-	}
 
-	return &domain.OAuthToken{
-		ID:                id,
-		UserID:            userID,
-		AccessToken:       accessToken,
-		AccessTokenSecret: accessTokenSecret,
-		DiscogsUsername:   discogsUsername,
-		CreatedAt:         now,
-	}, nil
+	return err
 }
 
 func (r *oauthTokenRepository) FindByUserID(

@@ -702,7 +702,7 @@ func (s *AuthSuite) TestForgotPassword_POST_EmailCaseInsensitive() {
 
 func (s *AuthSuite) TestResetPassword_POST_Success_DeletesOAuthToken() {
 	user := s.registerUser("resetoauth@example.com", "oldpassword")
-	_, err := s.oauthTokens.Upsert(context.Background(), user.ID, "access", "secret", "attacker")
+	err := s.oauthTokens.Save(context.Background(), accountdomain.NewOAuthToken(user.ID, "access", "secret", "attacker"))
 	s.Require().NoError(err)
 
 	err = s.saveResetToken(user.ID, authdomain.HashToken("oauth-reset-token"), time.Now().Add(1*time.Hour))

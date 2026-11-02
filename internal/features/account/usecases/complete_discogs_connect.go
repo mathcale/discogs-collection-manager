@@ -48,7 +48,8 @@ func (uc *CompleteDiscogsConnect) Execute(ctx context.Context, in CompleteDiscog
 
 	discogsUsername := uc.fetchDiscogsUsername(ctx, accessToken, accessSecret)
 
-	if _, err := uc.OAuthTokens.Upsert(ctx, in.UserID, accessToken, accessSecret, discogsUsername); err != nil {
+	token := domain.NewOAuthToken(in.UserID, accessToken, accessSecret, discogsUsername)
+	if err := uc.OAuthTokens.Save(ctx, token); err != nil {
 		return CompleteDiscogsConnectOutput{}, err
 	}
 

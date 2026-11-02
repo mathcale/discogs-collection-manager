@@ -174,6 +174,36 @@ func (s *DiscogsOAuthSuite) TestCallback_StoresAccessToken() {
 	s.Equal("testdiscogsuser", stored.DiscogsUsername)
 }
 
+func (s *DiscogsOAuthSuite) TestCallback_TwiceForSameUser_LeavesOneConnectionWithLatestCredentials() {
+	user := s.createUser("twice@example.com")
+	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
+	s.Require().NoError(s.saveOAuthToken(user.ID, "stale-access", "stale-secret", "staleuser"))
+
+	connectReq := httptest.NewRequest(http.MethodGet, "/discogs/connect", nil)
+	connectReq.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
+	s.router.ServeHTTP(httptest.NewRecorder(), connectReq)
+
+	callbackReq := httptest.NewRequest(http.MethodGet, "/discogs/callback?oauth_token=mock-request-token&oauth_verifier=mock-verifier", nil)
+	callbackReq.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
+	rr := httptest.NewRecorder()
+	s.router.ServeHTTP(rr, callbackReq)
+	s.Equal(http.StatusFound, rr.Code)
+
+	var count int
+	s.Require().NoError(s.db.QueryRow(`SELECT COUNT(*) FROM oauth_tokens WHERE user_id = ?`, user.ID).Scan(&count))
+	s.Equal(1, count)
+
+	stored, err := s.oauthTokens.FindByUserID(context.Background(), user.ID)
+	s.Require().NoError(err)
+	s.Equal("mock-access-token", stored.AccessToken)
+	s.Equal("mock-access-secret", stored.AccessTokenSecret)
+	s.Equal("testdiscogsuser", stored.DiscogsUsername)
+}
+
+func (s *DiscogsOAuthSuite) saveOAuthToken(userID, accessToken, accessSecret, username string) error {
+	return s.oauthTokens.Save(context.Background(), accountdomain.NewOAuthToken(userID, accessToken, accessSecret, username))
+}
+
 func (s *DiscogsOAuthSuite) TestCallback_FromDifferentUser_IsRejected() {
 	attacker := s.createUser("attacker@example.com")
 	attackerSession := s.createSession(attacker.ID, time.Now().Add(6*time.Hour))
@@ -201,7 +231,7 @@ func (s *DiscogsOAuthSuite) TestDisconnect_RemovesToken() {
 	user := s.createUser("disconnect@example.com")
 	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
 
-	_, err := s.oauthTokens.Upsert(context.Background(), user.ID, "tok", "sec", "discogsman")
+	err := s.saveOAuthToken(user.ID, "tok", "sec", "discogsman")
 	s.Require().NoError(err)
 
 	req := httptest.NewRequest(http.MethodPost, "/discogs/disconnect", nil)
@@ -265,7 +295,7 @@ func (s *DiscogsOAuthSuite) TestCallback_401FromDiscogs_ShowsReconnectPrompt() {
 func (s *DiscogsOAuthSuite) TestSettingsPage_ShowsConnectedStatus() {
 	user := s.createUser("settings@example.com")
 	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
-	_, err := s.oauthTokens.Upsert(context.Background(), user.ID, "tok", "sec", "myDiscogsUser")
+	err := s.saveOAuthToken(user.ID, "tok", "sec", "myDiscogsUser")
 	s.Require().NoError(err)
 
 	req := httptest.NewRequest(http.MethodGet, "/app/settings", nil)
