@@ -44,15 +44,19 @@ func (uc *VerifyOTP) Execute(ctx context.Context, in VerifyOTPInput) (VerifyOTPO
 	}
 
 	if !otp.Matches(in.Code) {
-		if err := uc.OTPCodes.RecordFailedAttempt(ctx, otp.ID, domain.MaxOTPFailedAttempts); err != nil {
+		if err := uc.recordFailedAttempt(ctx, otp); err != nil {
 			return VerifyOTPOutput{}, err
 		}
 
 		return VerifyOTPOutput{}, ErrOTPMismatch
 	}
 
-	if err := uc.OTPCodes.MarkUsed(ctx, otp.ID); err != nil {
-		if errors.Is(err, domain.ErrOTPNotPending) {
+	if err := otp.MarkUsed(); err != nil {
+		return VerifyOTPOutput{}, ErrOTPNotFound
+	}
+
+	if err := uc.OTPCodes.Save(ctx, otp); err != nil {
+		if errors.Is(err, domain.ErrConcurrentUpdate) {
 			return VerifyOTPOutput{}, ErrOTPNotFound
 		}
 
@@ -65,4 +69,31 @@ func (uc *VerifyOTP) Execute(ctx context.Context, in VerifyOTPInput) (VerifyOTPO
 	}
 
 	return VerifyOTPOutput{SessionToken: token, SessionExpiresAt: expiresAt}, nil
+}
+
+func (uc *VerifyOTP) recordFailedAttempt(ctx context.Context, otp *domain.OTPCode) error {
+	guessedID := otp.ID
+
+	for {
+		if otp.ID != guessedID {
+			return nil
+		}
+
+		if err := otp.RecordFailedAttempt(); err != nil {
+			return nil
+		}
+
+		err := uc.OTPCodes.Save(ctx, otp)
+		if !errors.Is(err, domain.ErrConcurrentUpdate) {
+			return err
+		}
+
+		otp, err = uc.OTPCodes.FindPendingByUserID(ctx, otp.UserID)
+		if errors.Is(err, domain.ErrNotFound) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+	}
 }

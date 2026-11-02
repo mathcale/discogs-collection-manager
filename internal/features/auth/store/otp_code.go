@@ -3,9 +3,8 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"time"
-
-	"github.com/google/uuid"
 
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
@@ -20,29 +19,30 @@ func NewOTPRepository(db *sql.DB) domain.OTPRepository {
 	}
 }
 
-func (r *otpRepository) Create(
-	ctx context.Context,
-	userID, codeHash string,
-	expiresAt time.Time,
-) (*domain.OTPCode, error) {
-	id := uuid.NewString()
-	now := time.Now().UTC()
-
-	_, err := r.db.ExecContext(ctx,
-		`INSERT INTO otp_codes (id, user_id, code_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?)`,
-		id, userID, codeHash, expiresAt.UTC().Format(time.DateTime), now.Format(time.DateTime),
-	)
-	if err != nil {
-		return nil, err
+func (r *otpRepository) Save(ctx context.Context, otp *domain.OTPCode) error {
+	var usedAt any
+	if otp.UsedAt != nil {
+		usedAt = otp.UsedAt.UTC().Format(time.DateTime)
 	}
 
-	return &domain.OTPCode{
-		ID:        id,
-		UserID:    userID,
-		CodeHash:  codeHash,
-		ExpiresAt: expiresAt,
-		CreatedAt: now,
-	}, nil
+	err := r.db.QueryRowContext(ctx,
+		`INSERT INTO otp_codes (id, user_id, code_hash, expires_at, used_at, created_at, failed_attempts, version)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+		 ON CONFLICT(id) DO UPDATE SET
+		     used_at = excluded.used_at,
+		     failed_attempts = excluded.failed_attempts,
+		     version = otp_codes.version + 1
+		 WHERE otp_codes.version = excluded.version
+		 RETURNING version`,
+		otp.ID, otp.UserID, otp.CodeHash,
+		otp.ExpiresAt.UTC().Format(time.DateTime), usedAt, otp.CreatedAt.UTC().Format(time.DateTime),
+		otp.FailedAttempts, otp.Version,
+	).Scan(&otp.Version)
+	if errors.Is(err, sql.ErrNoRows) {
+		return domain.ErrConcurrentUpdate
+	}
+
+	return err
 }
 
 func (r *otpRepository) FindPendingByUserID(
@@ -53,13 +53,13 @@ func (r *otpRepository) FindPendingByUserID(
 	var usedAt sql.NullTime
 
 	err := r.db.QueryRowContext(ctx,
-		`SELECT id, user_id, code_hash, expires_at, used_at, created_at
+		`SELECT id, user_id, code_hash, expires_at, used_at, created_at, failed_attempts, version
 		 FROM otp_codes
 		 WHERE user_id = ? AND used_at IS NULL
 		 ORDER BY created_at DESC
 		 LIMIT 1`,
 		userID,
-	).Scan(&otp.ID, &otp.UserID, &otp.CodeHash, &otp.ExpiresAt, &usedAt, &otp.CreatedAt)
+	).Scan(&otp.ID, &otp.UserID, &otp.CodeHash, &otp.ExpiresAt, &usedAt, &otp.CreatedAt, &otp.FailedAttempts, &otp.Version)
 	if err == sql.ErrNoRows {
 		return nil, domain.ErrNotFound
 	}
@@ -73,37 +73,4 @@ func (r *otpRepository) FindPendingByUserID(
 	}
 
 	return &otp, nil
-}
-
-func (r *otpRepository) MarkUsed(ctx context.Context, id string) error {
-	result, err := r.db.ExecContext(ctx,
-		`UPDATE otp_codes SET used_at = ? WHERE id = ? AND used_at IS NULL`,
-		time.Now().UTC().Format(time.DateTime), id,
-	)
-	if err != nil {
-		return err
-	}
-
-	affected, err := result.RowsAffected()
-	if err != nil {
-		return err
-	}
-
-	if affected == 0 {
-		return domain.ErrOTPNotPending
-	}
-
-	return nil
-}
-
-func (r *otpRepository) RecordFailedAttempt(ctx context.Context, id string, maxAttempts int) error {
-	_, err := r.db.ExecContext(ctx,
-		`UPDATE otp_codes
-		 SET failed_attempts = failed_attempts + 1,
-		     used_at = CASE WHEN failed_attempts + 1 >= ? THEN ? ELSE used_at END
-		 WHERE id = ? AND used_at IS NULL`,
-		maxAttempts, time.Now().UTC().Format(time.DateTime), id,
-	)
-
-	return err
 }

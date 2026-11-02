@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -279,8 +280,9 @@ func (s *AuthSuite) TestVerifyOTP_ValidCode_IssuesSession() {
 
 	code := "123456"
 	codeHash := authdomain.HashToken(code)
-	_, err := s.otpCodes.Create(context.Background(), user.ID, codeHash, time.Now().Add(10*time.Minute))
-	s.Require().NoError(err)
+	otp := authdomain.NewOTPCode(user.ID, codeHash)
+	otp.ExpiresAt = time.Now().Add(10 * time.Minute)
+	s.Require().NoError(s.otpCodes.Save(context.Background(), otp))
 
 	form := url.Values{"code": {code}}
 	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
@@ -307,8 +309,9 @@ func (s *AuthSuite) TestVerifyOTP_ValidCode_IssuesSession() {
 func (s *AuthSuite) TestVerifyOTP_CodeWithNonDigits_IssuesSession() {
 	user := s.registerUser("otpdashes@example.com", "password123")
 
-	_, err := s.otpCodes.Create(context.Background(), user.ID, authdomain.HashToken("123456"), time.Now().Add(10*time.Minute))
-	s.Require().NoError(err)
+	otp := authdomain.NewOTPCode(user.ID, authdomain.HashToken("123456"))
+	otp.ExpiresAt = time.Now().Add(10 * time.Minute)
+	s.Require().NoError(s.otpCodes.Save(context.Background(), otp))
 
 	form := url.Values{"code": {" 123-456 "}}
 	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
@@ -327,8 +330,9 @@ func (s *AuthSuite) TestVerifyOTP_ValidCode_StayLoggedIn_PersistentSession() {
 
 	code := "654321"
 	codeHash := authdomain.HashToken(code)
-	_, err := s.otpCodes.Create(context.Background(), user.ID, codeHash, time.Now().Add(10*time.Minute))
-	s.Require().NoError(err)
+	otp := authdomain.NewOTPCode(user.ID, codeHash)
+	otp.ExpiresAt = time.Now().Add(10 * time.Minute)
+	s.Require().NoError(s.otpCodes.Save(context.Background(), otp))
 
 	form := url.Values{"code": {code}}
 	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
@@ -356,8 +360,9 @@ func (s *AuthSuite) TestVerifyOTP_InvalidCode_Returns422() {
 
 	code := "999999"
 	codeHash := authdomain.HashToken(code)
-	_, err := s.otpCodes.Create(context.Background(), user.ID, codeHash, time.Now().Add(10*time.Minute))
-	s.Require().NoError(err)
+	otp := authdomain.NewOTPCode(user.ID, codeHash)
+	otp.ExpiresAt = time.Now().Add(10 * time.Minute)
+	s.Require().NoError(s.otpCodes.Save(context.Background(), otp))
 
 	form := url.Values{"code": {"000000"}}
 	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
@@ -375,8 +380,9 @@ func (s *AuthSuite) TestVerifyOTP_RepeatedWrongCodes_InvalidatesCode() {
 	user := s.registerUser("otpbrute@example.com", "password123")
 
 	code := "424242"
-	_, err := s.otpCodes.Create(context.Background(), user.ID, authdomain.HashToken(code), time.Now().Add(10*time.Minute))
-	s.Require().NoError(err)
+	otp := authdomain.NewOTPCode(user.ID, authdomain.HashToken(code))
+	otp.ExpiresAt = time.Now().Add(10 * time.Minute)
+	s.Require().NoError(s.otpCodes.Save(context.Background(), otp))
 
 	submit := func(attempt string) *httptest.ResponseRecorder {
 		form := url.Values{"code": {attempt}}
@@ -402,13 +408,103 @@ func (s *AuthSuite) TestVerifyOTP_RepeatedWrongCodes_InvalidatesCode() {
 	s.Nil(pending)
 }
 
+func (s *AuthSuite) submitOTP(userID, code string) *httptest.ResponseRecorder {
+	form := url.Values{"code": {code}}
+	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "pending_login", Value: userID + ":0"})
+	rr := httptest.NewRecorder()
+	s.router.ServeHTTP(rr, req)
+	return rr
+}
+
+func (s *AuthSuite) submitOTPInParallel(userID string, codes []string) []*httptest.ResponseRecorder {
+	responses := make([]*httptest.ResponseRecorder, len(codes))
+	start := make(chan struct{})
+	var wg sync.WaitGroup
+
+	for i, code := range codes {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			<-start
+			responses[i] = s.submitOTP(userID, code)
+		}()
+	}
+
+	close(start)
+	wg.Wait()
+
+	return responses
+}
+
+func (s *AuthSuite) countSessions(userID string) int {
+	var count int
+	s.Require().NoError(s.db.QueryRow(`SELECT COUNT(*) FROM sessions WHERE user_id = ?`, userID).Scan(&count))
+	return count
+}
+
+func (s *AuthSuite) TestVerifyOTP_ParallelWrongCodes_LocksCodeAndRejectsEveryRequest() {
+	user := s.registerUser("otpparallelwrong@example.com", "password123")
+
+	code := "424242"
+	s.createOTP(user.ID, code, time.Now().Add(10*time.Minute))
+
+	wrongGuesses := make([]string, 3*authdomain.MaxOTPFailedAttempts)
+	for i := range wrongGuesses {
+		wrongGuesses[i] = "000000"
+	}
+
+	for _, rr := range s.submitOTPInParallel(user.ID, wrongGuesses) {
+		s.Equal(http.StatusUnprocessableEntity, rr.Code)
+		s.Nil(s.cookieNamed(rr, "session_token"))
+	}
+
+	_, err := s.otpCodes.FindPendingByUserID(context.Background(), user.ID)
+	s.Require().ErrorIs(err, authdomain.ErrNotFound)
+
+	rr := s.submitOTP(user.ID, code)
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+	s.Nil(s.cookieNamed(rr, "session_token"))
+	s.Zero(s.countSessions(user.ID))
+}
+
+func (s *AuthSuite) TestVerifyOTP_ParallelCorrectCodes_CreatesExactlyOneSession() {
+	user := s.registerUser("otpparallelright@example.com", "password123")
+
+	code := "313131"
+	s.createOTP(user.ID, code, time.Now().Add(10*time.Minute))
+
+	correctGuesses := make([]string, 10)
+	for i := range correctGuesses {
+		correctGuesses[i] = code
+	}
+
+	succeeded := 0
+	for _, rr := range s.submitOTPInParallel(user.ID, correctGuesses) {
+		if rr.Code == http.StatusFound && s.cookieNamed(rr, "session_token") != nil {
+			succeeded++
+		}
+	}
+
+	s.Equal(1, succeeded)
+	s.Equal(1, s.countSessions(user.ID))
+}
+
+func (s *AuthSuite) createOTP(userID, code string, expiresAt time.Time) {
+	otp := authdomain.NewOTPCode(userID, authdomain.HashToken(code))
+	otp.ExpiresAt = expiresAt
+	s.Require().NoError(s.otpCodes.Save(context.Background(), otp))
+}
+
 func (s *AuthSuite) TestVerifyOTP_ExpiredCode_Returns422() {
 	user := s.registerUser("otpexpired@example.com", "password123")
 
 	code := "777777"
 	codeHash := authdomain.HashToken(code)
-	_, err := s.otpCodes.Create(context.Background(), user.ID, codeHash, time.Now().Add(-1*time.Minute))
-	s.Require().NoError(err)
+	otp := authdomain.NewOTPCode(user.ID, codeHash)
+	otp.ExpiresAt = time.Now().Add(-1 * time.Minute)
+	s.Require().NoError(s.otpCodes.Save(context.Background(), otp))
 
 	form := url.Values{"code": {code}}
 	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))

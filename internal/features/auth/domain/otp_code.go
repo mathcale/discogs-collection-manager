@@ -5,6 +5,8 @@ import (
 	"errors"
 	"strings"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -19,9 +21,52 @@ type OTPCode struct {
 	ExpiresAt time.Time
 	UsedAt    *time.Time
 	CreatedAt time.Time
+
+	FailedAttempts int
+	Version        int
 }
 
-var ErrOTPNotPending = errors.New("otp code is not pending")
+var (
+	ErrOTPNotPending    = errors.New("otp code is not pending")
+	ErrConcurrentUpdate = errors.New("concurrent update")
+)
+
+func NewOTPCode(userID, codeHash string) *OTPCode {
+	now := time.Now().UTC()
+
+	return &OTPCode{
+		ID:        uuid.NewString(),
+		UserID:    userID,
+		CodeHash:  codeHash,
+		ExpiresAt: now.Add(OTPExpiry),
+		CreatedAt: now,
+	}
+}
+
+func (o *OTPCode) MarkUsed() error {
+	if o.UsedAt != nil {
+		return ErrOTPNotPending
+	}
+
+	now := time.Now().UTC()
+	o.UsedAt = &now
+
+	return nil
+}
+
+func (o *OTPCode) RecordFailedAttempt() error {
+	if o.UsedAt != nil {
+		return ErrOTPNotPending
+	}
+
+	o.FailedAttempts++
+
+	if o.FailedAttempts >= MaxOTPFailedAttempts {
+		return o.MarkUsed()
+	}
+
+	return nil
+}
 
 func (o *OTPCode) IsExpired() bool {
 	return time.Now().After(o.ExpiresAt)
@@ -42,8 +87,6 @@ func digitsOnly(value string) string {
 }
 
 type OTPRepository interface {
-	Create(ctx context.Context, userID, codeHash string, expiresAt time.Time) (*OTPCode, error)
+	Save(ctx context.Context, otp *OTPCode) error
 	FindPendingByUserID(ctx context.Context, userID string) (*OTPCode, error)
-	MarkUsed(ctx context.Context, id string) error
-	RecordFailedAttempt(ctx context.Context, id string, maxAttempts int) error
 }
