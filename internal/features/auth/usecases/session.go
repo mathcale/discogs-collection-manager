@@ -8,16 +8,14 @@ import (
 )
 
 func createSession(ctx context.Context, sessions domain.SessionRepository, userID string, persistent bool) (string, time.Time, error) {
-	token, err := domain.GenerateToken()
+	session, err := domain.NewSession(userID, persistent)
 	if err != nil {
 		return "", time.Time{}, err
 	}
 
-	expiresAt := time.Now().Add(domain.SessionExpiry(persistent))
-
-	if _, err := sessions.Create(ctx, userID, token, expiresAt, persistent); err != nil {
+	if err := sessions.Save(ctx, session); err != nil {
 		return "", time.Time{}, err
 	}
 
-	return token, expiresAt, nil
+	return session.Token, session.ExpiresAt, nil
 }

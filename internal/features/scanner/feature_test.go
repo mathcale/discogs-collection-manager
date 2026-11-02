@@ -401,7 +401,7 @@ func (s *ScanSuite) TestScanPage_ShowsNavigation() {
 
 func (s *ScanSuite) createSession(userID string, expiresAt time.Time) string {
 	token := "scan-test-token-" + userID
-	_, err := s.sessions.Create(context.Background(), userID, token, expiresAt, false)
+	err := s.sessions.Save(context.Background(), &authdomain.Session{ID: "session-" + token, UserID: userID, Token: token, ExpiresAt: expiresAt, Persistent: false, CreatedAt: time.Now().UTC()})
 	s.Require().NoError(err)
 	return token
 }

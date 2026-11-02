@@ -60,3 +60,20 @@ func TestFindMethods_ReturnErrNotFoundWhenNoRowMatches(t *testing.T) {
 	require.ErrorIs(t, err, domain.ErrNotFound)
 	require.Nil(t, resetToken)
 }
+
+func TestSessionSave_PersistsSessionFindableByToken(t *testing.T) {
+	db := openDB(t)
+	ctx := context.Background()
+	sessions := store.NewSessionRepository(db)
+
+	session, err := domain.NewSession("user-1", true)
+	require.NoError(t, err)
+
+	require.NoError(t, sessions.Save(ctx, session))
+
+	found, err := sessions.FindByToken(ctx, session.Token)
+	require.NoError(t, err)
+	require.Equal(t, session.ID, found.ID)
+	require.Equal(t, "user-1", found.UserID)
+	require.True(t, found.Persistent)
+}
