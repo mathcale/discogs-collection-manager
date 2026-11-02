@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 
-	"github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/account/domain"
 )
 
 type DisconnectDiscogsInput struct {
@@ -13,7 +13,7 @@ type DisconnectDiscogsInput struct {
 type DisconnectDiscogsOutput struct{}
 
 type DisconnectDiscogs struct {
-	OAuthTokens models.OAuthTokenRepository
+	OAuthTokens domain.OAuthTokenRepository
 }
 
 func (uc *DisconnectDiscogs) Execute(ctx context.Context, in DisconnectDiscogsInput) (DisconnectDiscogsOutput, error) {

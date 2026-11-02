@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
-	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 )
 
@@ -27,15 +27,15 @@ type LoginOutput struct {
 var ErrInvalidCredentials = errors.New("invalid credentials")
 
 type Login struct {
-	Users              models.UserRepository
-	Sessions           models.SessionRepository
-	OTPCodes           models.OTPRepository
+	Users              domain.UserRepository
+	Sessions           domain.SessionRepository
+	OTPCodes           domain.OTPRepository
 	Mailer             mailer.Mailer
 	TwoStepAuthEnabled bool
 }
 
 func (uc *Login) Execute(ctx context.Context, in LoginInput) (LoginOutput, error) {
-	email := models.NormalizeEmail(in.Email)
+	email := domain.NormalizeEmail(in.Email)
 
 	user, err := uc.Users.FindByEmail(ctx, email)
 	if err != nil {
@@ -54,13 +54,13 @@ func (uc *Login) Execute(ctx context.Context, in LoginInput) (LoginOutput, error
 		return LoginOutput{UserID: user.ID, SessionToken: token, SessionExpiresAt: expiresAt}, nil
 	}
 
-	code, err := models.GenerateOTPCode()
+	code, err := domain.GenerateOTPCode()
 	if err != nil {
 		return LoginOutput{}, err
 	}
 
-	codeHash := models.HashToken(code)
-	if _, err := uc.OTPCodes.Create(ctx, user.ID, codeHash, time.Now().Add(models.OTPExpiry)); err != nil {
+	codeHash := domain.HashToken(code)
+	if _, err := uc.OTPCodes.Create(ctx, user.ID, codeHash, time.Now().Add(domain.OTPExpiry)); err != nil {
 		return LoginOutput{}, err
 	}
 
@@ -68,5 +68,5 @@ func (uc *Login) Execute(ctx context.Context, in LoginInput) (LoginOutput, error
 		return LoginOutput{}, err
 	}
 
-	return LoginOutput{UserID: user.ID, OTPRequired: true, OTPExpiresIn: models.OTPExpiry}, nil
+	return LoginOutput{UserID: user.ID, OTPRequired: true, OTPExpiresIn: domain.OTPExpiry}, nil
 }

@@ -3,7 +3,7 @@ package usecases
 import (
 	"context"
 
-	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
 
 type LogoutInput struct {
@@ -13,7 +13,7 @@ type LogoutInput struct {
 type LogoutOutput struct{}
 
 type Logout struct {
-	Sessions models.SessionRepository
+	Sessions domain.SessionRepository
 }
 
 func (uc *Logout) Execute(ctx context.Context, in LogoutInput) (LogoutOutput, error) {

@@ -1,50 +1,20 @@
-package models
+package store
 
 import (
 	"context"
 	"database/sql"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
-	"golang.org/x/crypto/bcrypt"
+
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
-
-type User struct {
-	ID           string
-	Email        string
-	PasswordHash string
-	CreatedAt    time.Time
-}
-
-func NormalizeEmail(email string) string {
-	return strings.ToLower(strings.TrimSpace(email))
-}
-
-func HashPassword(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
-	}
-	return string(hash), nil
-}
-
-func (u *User) CheckPassword(password string) bool {
-	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) == nil
-}
-
-type UserRepository interface {
-	Create(ctx context.Context, email, passwordHash string) (*User, error)
-	FindByEmail(ctx context.Context, email string) (*User, error)
-	FindByID(ctx context.Context, id string) (*User, error)
-	UpdatePassword(ctx context.Context, id, passwordHash string) error
-}
 
 type userRepository struct {
 	db *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) UserRepository {
+func NewUserRepository(db *sql.DB) domain.UserRepository {
 	return &userRepository{
 		db: db,
 	}
@@ -53,7 +23,7 @@ func NewUserRepository(db *sql.DB) UserRepository {
 func (r *userRepository) Create(
 	ctx context.Context,
 	email, passwordHash string,
-) (*User, error) {
+) (*domain.User, error) {
 	id := uuid.NewString()
 	now := time.Now().UTC()
 
@@ -65,7 +35,7 @@ func (r *userRepository) Create(
 		return nil, err
 	}
 
-	return &User{
+	return &domain.User{
 		ID:           id,
 		Email:        email,
 		PasswordHash: passwordHash,
@@ -73,8 +43,8 @@ func (r *userRepository) Create(
 	}, nil
 }
 
-func (r *userRepository) FindByEmail(ctx context.Context, email string) (*User, error) {
-	var u User
+func (r *userRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+	var u domain.User
 	var createdAt string
 
 	err := r.db.QueryRowContext(ctx,
@@ -93,8 +63,8 @@ func (r *userRepository) FindByEmail(ctx context.Context, email string) (*User, 
 	return &u, nil
 }
 
-func (r *userRepository) FindByID(ctx context.Context, id string) (*User, error) {
-	var u User
+func (r *userRepository) FindByID(ctx context.Context, id string) (*domain.User, error) {
+	var u domain.User
 	var createdAt string
 
 	err := r.db.QueryRowContext(ctx,

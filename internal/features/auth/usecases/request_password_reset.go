@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
-	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 )
 
@@ -16,14 +16,14 @@ type RequestPasswordResetInput struct {
 type RequestPasswordResetOutput struct{}
 
 type RequestPasswordReset struct {
-	Users       models.UserRepository
-	ResetTokens models.PasswordResetTokenRepository
+	Users       domain.UserRepository
+	ResetTokens domain.PasswordResetTokenRepository
 	Mailer      mailer.Mailer
 	BaseURL     string
 }
 
 func (uc *RequestPasswordReset) Execute(ctx context.Context, in RequestPasswordResetInput) (RequestPasswordResetOutput, error) {
-	email := models.NormalizeEmail(in.Email)
+	email := domain.NormalizeEmail(in.Email)
 
 	user, err := uc.Users.FindByEmail(ctx, email)
 	if err != nil {
@@ -33,7 +33,7 @@ func (uc *RequestPasswordReset) Execute(ctx context.Context, in RequestPasswordR
 		return RequestPasswordResetOutput{}, nil
 	}
 
-	rawToken, err := models.GenerateToken()
+	rawToken, err := domain.GenerateToken()
 	if err != nil {
 		return RequestPasswordResetOutput{}, err
 	}
@@ -42,8 +42,8 @@ func (uc *RequestPasswordReset) Execute(ctx context.Context, in RequestPasswordR
 		return RequestPasswordResetOutput{}, err
 	}
 
-	tokenHash := models.HashToken(rawToken)
-	if _, err := uc.ResetTokens.Create(ctx, user.ID, tokenHash, time.Now().Add(models.ResetTokenExpiry)); err != nil {
+	tokenHash := domain.HashToken(rawToken)
+	if _, err := uc.ResetTokens.Create(ctx, user.ID, tokenHash, time.Now().Add(domain.ResetTokenExpiry)); err != nil {
 		return RequestPasswordResetOutput{}, err
 	}
 

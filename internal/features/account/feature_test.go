@@ -20,9 +20,11 @@ import (
 	"github.com/dghubble/oauth1"
 
 	"github.com/mathcale/discogs-collection-manager/internal/features/account"
-	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	accountdomain "github.com/mathcale/discogs-collection-manager/internal/features/account/domain"
+	accountstore "github.com/mathcale/discogs-collection-manager/internal/features/account/store"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth"
-	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	authdomain "github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
+	authstore "github.com/mathcale/discogs-collection-manager/internal/features/auth/store"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
 
@@ -30,9 +32,9 @@ type DiscogsOAuthSuite struct {
 	suite.Suite
 	db          *sql.DB
 	dbPath      string
-	users       authmodels.UserRepository
-	sessions    authmodels.SessionRepository
-	oauthTokens accountmodels.OAuthTokenRepository
+	users       authdomain.UserRepository
+	sessions    authdomain.SessionRepository
+	oauthTokens accountdomain.OAuthTokenRepository
 	router      http.Handler
 	mockDiscogs *httptest.Server
 }
@@ -53,9 +55,9 @@ func (s *DiscogsOAuthSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.db = db
 
-	s.users = authmodels.NewUserRepository(db)
-	s.sessions = authmodels.NewSessionRepository(db)
-	s.oauthTokens = accountmodels.NewOAuthTokenRepository(db)
+	s.users = authstore.NewUserRepository(db)
+	s.sessions = authstore.NewSessionRepository(db)
+	s.oauthTokens = accountstore.NewOAuthTokenRepository(db)
 }
 
 func (s *DiscogsOAuthSuite) SetupTest() {
@@ -372,7 +374,7 @@ func (s *DiscogsOAuthSuite) TestSettingsPage_PreselectsLanguageFromCookie() {
 	s.Contains(rr.Body.String(), `name="lang" value="pt-BR"`)
 }
 
-func (s *DiscogsOAuthSuite) createUser(email string) *authmodels.User {
+func (s *DiscogsOAuthSuite) createUser(email string) *authdomain.User {
 	form := url.Values{"email": {email}, "password": {"password123"}}
 	user, err := s.users.Create(context.Background(), email, "hashed")
 	s.Require().NoError(err)

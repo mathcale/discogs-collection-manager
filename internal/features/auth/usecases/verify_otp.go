@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
 
 type VerifyOTPInput struct {
@@ -26,8 +26,8 @@ var (
 )
 
 type VerifyOTP struct {
-	OTPCodes models.OTPRepository
-	Sessions models.SessionRepository
+	OTPCodes domain.OTPRepository
+	Sessions domain.SessionRepository
 }
 
 func (uc *VerifyOTP) Execute(ctx context.Context, in VerifyOTPInput) (VerifyOTPOutput, error) {
@@ -45,7 +45,7 @@ func (uc *VerifyOTP) Execute(ctx context.Context, in VerifyOTPInput) (VerifyOTPO
 	}
 
 	if !otp.Matches(in.Code) {
-		if err := uc.OTPCodes.RecordFailedAttempt(ctx, otp.ID, models.MaxOTPFailedAttempts); err != nil {
+		if err := uc.OTPCodes.RecordFailedAttempt(ctx, otp.ID, domain.MaxOTPFailedAttempts); err != nil {
 			return VerifyOTPOutput{}, err
 		}
 
@@ -53,7 +53,7 @@ func (uc *VerifyOTP) Execute(ctx context.Context, in VerifyOTPInput) (VerifyOTPO
 	}
 
 	if err := uc.OTPCodes.MarkUsed(ctx, otp.ID); err != nil {
-		if errors.Is(err, models.ErrOTPNotPending) {
+		if errors.Is(err, domain.ErrOTPNotPending) {
 			return VerifyOTPOutput{}, ErrOTPNotFound
 		}
 

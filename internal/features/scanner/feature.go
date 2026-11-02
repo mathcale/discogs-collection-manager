@@ -6,7 +6,7 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
-	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	accountstore "github.com/mathcale/discogs-collection-manager/internal/features/account/store"
 	"github.com/mathcale/discogs-collection-manager/internal/features/scanner/handlers"
 	"github.com/mathcale/discogs-collection-manager/internal/features/scanner/usecases"
 )
@@ -21,7 +21,7 @@ type Module struct {
 }
 
 func New(d Deps) *Module {
-	oauthTokens := accountmodels.NewOAuthTokenRepository(d.DB)
+	oauthTokens := accountstore.NewOAuthTokenRepository(d.DB)
 
 	return &Module{handler: &handlers.Handler{
 		LookupBarcode:   &usecases.LookupBarcode{Discogs: d.Discogs, OAuthTokens: oauthTokens},

@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
 
 type AuthenticateSessionInput struct {
@@ -18,7 +18,7 @@ type AuthenticateSessionOutput struct {
 var ErrSessionInvalid = errors.New("session invalid or expired")
 
 type AuthenticateSession struct {
-	Sessions models.SessionRepository
+	Sessions domain.SessionRepository
 }
 
 func (uc *AuthenticateSession) Execute(ctx context.Context, in AuthenticateSessionInput) (AuthenticateSessionOutput, error) {

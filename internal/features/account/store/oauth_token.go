@@ -1,4 +1,4 @@
-package models
+package store
 
 import (
 	"context"
@@ -6,28 +6,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/mathcale/discogs-collection-manager/internal/features/account/domain"
 )
-
-type OAuthToken struct {
-	ID                string
-	UserID            string
-	AccessToken       string
-	AccessTokenSecret string
-	DiscogsUsername   string
-	CreatedAt         time.Time
-}
-
-type OAuthTokenRepository interface {
-	Upsert(ctx context.Context, userID, accessToken, accessTokenSecret, discogsUsername string) (*OAuthToken, error)
-	FindByUserID(ctx context.Context, userID string) (*OAuthToken, error)
-	DeleteByUserID(ctx context.Context, userID string) error
-}
 
 type oauthTokenRepository struct {
 	db *sql.DB
 }
 
-func NewOAuthTokenRepository(db *sql.DB) OAuthTokenRepository {
+func NewOAuthTokenRepository(db *sql.DB) domain.OAuthTokenRepository {
 	return &oauthTokenRepository{
 		db: db,
 	}
@@ -36,7 +23,7 @@ func NewOAuthTokenRepository(db *sql.DB) OAuthTokenRepository {
 func (r *oauthTokenRepository) Upsert(
 	ctx context.Context,
 	userID, accessToken, accessTokenSecret, discogsUsername string,
-) (*OAuthToken, error) {
+) (*domain.OAuthToken, error) {
 	id := uuid.NewString()
 	now := time.Now().UTC()
 
@@ -53,7 +40,7 @@ func (r *oauthTokenRepository) Upsert(
 		return nil, err
 	}
 
-	return &OAuthToken{
+	return &domain.OAuthToken{
 		ID:                id,
 		UserID:            userID,
 		AccessToken:       accessToken,
@@ -66,8 +53,8 @@ func (r *oauthTokenRepository) Upsert(
 func (r *oauthTokenRepository) FindByUserID(
 	ctx context.Context,
 	userID string,
-) (*OAuthToken, error) {
-	var t OAuthToken
+) (*domain.OAuthToken, error) {
+	var t domain.OAuthToken
 	var createdAt string
 
 	err := r.db.QueryRowContext(ctx,

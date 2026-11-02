@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
 
 type ResetPasswordInput struct {
@@ -22,9 +22,9 @@ type oauthTokenRevoker interface {
 }
 
 type ResetPassword struct {
-	Users       models.UserRepository
-	ResetTokens models.PasswordResetTokenRepository
-	Sessions    models.SessionRepository
+	Users       domain.UserRepository
+	ResetTokens domain.PasswordResetTokenRepository
+	Sessions    domain.SessionRepository
 	OAuthTokens oauthTokenRevoker
 }
 
@@ -38,7 +38,7 @@ func (uc *ResetPassword) Execute(ctx context.Context, in ResetPasswordInput) (Re
 		return ResetPasswordOutput{}, err
 	}
 
-	hash, err := models.HashPassword(in.Password)
+	hash, err := domain.HashPassword(in.Password)
 	if err != nil {
 		return ResetPasswordOutput{}, err
 	}

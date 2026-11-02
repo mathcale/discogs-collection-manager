@@ -12,7 +12,7 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
 	"github.com/mathcale/discogs-collection-manager/internal/features/account"
-	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	accountstore "github.com/mathcale/discogs-collection-manager/internal/features/account/store"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth"
 	"github.com/mathcale/discogs-collection-manager/internal/features/landing"
 	"github.com/mathcale/discogs-collection-manager/internal/features/scanner"
@@ -99,7 +99,7 @@ func New() (*Kernel, error) {
 		},
 	}
 
-	oauthTokens := accountmodels.NewOAuthTokenRepository(db)
+	oauthTokens := accountstore.NewOAuthTokenRepository(db)
 
 	resendAPIKey := os.Getenv("RESEND_API_KEY")
 	resendFrom := os.Getenv("RESEND_FROM")

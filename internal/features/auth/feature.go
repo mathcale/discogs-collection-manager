@@ -7,9 +7,9 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
-	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	accountstore "github.com/mathcale/discogs-collection-manager/internal/features/account/store"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/handlers"
-	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/store"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/usecases"
 )
 
@@ -26,11 +26,11 @@ type Module struct {
 }
 
 func New(d Deps) *Module {
-	users := models.NewUserRepository(d.DB)
-	sessions := models.NewSessionRepository(d.DB)
-	otpCodes := models.NewOTPRepository(d.DB)
-	resetTokens := models.NewPasswordResetTokenRepository(d.DB)
-	oauthTokens := accountmodels.NewOAuthTokenRepository(d.DB)
+	users := store.NewUserRepository(d.DB)
+	sessions := store.NewSessionRepository(d.DB)
+	otpCodes := store.NewOTPRepository(d.DB)
+	resetTokens := store.NewPasswordResetTokenRepository(d.DB)
+	oauthTokens := accountstore.NewOAuthTokenRepository(d.DB)
 
 	return &Module{handler: &handlers.Handler{
 		Register:             &usecases.Register{Users: users},

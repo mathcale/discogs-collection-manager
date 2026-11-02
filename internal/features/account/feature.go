@@ -7,9 +7,9 @@ import (
 	"github.com/go-chi/chi/v5"
 
 	"github.com/mathcale/discogs-collection-manager/internal/features/account/handlers"
-	"github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/account/store"
 	"github.com/mathcale/discogs-collection-manager/internal/features/account/usecases"
-	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	authstore "github.com/mathcale/discogs-collection-manager/internal/features/auth/store"
 )
 
 type Deps struct {
@@ -23,8 +23,8 @@ type Module struct {
 }
 
 func New(d Deps) *Module {
-	oauthTokens := models.NewOAuthTokenRepository(d.DB)
-	users := authmodels.NewUserRepository(d.DB)
+	oauthTokens := store.NewOAuthTokenRepository(d.DB)
+	users := authstore.NewUserRepository(d.DB)
 	pending := &usecases.PendingOAuthRequests{}
 
 	return &Module{handler: &handlers.Handler{
