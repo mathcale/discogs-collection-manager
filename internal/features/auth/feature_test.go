@@ -895,7 +895,7 @@ func (s *AuthSuite) registerUser(email, password string) *authdomain.User {
 
 func (s *AuthSuite) createSession(userID string, expiresAt time.Time, persistent bool) string {
 	token := "test-token-" + userID
-	_, err := s.sessions.Create(context.Background(), userID, token, expiresAt, persistent)
+	err := s.sessions.Save(context.Background(), &authdomain.Session{ID: "session-" + token, UserID: userID, Token: token, ExpiresAt: expiresAt, Persistent: persistent, CreatedAt: time.Now().UTC()})
 	s.Require().NoError(err)
 	return token
 }

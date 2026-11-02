@@ -375,16 +375,15 @@ func (s *DiscogsOAuthSuite) TestSettingsPage_PreselectsLanguageFromCookie() {
 }
 
 func (s *DiscogsOAuthSuite) createUser(email string) *authdomain.User {
-	form := url.Values{"email": {email}, "password": {"password123"}}
-	user, err := s.users.Create(context.Background(), email, "hashed")
+	user, err := authdomain.NewUser(email, "password123")
 	s.Require().NoError(err)
-	_ = form
+	s.Require().NoError(s.users.Save(context.Background(), user))
 	return user
 }
 
 func (s *DiscogsOAuthSuite) createSession(userID string, expiresAt time.Time) string {
 	token := "discogs-test-token-" + userID
-	_, err := s.sessions.Create(context.Background(), userID, token, expiresAt, false)
+	err := s.sessions.Save(context.Background(), &authdomain.Session{ID: "session-" + token, UserID: userID, Token: token, ExpiresAt: expiresAt, Persistent: false, CreatedAt: time.Now().UTC()})
 	s.Require().NoError(err)
 	return token
 }
