@@ -193,7 +193,7 @@ func (s *DiscogsOAuthSuite) TestCallback_FromDifferentUser_IsRejected() {
 	s.Equal(http.StatusBadRequest, rr.Code)
 
 	stored, err := s.oauthTokens.FindByUserID(context.Background(), victim.ID)
-	s.Require().NoError(err)
+	s.Require().ErrorIs(err, accountdomain.ErrNotFound)
 	s.Nil(stored)
 }
 
@@ -214,7 +214,7 @@ func (s *DiscogsOAuthSuite) TestDisconnect_RemovesToken() {
 	s.Equal("/app/settings", rr.Header().Get("Location"))
 
 	stored, err := s.oauthTokens.FindByUserID(context.Background(), user.ID)
-	s.Require().NoError(err)
+	s.Require().ErrorIs(err, accountdomain.ErrNotFound)
 	s.Nil(stored)
 }
 

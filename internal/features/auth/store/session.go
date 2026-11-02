@@ -65,7 +65,7 @@ func (r *sessionRepository) FindByToken(
 		`SELECT id, user_id, token, expires_at, persistent, created_at FROM sessions WHERE token = ?`, token,
 	).Scan(&s.ID, &s.UserID, &s.Token, &expiresAt, &persistentInt, &createdAt)
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, domain.ErrNotFound
 	}
 
 	if err != nil {

@@ -32,12 +32,11 @@ type VerifyOTP struct {
 
 func (uc *VerifyOTP) Execute(ctx context.Context, in VerifyOTPInput) (VerifyOTPOutput, error) {
 	otp, err := uc.OTPCodes.FindPendingByUserID(ctx, in.UserID)
+	if errors.Is(err, domain.ErrNotFound) {
+		return VerifyOTPOutput{}, ErrOTPNotFound
+	}
 	if err != nil {
 		return VerifyOTPOutput{}, err
-	}
-
-	if otp == nil {
-		return VerifyOTPOutput{}, ErrOTPNotFound
 	}
 
 	if otp.IsExpired() {

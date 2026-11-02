@@ -51,7 +51,7 @@ func (r *userRepository) FindByEmail(ctx context.Context, email string) (*domain
 		`SELECT id, email, password_hash, created_at FROM users WHERE email = ?`, email,
 	).Scan(&u.ID, &u.Email, &u.PasswordHash, &createdAt)
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, domain.ErrNotFound
 	}
 
 	if err != nil {
@@ -71,7 +71,7 @@ func (r *userRepository) FindByID(ctx context.Context, id string) (*domain.User,
 		`SELECT id, email, password_hash, created_at FROM users WHERE id = ?`, id,
 	).Scan(&u.ID, &u.Email, &u.PasswordHash, &createdAt)
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, domain.ErrNotFound
 	}
 
 	if err != nil {

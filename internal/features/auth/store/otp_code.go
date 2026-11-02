@@ -61,7 +61,7 @@ func (r *otpRepository) FindPendingByUserID(
 		userID,
 	).Scan(&otp.ID, &otp.UserID, &otp.CodeHash, &otp.ExpiresAt, &usedAt, &otp.CreatedAt)
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, domain.ErrNotFound
 	}
 
 	if err != nil {

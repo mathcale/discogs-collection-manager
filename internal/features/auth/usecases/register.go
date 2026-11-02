@@ -23,12 +23,12 @@ type Register struct {
 func (uc *Register) Execute(ctx context.Context, in RegisterInput) (RegisterOutput, error) {
 	email := domain.NormalizeEmail(in.Email)
 
-	existing, err := uc.Users.FindByEmail(ctx, email)
-	if err != nil {
-		return RegisterOutput{}, err
-	}
-	if existing != nil {
+	_, err := uc.Users.FindByEmail(ctx, email)
+	if err == nil {
 		return RegisterOutput{}, ErrEmailTaken
+	}
+	if !errors.Is(err, domain.ErrNotFound) {
+		return RegisterOutput{}, err
 	}
 
 	hash, err := domain.HashPassword(in.Password)

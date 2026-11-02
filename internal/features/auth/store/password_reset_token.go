@@ -59,7 +59,7 @@ func (r *passwordResetTokenRepository) FindByTokenHash(
 		tokenHash,
 	).Scan(&t.ID, &t.UserID, &t.TokenHash, &t.ExpiresAt, &usedAt, &t.CreatedAt)
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, domain.ErrNotFound
 	}
 
 	if err != nil {

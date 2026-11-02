@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
+	accountdomain "github.com/mathcale/discogs-collection-manager/internal/features/account/domain"
 )
 
 type AddToCollectionInput struct {
@@ -30,11 +31,11 @@ type AddToCollection struct {
 
 func (uc *AddToCollection) Execute(ctx context.Context, in AddToCollectionInput) (AddToCollectionOutput, error) {
 	token, err := uc.OAuthTokens.FindByUserID(ctx, in.UserID)
+	if errors.Is(err, accountdomain.ErrNotFound) {
+		return AddToCollectionOutput{}, ErrDiscogsNotConnected
+	}
 	if err != nil {
 		return AddToCollectionOutput{}, err
-	}
-	if token == nil {
-		return AddToCollectionOutput{}, ErrDiscogsNotConnected
 	}
 
 	if !in.Acknowledged {
