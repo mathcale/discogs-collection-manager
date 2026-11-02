@@ -407,6 +407,6 @@ func (s *ScanSuite) createSession(userID string, expiresAt time.Time) string {
 }
 
 func (s *ScanSuite) createOAuthToken(userID, discogsUsername string) {
-	_, err := s.oauthTokens.Upsert(context.Background(), userID, "access-token", "access-secret", discogsUsername)
+	err := s.oauthTokens.Save(context.Background(), accountdomain.NewOAuthToken(userID, "access-token", "access-secret", discogsUsername))
 	s.Require().NoError(err)
 }
