@@ -3,6 +3,8 @@ package domain
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -10,7 +12,7 @@ const (
 	longSessionExpiry  = 30 * 24 * time.Hour
 )
 
-func SessionExpiry(persistent bool) time.Duration {
+func sessionExpiry(persistent bool) time.Duration {
 	if persistent {
 		return longSessionExpiry
 	}
@@ -26,12 +28,30 @@ type Session struct {
 	CreatedAt  time.Time
 }
 
+func NewSession(userID string, persistent bool) (*Session, error) {
+	token, err := GenerateToken()
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now().UTC()
+
+	return &Session{
+		ID:         uuid.NewString(),
+		UserID:     userID,
+		Token:      token,
+		ExpiresAt:  now.Add(sessionExpiry(persistent)),
+		Persistent: persistent,
+		CreatedAt:  now,
+	}, nil
+}
+
 func (s *Session) IsExpired() bool {
 	return time.Now().After(s.ExpiresAt)
 }
 
 type SessionRepository interface {
-	Create(ctx context.Context, userID, token string, expiresAt time.Time, persistent bool) (*Session, error)
+	Save(ctx context.Context, session *Session) error
 	FindByToken(ctx context.Context, token string) (*Session, error)
 	Delete(ctx context.Context, token string) error
 	DeleteAllForUser(ctx context.Context, userID string) error

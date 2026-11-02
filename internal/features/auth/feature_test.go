@@ -662,7 +662,7 @@ func (s *AuthSuite) TestResetPasswordPage_ValidToken_ShowsForm() {
 
 	rawToken := "test-reset-token-abc123"
 	tokenHash := authdomain.HashToken(rawToken)
-	_, err := s.resetTokens.Create(context.Background(), user.ID, tokenHash, time.Now().Add(1*time.Hour))
+	err := s.saveResetToken(user.ID, tokenHash, time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
 	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/auth/reset-password?token=%s", rawToken), nil)
@@ -691,7 +691,7 @@ func (s *AuthSuite) TestResetPassword_POST_Success_UpdatesPasswordAndInvalidates
 
 	rawToken := "valid-reset-token-xyz"
 	tokenHash := authdomain.HashToken(rawToken)
-	_, err := s.resetTokens.Create(context.Background(), user.ID, tokenHash, time.Now().Add(1*time.Hour))
+	err := s.saveResetToken(user.ID, tokenHash, time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
 	form := url.Values{
@@ -720,9 +720,9 @@ func (s *AuthSuite) TestResetPassword_POST_Success_UpdatesPasswordAndInvalidates
 func (s *AuthSuite) TestResetPassword_POST_Success_InvalidatesOtherUnusedTokens() {
 	user := s.registerUser("resetother@example.com", "oldpassword")
 
-	_, err := s.resetTokens.Create(context.Background(), user.ID, authdomain.HashToken("first-token"), time.Now().Add(1*time.Hour))
+	err := s.saveResetToken(user.ID, authdomain.HashToken("first-token"), time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
-	_, err = s.resetTokens.Create(context.Background(), user.ID, authdomain.HashToken("second-token"), time.Now().Add(1*time.Hour))
+	err = s.saveResetToken(user.ID, authdomain.HashToken("second-token"), time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
 	rr := s.postForm(s.router, "/auth/reset-password", url.Values{
@@ -743,7 +743,7 @@ func (s *AuthSuite) TestResetPassword_POST_Success_InvalidatesOtherUnusedTokens(
 func (s *AuthSuite) TestForgotPassword_POST_InvalidatesPreviousToken() {
 	user := s.registerUser("resetagain@example.com", "password123")
 
-	_, err := s.resetTokens.Create(context.Background(), user.ID, authdomain.HashToken("old-token"), time.Now().Add(1*time.Hour))
+	err := s.saveResetToken(user.ID, authdomain.HashToken("old-token"), time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
 	rr := s.postForm(s.router, "/auth/forgot-password", url.Values{"email": {"resetagain@example.com"}})
@@ -801,7 +801,7 @@ func (s *AuthSuite) TestResetPassword_POST_Success_DeletesOAuthToken() {
 	_, err := s.oauthTokens.Upsert(context.Background(), user.ID, "access", "secret", "attacker")
 	s.Require().NoError(err)
 
-	_, err = s.resetTokens.Create(context.Background(), user.ID, authdomain.HashToken("oauth-reset-token"), time.Now().Add(1*time.Hour))
+	err = s.saveResetToken(user.ID, authdomain.HashToken("oauth-reset-token"), time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
 	rr := s.postForm(s.router, "/auth/reset-password", url.Values{
@@ -821,9 +821,8 @@ func (s *AuthSuite) TestResetPassword_POST_UsedToken_Rejected() {
 
 	rawToken := "used-reset-token"
 	tokenHash := authdomain.HashToken(rawToken)
-	record, err := s.resetTokens.Create(context.Background(), user.ID, tokenHash, time.Now().Add(1*time.Hour))
-	s.Require().NoError(err)
-	s.Require().NoError(s.resetTokens.MarkUsed(context.Background(), record.ID))
+	s.Require().NoError(s.saveResetToken(user.ID, tokenHash, time.Now().Add(1*time.Hour)))
+	s.Require().NoError(s.resetTokens.MarkAllUsedForUser(context.Background(), user.ID))
 
 	form := url.Values{
 		"token":            {rawToken},
@@ -845,7 +844,7 @@ func (s *AuthSuite) TestResetPassword_POST_PasswordMismatch_Returns422() {
 
 	rawToken := "mismatch-token"
 	tokenHash := authdomain.HashToken(rawToken)
-	_, err := s.resetTokens.Create(context.Background(), user.ID, tokenHash, time.Now().Add(1*time.Hour))
+	err := s.saveResetToken(user.ID, tokenHash, time.Now().Add(1*time.Hour))
 	s.Require().NoError(err)
 
 	form := url.Values{
@@ -861,6 +860,26 @@ func (s *AuthSuite) TestResetPassword_POST_PasswordMismatch_Returns422() {
 
 	s.Equal(http.StatusUnprocessableEntity, rr.Code)
 	s.Contains(rr.Body.String(), "do not match")
+}
+
+func (s *AuthSuite) TestResetPassword_POST_ExpiredToken_Returns422() {
+	user := s.registerUser("resetexpired@example.com", "password123")
+	s.Require().NoError(s.saveResetToken(user.ID, authdomain.HashToken("expired-token"), time.Now().Add(-1*time.Minute)))
+
+	rr := s.postForm(s.router, "/auth/reset-password", url.Values{
+		"token":            {"expired-token"},
+		"password":         {"newpassword123"},
+		"password_confirm": {"newpassword123"},
+	})
+
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+}
+
+func (s *AuthSuite) saveResetToken(userID, tokenHash string, expiresAt time.Time) error {
+	token := authdomain.NewPasswordResetToken(userID, tokenHash)
+	token.ExpiresAt = expiresAt
+
+	return s.resetTokens.Save(context.Background(), token)
 }
 
 func (s *AuthSuite) postForm(router http.Handler, path string, form url.Values) *httptest.ResponseRecorder {
@@ -972,7 +991,7 @@ func (s *AuthSuite) registerUser(email, password string) *authdomain.User {
 
 func (s *AuthSuite) createSession(userID string, expiresAt time.Time, persistent bool) string {
 	token := "test-token-" + userID
-	_, err := s.sessions.Create(context.Background(), userID, token, expiresAt, persistent)
+	err := s.sessions.Save(context.Background(), &authdomain.Session{ID: "session-" + token, UserID: userID, Token: token, ExpiresAt: expiresAt, Persistent: persistent, CreatedAt: time.Now().UTC()})
 	s.Require().NoError(err)
 	return token
 }

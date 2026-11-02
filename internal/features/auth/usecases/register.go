@@ -31,12 +31,12 @@ func (uc *Register) Execute(ctx context.Context, in RegisterInput) (RegisterOutp
 		return RegisterOutput{}, err
 	}
 
-	hash, err := domain.HashPassword(in.Password)
+	user, err := domain.NewUser(email, in.Password)
 	if err != nil {
 		return RegisterOutput{}, err
 	}
 
-	if _, err := uc.Users.Create(ctx, email, hash); err != nil {
+	if err := uc.Users.Save(ctx, user); err != nil {
 		return RegisterOutput{}, err
 	}
 
