@@ -1,61 +1,20 @@
-package models
+package store
 
 import (
 	"context"
 	"database/sql"
-	"errors"
-	"strings"
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
-
-const (
-	OTPExpiry            = 10 * time.Minute
-	MaxOTPFailedAttempts = 5
-)
-
-type OTPCode struct {
-	ID        string
-	UserID    string
-	CodeHash  string
-	ExpiresAt time.Time
-	UsedAt    *time.Time
-	CreatedAt time.Time
-}
-
-var ErrOTPNotPending = errors.New("otp code is not pending")
-
-func (o *OTPCode) IsExpired() bool {
-	return time.Now().After(o.ExpiresAt)
-}
-
-func (o *OTPCode) Matches(code string) bool {
-	return HashToken(digitsOnly(code)) == o.CodeHash
-}
-
-func digitsOnly(value string) string {
-	return strings.Map(func(r rune) rune {
-		if r >= '0' && r <= '9' {
-			return r
-		}
-
-		return -1
-	}, value)
-}
-
-type OTPRepository interface {
-	Create(ctx context.Context, userID, codeHash string, expiresAt time.Time) (*OTPCode, error)
-	FindPendingByUserID(ctx context.Context, userID string) (*OTPCode, error)
-	MarkUsed(ctx context.Context, id string) error
-	RecordFailedAttempt(ctx context.Context, id string, maxAttempts int) error
-}
 
 type otpRepository struct {
 	db *sql.DB
 }
 
-func NewOTPRepository(db *sql.DB) OTPRepository {
+func NewOTPRepository(db *sql.DB) domain.OTPRepository {
 	return &otpRepository{
 		db: db,
 	}
@@ -65,7 +24,7 @@ func (r *otpRepository) Create(
 	ctx context.Context,
 	userID, codeHash string,
 	expiresAt time.Time,
-) (*OTPCode, error) {
+) (*domain.OTPCode, error) {
 	id := uuid.NewString()
 	now := time.Now().UTC()
 
@@ -77,7 +36,7 @@ func (r *otpRepository) Create(
 		return nil, err
 	}
 
-	return &OTPCode{
+	return &domain.OTPCode{
 		ID:        id,
 		UserID:    userID,
 		CodeHash:  codeHash,
@@ -89,8 +48,8 @@ func (r *otpRepository) Create(
 func (r *otpRepository) FindPendingByUserID(
 	ctx context.Context,
 	userID string,
-) (*OTPCode, error) {
-	var otp OTPCode
+) (*domain.OTPCode, error) {
+	var otp domain.OTPCode
 	var usedAt sql.NullTime
 
 	err := r.db.QueryRowContext(ctx,
@@ -131,7 +90,7 @@ func (r *otpRepository) MarkUsed(ctx context.Context, id string) error {
 	}
 
 	if affected == 0 {
-		return ErrOTPNotPending
+		return domain.ErrOTPNotPending
 	}
 
 	return nil

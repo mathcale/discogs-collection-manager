@@ -10,7 +10,7 @@ import (
 
 	"github.com/dghubble/oauth1"
 
-	"github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/account/domain"
 )
 
 const defaultDiscogsIdentityURL = "https://api.discogs.com/oauth/identity"
@@ -31,7 +31,7 @@ var (
 type CompleteDiscogsConnect struct {
 	OAuth       *oauth1.Config
 	Pending     *PendingOAuthRequests
-	OAuthTokens models.OAuthTokenRepository
+	OAuthTokens domain.OAuthTokenRepository
 	IdentityURL string
 }
 

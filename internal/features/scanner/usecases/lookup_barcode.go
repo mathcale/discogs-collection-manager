@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
-	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	accountdomain "github.com/mathcale/discogs-collection-manager/internal/features/account/domain"
 )
 
 type LookupBarcodeInput struct {
@@ -24,7 +24,7 @@ var (
 )
 
 type oauthTokenFinder interface {
-	FindByUserID(ctx context.Context, userID string) (*accountmodels.OAuthToken, error)
+	FindByUserID(ctx context.Context, userID string) (*accountdomain.OAuthToken, error)
 }
 
 type LookupBarcode struct {

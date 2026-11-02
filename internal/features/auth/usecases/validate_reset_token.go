@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
 
 type ValidateResetTokenInput struct {
@@ -16,7 +16,7 @@ type ValidateResetTokenOutput struct{}
 var ErrResetTokenInvalid = errors.New("reset token invalid or expired")
 
 type ValidateResetToken struct {
-	ResetTokens models.PasswordResetTokenRepository
+	ResetTokens domain.PasswordResetTokenRepository
 }
 
 func (uc *ValidateResetToken) Execute(ctx context.Context, in ValidateResetTokenInput) (ValidateResetTokenOutput, error) {

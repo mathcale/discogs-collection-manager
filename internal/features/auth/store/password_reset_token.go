@@ -1,4 +1,4 @@
-package models
+package store
 
 import (
 	"context"
@@ -6,35 +6,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
-
-const ResetTokenExpiry = time.Hour
-
-type PasswordResetToken struct {
-	ID        string
-	UserID    string
-	TokenHash string
-	ExpiresAt time.Time
-	UsedAt    *time.Time
-	CreatedAt time.Time
-}
-
-func (t *PasswordResetToken) IsUsable() bool {
-	return t.UsedAt == nil && !time.Now().After(t.ExpiresAt)
-}
-
-type PasswordResetTokenRepository interface {
-	Create(ctx context.Context, userID, tokenHash string, expiresAt time.Time) (*PasswordResetToken, error)
-	FindByTokenHash(ctx context.Context, tokenHash string) (*PasswordResetToken, error)
-	MarkUsed(ctx context.Context, id string) error
-	MarkAllUsedForUser(ctx context.Context, userID string) error
-}
 
 type passwordResetTokenRepository struct {
 	db *sql.DB
 }
 
-func NewPasswordResetTokenRepository(db *sql.DB) PasswordResetTokenRepository {
+func NewPasswordResetTokenRepository(db *sql.DB) domain.PasswordResetTokenRepository {
 	return &passwordResetTokenRepository{
 		db: db,
 	}
@@ -44,7 +24,7 @@ func (r *passwordResetTokenRepository) Create(
 	ctx context.Context,
 	userID, tokenHash string,
 	expiresAt time.Time,
-) (*PasswordResetToken, error) {
+) (*domain.PasswordResetToken, error) {
 	id := uuid.NewString()
 	now := time.Now().UTC()
 
@@ -56,7 +36,7 @@ func (r *passwordResetTokenRepository) Create(
 		return nil, err
 	}
 
-	return &PasswordResetToken{
+	return &domain.PasswordResetToken{
 		ID:        id,
 		UserID:    userID,
 		TokenHash: tokenHash,
@@ -68,8 +48,8 @@ func (r *passwordResetTokenRepository) Create(
 func (r *passwordResetTokenRepository) FindByTokenHash(
 	ctx context.Context,
 	tokenHash string,
-) (*PasswordResetToken, error) {
-	var t PasswordResetToken
+) (*domain.PasswordResetToken, error) {
+	var t domain.PasswordResetToken
 	var usedAt sql.NullTime
 
 	err := r.db.QueryRowContext(ctx,

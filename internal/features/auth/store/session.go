@@ -1,4 +1,4 @@
-package models
+package store
 
 import (
 	"context"
@@ -6,45 +6,15 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
-
-const (
-	shortSessionExpiry = 6 * time.Hour
-	longSessionExpiry  = 30 * 24 * time.Hour
-)
-
-func SessionExpiry(persistent bool) time.Duration {
-	if persistent {
-		return longSessionExpiry
-	}
-	return shortSessionExpiry
-}
-
-type Session struct {
-	ID         string
-	UserID     string
-	Token      string
-	ExpiresAt  time.Time
-	Persistent bool
-	CreatedAt  time.Time
-}
-
-func (s *Session) IsExpired() bool {
-	return time.Now().After(s.ExpiresAt)
-}
-
-type SessionRepository interface {
-	Create(ctx context.Context, userID, token string, expiresAt time.Time, persistent bool) (*Session, error)
-	FindByToken(ctx context.Context, token string) (*Session, error)
-	Delete(ctx context.Context, token string) error
-	DeleteAllForUser(ctx context.Context, userID string) error
-}
 
 type sessionRepository struct {
 	db *sql.DB
 }
 
-func NewSessionRepository(db *sql.DB) SessionRepository {
+func NewSessionRepository(db *sql.DB) domain.SessionRepository {
 	return &sessionRepository{
 		db: db,
 	}
@@ -55,7 +25,7 @@ func (r *sessionRepository) Create(
 	userID, token string,
 	expiresAt time.Time,
 	persistent bool,
-) (*Session, error) {
+) (*domain.Session, error) {
 	id := uuid.NewString()
 	now := time.Now().UTC()
 
@@ -73,7 +43,7 @@ func (r *sessionRepository) Create(
 		return nil, err
 	}
 
-	return &Session{
+	return &domain.Session{
 		ID:         id,
 		UserID:     userID,
 		Token:      token,
@@ -86,8 +56,8 @@ func (r *sessionRepository) Create(
 func (r *sessionRepository) FindByToken(
 	ctx context.Context,
 	token string,
-) (*Session, error) {
-	var s Session
+) (*domain.Session, error) {
+	var s domain.Session
 	var expiresAt, createdAt string
 	var persistentInt int
 

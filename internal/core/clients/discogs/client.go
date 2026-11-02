@@ -9,7 +9,7 @@ import (
 
 	"github.com/dghubble/oauth1"
 
-	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	accountdomain "github.com/mathcale/discogs-collection-manager/internal/features/account/domain"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/ctxkey"
 )
 
@@ -169,12 +169,12 @@ type DiscogsClient interface {
 
 type HTTPDiscogsClient struct {
 	oauthConfig *oauth1.Config
-	oauthTokens accountmodels.OAuthTokenRepository
+	oauthTokens accountdomain.OAuthTokenRepository
 	searchURL   string
 	apiBase     string
 }
 
-func NewHTTPDiscogsClient(cfg *oauth1.Config, oauthTokens accountmodels.OAuthTokenRepository) *HTTPDiscogsClient {
+func NewHTTPDiscogsClient(cfg *oauth1.Config, oauthTokens accountdomain.OAuthTokenRepository) *HTTPDiscogsClient {
 	return &HTTPDiscogsClient{
 		oauthConfig: cfg,
 		oauthTokens: oauthTokens,

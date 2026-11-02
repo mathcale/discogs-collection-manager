@@ -16,9 +16,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
-	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	accountdomain "github.com/mathcale/discogs-collection-manager/internal/features/account/domain"
+	accountstore "github.com/mathcale/discogs-collection-manager/internal/features/account/store"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth"
-	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	authdomain "github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
+	authstore "github.com/mathcale/discogs-collection-manager/internal/features/auth/store"
 	"github.com/mathcale/discogs-collection-manager/internal/features/scanner"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
@@ -53,8 +55,8 @@ type ScanSuite struct {
 	suite.Suite
 	db          *sql.DB
 	dbPath      string
-	sessions    authmodels.SessionRepository
-	oauthTokens accountmodels.OAuthTokenRepository
+	sessions    authdomain.SessionRepository
+	oauthTokens accountdomain.OAuthTokenRepository
 	router      http.Handler
 	mockDiscogs *mockDiscogsClient
 }
@@ -75,8 +77,8 @@ func (s *ScanSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.db = db
 
-	s.sessions = authmodels.NewSessionRepository(db)
-	s.oauthTokens = accountmodels.NewOAuthTokenRepository(db)
+	s.sessions = authstore.NewSessionRepository(db)
+	s.oauthTokens = accountstore.NewOAuthTokenRepository(db)
 }
 
 func (s *ScanSuite) SetupTest() {

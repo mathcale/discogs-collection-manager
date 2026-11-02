@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
 
 type RegisterInput struct {
@@ -17,11 +17,11 @@ type RegisterOutput struct{}
 var ErrEmailTaken = errors.New("email already registered")
 
 type Register struct {
-	Users models.UserRepository
+	Users domain.UserRepository
 }
 
 func (uc *Register) Execute(ctx context.Context, in RegisterInput) (RegisterOutput, error) {
-	email := models.NormalizeEmail(in.Email)
+	email := domain.NormalizeEmail(in.Email)
 
 	existing, err := uc.Users.FindByEmail(ctx, email)
 	if err != nil {
@@ -31,7 +31,7 @@ func (uc *Register) Execute(ctx context.Context, in RegisterInput) (RegisterOutp
 		return RegisterOutput{}, ErrEmailTaken
 	}
 
-	hash, err := models.HashPassword(in.Password)
+	hash, err := domain.HashPassword(in.Password)
 	if err != nil {
 		return RegisterOutput{}, err
 	}

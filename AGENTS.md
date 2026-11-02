@@ -62,8 +62,8 @@ internal/
 
   features/
     landing/        feature.go, handlers/, views/
-    auth/           feature.go, handlers/, usecases/, models/, views/
-    account/        feature.go, handlers/, usecases/, models/, views/
+    auth/           feature.go, handlers/, usecases/, domain/, store/, views/
+    account/        feature.go, handlers/, usecases/, domain/, store/, views/
     scanner/        feature.go, handlers/, usecases/, views/
 
   ui/                                   BaseLayout, AppLayout, AlertError, icons, Render
@@ -79,13 +79,14 @@ migrations/
 | Package | May import |
 |---|---|
 | `core/web` | `core`, `pkg/*` |
-| `core` (kernel) | feature **root** packages, `core/clients/*`, `pkg/*`, and `features/account/models` (only to build the Discogs client) |
-| `core/clients/discogs` | `features/account/models`, `pkg/ctxkey` |
-| feature root (`feature.go`) | its own subpackages, other features' `models`, `core/clients/*`, `chi` |
+| `core` (kernel) | feature **root** packages, `core/clients/*`, `pkg/*`, and `features/account/domain` + `features/account/store` (only to build the Discogs client) |
+| `core/clients/discogs` | `features/account/domain`, `pkg/ctxkey` |
+| feature root (`feature.go`) | its own subpackages, other features' `domain` and `store` (`store` only for wiring), `core/clients/*`, `chi` |
 | `<f>/handlers` | own `usecases`, own `views`, `ui`, `pkg/ctxkey`, `pkg/i18n`, `core/clients/discogs` (error types only) |
-| `<f>/usecases` | own `models`, other features' `models`, `core/clients/*`, `pkg/i18n` |
-| `<f>/models` | stdlib only (plus crypto libs already in use) |
-| `<f>/views` | `ui`, own `models`, `core/clients/discogs` (release types), `pkg/i18n` |
+| `<f>/usecases` | own `domain`, other features' `domain`, `core/clients/*`, `pkg/i18n` |
+| `<f>/domain` | stdlib, `uuid`, `bcrypt` |
+| `<f>/store` | own `domain`, stdlib |
+| `<f>/views` | `ui`, own `domain`, `core/clients/discogs` (release types), `pkg/i18n` |
 | `ui` | `templ`, `pkg/i18n` |
 
 Hard rules:
@@ -95,8 +96,8 @@ Hard rules:
 
 ## Architecture Conventions
 
-- Handlers handle HTTP only (parsing, cookies, redirects, rendering). Business flows live in use cases; domain rules (password hashing, token generation, expiry checks) live in `models`.
-- All database access is behind repository interfaces (for example `UserRepository`, `SessionRepository`, `OAuthTokenRepository`). Each feature builds its repositories from the injected `*sql.DB` in its `feature.go`.
+- Handlers handle HTTP only (parsing, cookies, redirects, rendering). Business flows live in use cases; domain rules (password hashing, token generation, expiry checks) live in `domain`.
+- All database access is behind repository interfaces declared in `domain` (for example `UserRepository`, `SessionRepository`, `OAuthTokenRepository`), implemented in the feature's `store` package. Each feature builds its repositories from the injected `*sql.DB` in its `feature.go`. Use cases, handlers and views never import a `store`.
 - The Discogs HTTP client is hidden behind a `DiscogsClient` interface. Inject it — never instantiate it inside handlers or use cases.
 - All email sending goes through a `Mailer` interface. Never call Resend directly from business logic.
 - Tests use the HTTP handler boundary as the primary seam: each feature tests its `Module.Routes` with an in-memory SQLite DB and mock `DiscogsClient` + `Mailer`. Full-tree tests live in `core/web`.
@@ -105,7 +106,7 @@ Hard rules:
 
 - Each feature has a root `feature.go` declaring a `Deps` struct and a `Module`. `Deps` holds only shared infrastructure (DB, clients, config values), never another feature's module or repository. A feature that needs another feature's data builds that feature's repository itself from the DB.
 - `New(Deps)` wires repositories, use cases and the handler. `Routes` registers absolute paths; `core/web` only decides grouping and middleware.
-- Repositories take the DB through their constructor, which returns the interface; implementations are unexported and have no `SQLite` prefix.
+- Repositories live in `store`, take the DB through their constructor, which returns the `domain` interface; implementations are unexported and have no `SQLite` prefix.
 - Each use case lives in its own file with its input, output, sentinel errors, unexported local interfaces for dependencies owned by other features, the use case struct with exported dependency fields, and an `Execute` method. Use cases know nothing about HTTP and never call each other; shared logic goes in an unexported helper in a non-use-case file.
 - Unexpected errors are returned as-is and handlers turn unrecognised ones into `500 internal error`. Discogs client errors must stay reachable with `errors.As`; when a use case needs to name the failed step, wrap with both the sentinel and the original error.
 - Handler structs hold concrete use-case pointers named after the use case. Handler methods keep their action names; when a method name collides with a use-case field, the method gets a `Submit` suffix.
