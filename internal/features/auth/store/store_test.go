@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"os"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
@@ -59,4 +60,74 @@ func TestFindMethods_ReturnErrNotFoundWhenNoRowMatches(t *testing.T) {
 	resetToken, err := resetTokens.FindByTokenHash(ctx, "missing")
 	require.ErrorIs(t, err, domain.ErrNotFound)
 	require.Nil(t, resetToken)
+}
+
+func TestPasswordResetTokenSave_PersistsEntityFields(t *testing.T) {
+	db := openDB(t)
+	ctx := context.Background()
+
+	users := store.NewUserRepository(db)
+	resetTokens := store.NewPasswordResetTokenRepository(db)
+
+	user, err := domain.NewUser("save@example.com", "password")
+	require.NoError(t, err)
+	require.NoError(t, users.Save(ctx, user))
+
+	token := domain.NewPasswordResetToken(user.ID, "token-hash")
+	require.NoError(t, resetTokens.Save(ctx, token))
+
+	found, err := resetTokens.FindByTokenHash(ctx, "token-hash")
+	require.NoError(t, err)
+	require.Equal(t, token.ID, found.ID)
+	require.Equal(t, user.ID, found.UserID)
+	require.WithinDuration(t, token.ExpiresAt, found.ExpiresAt, time.Second)
+	require.WithinDuration(t, token.CreatedAt, found.CreatedAt, time.Second)
+	require.Nil(t, found.UsedAt)
+}
+
+func TestSessionSave_PersistsSessionFindableByToken(t *testing.T) {
+	db := openDB(t)
+	ctx := context.Background()
+	sessions := store.NewSessionRepository(db)
+
+	session, err := domain.NewSession("user-1", true)
+	require.NoError(t, err)
+
+	require.NoError(t, sessions.Save(ctx, session))
+
+	found, err := sessions.FindByToken(ctx, session.Token)
+	require.NoError(t, err)
+	require.Equal(t, session.ID, found.ID)
+	require.Equal(t, "user-1", found.UserID)
+	require.True(t, found.Persistent)
+}
+
+func TestUserRepository_SaveInsertsThenUpdatesWholeEntityByID(t *testing.T) {
+	db := openDB(t)
+	ctx := context.Background()
+	users := store.NewUserRepository(db)
+
+	user, err := domain.NewUser("Save@Example.com", "first-password")
+	require.NoError(t, err)
+
+	require.NoError(t, users.Save(ctx, user))
+
+	found, err := users.FindByID(ctx, user.ID)
+	require.NoError(t, err)
+	require.Equal(t, user.ID, found.ID)
+	require.Equal(t, "save@example.com", found.Email)
+	require.True(t, found.CheckPassword("first-password"))
+
+	require.NoError(t, user.ChangePassword("second-password"))
+	require.NoError(t, users.Save(ctx, user))
+
+	updated, err := users.FindByEmail(ctx, "save@example.com")
+	require.NoError(t, err)
+	require.Equal(t, user.ID, updated.ID)
+	require.True(t, updated.CheckPassword("second-password"))
+	require.False(t, updated.CheckPassword("first-password"))
+
+	var count int
+	require.NoError(t, db.QueryRow(`SELECT COUNT(*) FROM users`).Scan(&count))
+	require.Equal(t, 1, count)
 }

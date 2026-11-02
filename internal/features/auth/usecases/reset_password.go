@@ -38,12 +38,16 @@ func (uc *ResetPassword) Execute(ctx context.Context, in ResetPasswordInput) (Re
 		return ResetPasswordOutput{}, err
 	}
 
-	hash, err := domain.HashPassword(in.Password)
+	user, err := uc.Users.FindByID(ctx, record.UserID)
 	if err != nil {
 		return ResetPasswordOutput{}, err
 	}
 
-	if err := uc.Users.UpdatePassword(ctx, record.UserID, hash); err != nil {
+	if err := user.ChangePassword(in.Password); err != nil {
+		return ResetPasswordOutput{}, err
+	}
+
+	if err := uc.Users.Save(ctx, user); err != nil {
 		return ResetPasswordOutput{}, err
 	}
 

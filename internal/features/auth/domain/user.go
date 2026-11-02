@@ -5,6 +5,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -19,7 +20,7 @@ func NormalizeEmail(email string) string {
 	return strings.ToLower(strings.TrimSpace(email))
 }
 
-func HashPassword(password string) (string, error) {
+func hashPassword(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
@@ -27,13 +28,37 @@ func HashPassword(password string) (string, error) {
 	return string(hash), nil
 }
 
+func NewUser(email, password string) (*User, error) {
+	hash, err := hashPassword(password)
+	if err != nil {
+		return nil, err
+	}
+
+	return &User{
+		ID:           uuid.NewString(),
+		Email:        NormalizeEmail(email),
+		PasswordHash: hash,
+		CreatedAt:    time.Now().UTC(),
+	}, nil
+}
+
+func (u *User) ChangePassword(password string) error {
+	hash, err := hashPassword(password)
+	if err != nil {
+		return err
+	}
+
+	u.PasswordHash = hash
+
+	return nil
+}
+
 func (u *User) CheckPassword(password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) == nil
 }
 
 type UserRepository interface {
-	Create(ctx context.Context, email, passwordHash string) (*User, error)
+	Save(ctx context.Context, user *User) error
 	FindByEmail(ctx context.Context, email string) (*User, error)
 	FindByID(ctx context.Context, id string) (*User, error)
-	UpdatePassword(ctx context.Context, id, passwordHash string) error
 }

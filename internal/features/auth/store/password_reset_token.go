@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
 
@@ -20,29 +18,21 @@ func NewPasswordResetTokenRepository(db *sql.DB) domain.PasswordResetTokenReposi
 	}
 }
 
-func (r *passwordResetTokenRepository) Create(
-	ctx context.Context,
-	userID, tokenHash string,
-	expiresAt time.Time,
-) (*domain.PasswordResetToken, error) {
-	id := uuid.NewString()
-	now := time.Now().UTC()
-
-	_, err := r.db.ExecContext(ctx,
-		`INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at, created_at) VALUES (?, ?, ?, ?, ?)`,
-		id, userID, tokenHash, expiresAt.UTC().Format(time.DateTime), now.Format(time.DateTime),
-	)
-	if err != nil {
-		return nil, err
+func (r *passwordResetTokenRepository) Save(ctx context.Context, token *domain.PasswordResetToken) error {
+	var usedAt any
+	if token.UsedAt != nil {
+		usedAt = token.UsedAt.UTC().Format(time.DateTime)
 	}
 
-	return &domain.PasswordResetToken{
-		ID:        id,
-		UserID:    userID,
-		TokenHash: tokenHash,
-		ExpiresAt: expiresAt,
-		CreatedAt: now,
-	}, nil
+	_, err := r.db.ExecContext(ctx,
+		`INSERT INTO password_reset_tokens (id, user_id, token_hash, expires_at, used_at, created_at)
+		 VALUES (?, ?, ?, ?, ?, ?)
+		 ON CONFLICT(id) DO UPDATE SET used_at = excluded.used_at`,
+		token.ID, token.UserID, token.TokenHash,
+		token.ExpiresAt.UTC().Format(time.DateTime), usedAt, token.CreatedAt.UTC().Format(time.DateTime),
+	)
+
+	return err
 }
 
 func (r *passwordResetTokenRepository) FindByTokenHash(
@@ -71,15 +61,6 @@ func (r *passwordResetTokenRepository) FindByTokenHash(
 	}
 
 	return &t, nil
-}
-
-func (r *passwordResetTokenRepository) MarkUsed(ctx context.Context, id string) error {
-	_, err := r.db.ExecContext(ctx,
-		`UPDATE password_reset_tokens SET used_at = ? WHERE id = ?`,
-		time.Now().UTC().Format(time.DateTime), id,
-	)
-
-	return err
 }
 
 func (r *passwordResetTokenRepository) MarkAllUsedForUser(ctx context.Context, userID string) error {
