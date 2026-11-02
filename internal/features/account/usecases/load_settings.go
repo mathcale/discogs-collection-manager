@@ -30,20 +30,20 @@ type LoadSettings struct {
 
 func (uc *LoadSettings) Execute(ctx context.Context, in LoadSettingsInput) (LoadSettingsOutput, error) {
 	user, err := uc.Users.FindByID(ctx, in.UserID)
-	if err != nil {
-		return LoadSettingsOutput{}, err
-	}
-	if user == nil {
+	if errors.Is(err, authdomain.ErrNotFound) {
 		return LoadSettingsOutput{}, ErrUserNotFound
 	}
-
-	token, err := uc.OAuthTokens.FindByUserID(ctx, in.UserID)
 	if err != nil {
 		return LoadSettingsOutput{}, err
 	}
 
 	out := LoadSettingsOutput{Email: user.Email}
-	if token != nil {
+
+	token, err := uc.OAuthTokens.FindByUserID(ctx, in.UserID)
+	if err != nil && !errors.Is(err, domain.ErrNotFound) {
+		return LoadSettingsOutput{}, err
+	}
+	if err == nil {
 		out.DiscogsUsername = token.DiscogsUsername
 	}
 

@@ -2,6 +2,7 @@ package usecases
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
@@ -26,11 +27,11 @@ func (uc *RequestPasswordReset) Execute(ctx context.Context, in RequestPasswordR
 	email := domain.NormalizeEmail(in.Email)
 
 	user, err := uc.Users.FindByEmail(ctx, email)
+	if errors.Is(err, domain.ErrNotFound) {
+		return RequestPasswordResetOutput{}, nil
+	}
 	if err != nil {
 		return RequestPasswordResetOutput{}, err
-	}
-	if user == nil {
-		return RequestPasswordResetOutput{}, nil
 	}
 
 	rawToken, err := domain.GenerateToken()

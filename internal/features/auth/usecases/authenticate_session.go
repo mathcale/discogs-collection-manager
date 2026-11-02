@@ -23,10 +23,13 @@ type AuthenticateSession struct {
 
 func (uc *AuthenticateSession) Execute(ctx context.Context, in AuthenticateSessionInput) (AuthenticateSessionOutput, error) {
 	session, err := uc.Sessions.FindByToken(ctx, in.Token)
+	if errors.Is(err, domain.ErrNotFound) {
+		return AuthenticateSessionOutput{}, ErrSessionInvalid
+	}
 	if err != nil {
 		return AuthenticateSessionOutput{}, err
 	}
-	if session == nil || session.IsExpired() {
+	if session.IsExpired() {
 		return AuthenticateSessionOutput{}, ErrSessionInvalid
 	}
 

@@ -62,7 +62,7 @@ func (r *oauthTokenRepository) FindByUserID(
 		userID,
 	).Scan(&t.ID, &t.UserID, &t.AccessToken, &t.AccessTokenSecret, &t.DiscogsUsername, &createdAt)
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, domain.ErrNotFound
 	}
 
 	if err != nil {

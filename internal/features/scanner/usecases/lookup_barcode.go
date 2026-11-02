@@ -33,12 +33,12 @@ type LookupBarcode struct {
 }
 
 func (uc *LookupBarcode) Execute(ctx context.Context, in LookupBarcodeInput) (LookupBarcodeOutput, error) {
-	token, err := uc.OAuthTokens.FindByUserID(ctx, in.UserID)
+	_, err := uc.OAuthTokens.FindByUserID(ctx, in.UserID)
+	if errors.Is(err, accountdomain.ErrNotFound) {
+		return LookupBarcodeOutput{}, ErrDiscogsNotConnected
+	}
 	if err != nil {
 		return LookupBarcodeOutput{}, err
-	}
-	if token == nil {
-		return LookupBarcodeOutput{}, ErrDiscogsNotConnected
 	}
 
 	releases, err := uc.Discogs.SearchByBarcode(ctx, in.Barcode)

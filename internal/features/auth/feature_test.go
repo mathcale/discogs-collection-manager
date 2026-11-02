@@ -398,7 +398,7 @@ func (s *AuthSuite) TestVerifyOTP_RepeatedWrongCodes_InvalidatesCode() {
 	s.Nil(s.cookieNamed(rr, "session_token"))
 
 	pending, err := s.otpCodes.FindPendingByUserID(context.Background(), user.ID)
-	s.Require().NoError(err)
+	s.Require().ErrorIs(err, authdomain.ErrNotFound)
 	s.Nil(pending)
 }
 
@@ -444,6 +444,38 @@ func (s *AuthSuite) TestProtectedRoute_Unauthenticated() {
 	s.Equal("/auth/login", rr.Header().Get("Location"))
 }
 
+func (s *AuthSuite) TestProtectedRoute_UnknownSessionToken_RedirectsToLogin() {
+	req := httptest.NewRequest(http.MethodGet, "/app", nil)
+	req.AddCookie(&http.Cookie{Name: "session_token", Value: "bogus"})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusFound, rr.Code)
+	s.Equal("/auth/login", rr.Header().Get("Location"))
+}
+
+func (s *AuthSuite) TestVerifyOTP_NoPendingCode_Returns422() {
+	user := s.registerUser("nootp@example.com", "password123")
+
+	form := url.Values{"code": {"123456"}}
+	req := httptest.NewRequest(http.MethodPost, "/auth/login/otp", strings.NewReader(form.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.AddCookie(&http.Cookie{Name: "pending_login", Value: user.ID + ":0"})
+	rr := httptest.NewRecorder()
+
+	s.router.ServeHTTP(rr, req)
+
+	s.Equal(http.StatusUnprocessableEntity, rr.Code)
+}
+
+func (s *AuthSuite) TestResetPassword_POST_UnknownToken_ShowsError() {
+	form := url.Values{"token": {"nonexistent"}, "password": {"newpassword1"}, "password_confirm": {"newpassword1"}}
+	rr := s.postForm(s.router, "/auth/reset-password", form)
+
+	s.Contains(rr.Body.String(), "invalid or has expired")
+}
+
 func (s *AuthSuite) TestProtectedRoute_WithValidSession() {
 	user := s.registerUser("authed@example.com", "password123")
 	token := s.createSession(user.ID, time.Now().Add(6*time.Hour), false)
@@ -485,7 +517,7 @@ func (s *AuthSuite) TestLogout() {
 	s.Equal("/auth/login", rr.Header().Get("Location"))
 
 	session, err := s.sessions.FindByToken(req.Context(), token)
-	s.Require().NoError(err)
+	s.Require().ErrorIs(err, authdomain.ErrNotFound)
 	s.Nil(session)
 }
 
@@ -581,7 +613,7 @@ func (s *AuthSuite) TestResetPassword_POST_Success_UpdatesPasswordAndInvalidates
 	s.Equal("/auth/login", rr.Header().Get("Location"))
 
 	session, err := s.sessions.FindByToken(req.Context(), existingToken)
-	s.Require().NoError(err)
+	s.Require().ErrorIs(err, authdomain.ErrNotFound)
 	s.Nil(session)
 
 	updated, err := s.users.FindByEmail(req.Context(), "resetpost@example.com")
@@ -684,7 +716,7 @@ func (s *AuthSuite) TestResetPassword_POST_Success_DeletesOAuthToken() {
 	s.Equal(http.StatusFound, rr.Code)
 
 	token, err := s.oauthTokens.FindByUserID(context.Background(), user.ID)
-	s.Require().NoError(err)
+	s.Require().ErrorIs(err, accountdomain.ErrNotFound)
 	s.Nil(token)
 }
 
@@ -814,7 +846,7 @@ func (s *AuthSuite) TestRegister_SignupsDisabled_ReturnsNotFound() {
 	s.Equal(http.StatusNotFound, postRR.Code)
 
 	user, err := s.users.FindByEmail(context.Background(), "new@example.com")
-	s.Require().NoError(err)
+	s.Require().ErrorIs(err, authdomain.ErrNotFound)
 	s.Nil(user)
 }
 

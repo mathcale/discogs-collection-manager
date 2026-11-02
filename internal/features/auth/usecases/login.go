@@ -38,10 +38,13 @@ func (uc *Login) Execute(ctx context.Context, in LoginInput) (LoginOutput, error
 	email := domain.NormalizeEmail(in.Email)
 
 	user, err := uc.Users.FindByEmail(ctx, email)
+	if errors.Is(err, domain.ErrNotFound) {
+		return LoginOutput{}, ErrInvalidCredentials
+	}
 	if err != nil {
 		return LoginOutput{}, err
 	}
-	if user == nil || !user.CheckPassword(in.Password) {
+	if !user.CheckPassword(in.Password) {
 		return LoginOutput{}, ErrInvalidCredentials
 	}
 
