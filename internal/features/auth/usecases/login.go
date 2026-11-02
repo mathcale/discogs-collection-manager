@@ -63,7 +63,7 @@ func (uc *Login) Execute(ctx context.Context, in LoginInput) (LoginOutput, error
 	}
 
 	codeHash := domain.HashToken(code)
-	if _, err := uc.OTPCodes.Create(ctx, user.ID, codeHash, time.Now().Add(domain.OTPExpiry)); err != nil {
+	if err := uc.OTPCodes.Save(ctx, domain.NewOTPCode(user.ID, codeHash)); err != nil {
 		return LoginOutput{}, err
 	}
 
