@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"os"
 	"testing"
+	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/require"
@@ -59,4 +60,26 @@ func TestFindMethods_ReturnErrNotFoundWhenNoRowMatches(t *testing.T) {
 	resetToken, err := resetTokens.FindByTokenHash(ctx, "missing")
 	require.ErrorIs(t, err, domain.ErrNotFound)
 	require.Nil(t, resetToken)
+}
+
+func TestPasswordResetTokenSave_PersistsEntityFields(t *testing.T) {
+	db := openDB(t)
+	ctx := context.Background()
+
+	users := store.NewUserRepository(db)
+	resetTokens := store.NewPasswordResetTokenRepository(db)
+
+	user, err := users.Create(ctx, "save@example.com", "hash")
+	require.NoError(t, err)
+
+	token := domain.NewPasswordResetToken(user.ID, "token-hash")
+	require.NoError(t, resetTokens.Save(ctx, token))
+
+	found, err := resetTokens.FindByTokenHash(ctx, "token-hash")
+	require.NoError(t, err)
+	require.Equal(t, token.ID, found.ID)
+	require.Equal(t, user.ID, found.UserID)
+	require.WithinDuration(t, token.ExpiresAt, found.ExpiresAt, time.Second)
+	require.WithinDuration(t, token.CreatedAt, found.CreatedAt, time.Second)
+	require.Nil(t, found.UsedAt)
 }
