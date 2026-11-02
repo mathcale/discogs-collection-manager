@@ -60,3 +60,33 @@ func TestFindMethods_ReturnErrNotFoundWhenNoRowMatches(t *testing.T) {
 	require.ErrorIs(t, err, domain.ErrNotFound)
 	require.Nil(t, resetToken)
 }
+
+func TestUserRepository_SaveInsertsThenUpdatesWholeEntityByID(t *testing.T) {
+	db := openDB(t)
+	ctx := context.Background()
+	users := store.NewUserRepository(db)
+
+	user, err := domain.NewUser("Save@Example.com", "first-password")
+	require.NoError(t, err)
+
+	require.NoError(t, users.Save(ctx, user))
+
+	found, err := users.FindByID(ctx, user.ID)
+	require.NoError(t, err)
+	require.Equal(t, user.ID, found.ID)
+	require.Equal(t, "save@example.com", found.Email)
+	require.True(t, found.CheckPassword("first-password"))
+
+	require.NoError(t, user.ChangePassword("second-password"))
+	require.NoError(t, users.Save(ctx, user))
+
+	updated, err := users.FindByEmail(ctx, "save@example.com")
+	require.NoError(t, err)
+	require.Equal(t, user.ID, updated.ID)
+	require.True(t, updated.CheckPassword("second-password"))
+	require.False(t, updated.CheckPassword("first-password"))
+
+	var count int
+	require.NoError(t, db.QueryRow(`SELECT COUNT(*) FROM users`).Scan(&count))
+	require.Equal(t, 1, count)
+}

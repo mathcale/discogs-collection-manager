@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
 
@@ -20,27 +18,17 @@ func NewUserRepository(db *sql.DB) domain.UserRepository {
 	}
 }
 
-func (r *userRepository) Create(
-	ctx context.Context,
-	email, passwordHash string,
-) (*domain.User, error) {
-	id := uuid.NewString()
-	now := time.Now().UTC()
-
+func (r *userRepository) Save(ctx context.Context, user *domain.User) error {
 	_, err := r.db.ExecContext(ctx,
-		`INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)`,
-		id, email, passwordHash, now.Format(time.DateTime),
+		`INSERT INTO users (id, email, password_hash, created_at) VALUES (?, ?, ?, ?)
+		ON CONFLICT(id) DO UPDATE SET
+			email = excluded.email,
+			password_hash = excluded.password_hash,
+			created_at = excluded.created_at`,
+		user.ID, user.Email, user.PasswordHash, user.CreatedAt.UTC().Format(time.DateTime),
 	)
-	if err != nil {
-		return nil, err
-	}
 
-	return &domain.User{
-		ID:           id,
-		Email:        email,
-		PasswordHash: passwordHash,
-		CreatedAt:    now,
-	}, nil
+	return err
 }
 
 func (r *userRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
@@ -81,16 +69,4 @@ func (r *userRepository) FindByID(ctx context.Context, id string) (*domain.User,
 	u.CreatedAt, _ = time.Parse(time.RFC3339, createdAt)
 
 	return &u, nil
-}
-
-func (r *userRepository) UpdatePassword(
-	ctx context.Context,
-	id, passwordHash string,
-) error {
-	_, err := r.db.ExecContext(ctx,
-		`UPDATE users SET password_hash = ? WHERE id = ?`,
-		passwordHash, id,
-	)
-
-	return err
 }
