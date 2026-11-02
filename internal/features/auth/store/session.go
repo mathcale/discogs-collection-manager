@@ -5,8 +5,6 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/google/uuid"
-
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
 
@@ -20,37 +18,19 @@ func NewSessionRepository(db *sql.DB) domain.SessionRepository {
 	}
 }
 
-func (r *sessionRepository) Create(
-	ctx context.Context,
-	userID, token string,
-	expiresAt time.Time,
-	persistent bool,
-) (*domain.Session, error) {
-	id := uuid.NewString()
-	now := time.Now().UTC()
-
+func (r *sessionRepository) Save(ctx context.Context, session *domain.Session) error {
 	persistentInt := 0
 
-	if persistent {
+	if session.Persistent {
 		persistentInt = 1
 	}
 
 	_, err := r.db.ExecContext(ctx,
 		`INSERT INTO sessions (id, user_id, token, expires_at, persistent, created_at) VALUES (?, ?, ?, ?, ?, ?)`,
-		id, userID, token, expiresAt.UTC().Format(time.DateTime), persistentInt, now.Format(time.DateTime),
+		session.ID, session.UserID, session.Token, session.ExpiresAt.UTC().Format(time.DateTime), persistentInt, session.CreatedAt.UTC().Format(time.DateTime),
 	)
-	if err != nil {
-		return nil, err
-	}
 
-	return &domain.Session{
-		ID:         id,
-		UserID:     userID,
-		Token:      token,
-		ExpiresAt:  expiresAt,
-		Persistent: persistent,
-		CreatedAt:  now,
-	}, nil
+	return err
 }
 
 func (r *sessionRepository) FindByToken(
