@@ -72,10 +72,10 @@ func (uc *VerifyOTP) Execute(ctx context.Context, in VerifyOTPInput) (VerifyOTPO
 }
 
 func (uc *VerifyOTP) recordFailedAttempt(ctx context.Context, otp *domain.OTPCode) error {
-	guessedID := otp.ID
+	attemptedCodeID := otp.ID
 
 	for {
-		if otp.ID != guessedID {
+		if otp.ID != attemptedCodeID {
 			return nil
 		}
 
