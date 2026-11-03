@@ -90,7 +90,7 @@ func (s *ScanSuite) SetupTest() {
 	r := chi.NewRouter()
 	r.Group(func(r chi.Router) {
 		r.Use(auth.New(auth.Deps{DB: s.db}).RequireAuth)
-		scanner.New(scanner.Deps{DB: s.db, Discogs: s.mockDiscogs}).Routes(r)
+		scanner.New(scanner.Deps{DB: s.db, DiscogsClient: s.mockDiscogs}).Routes(r)
 	})
 
 	s.router = r

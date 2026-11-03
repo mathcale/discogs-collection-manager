@@ -12,27 +12,44 @@ import (
 	authstore "github.com/mathcale/discogs-collection-manager/internal/features/auth/store"
 )
 
-type Deps struct {
-	DB           *sql.DB
-	DiscogsOAuth *oauth1.Config
-	IdentityURL  string
-}
+type (
+	Deps struct {
+		DB                 *sql.DB
+		DiscogsOAuthConfig *oauth1.Config
+		IdentityURL        string
+	}
 
-type Module struct {
-	handler *handlers.Handler
-}
+	Module struct {
+		handler *handlers.Handler
+	}
+)
 
 func New(d Deps) *Module {
-	oauthTokens := store.NewOAuthTokenRepository(d.DB)
-	users := authstore.NewUserRepository(d.DB)
-	pending := &usecases.PendingOAuthRequests{}
+	oauthTokensRepo := store.NewOAuthTokenRepository(d.DB)
+	usersRepo := authstore.NewUserRepository(d.DB)
 
-	return &Module{handler: &handlers.Handler{
-		LoadSettings:           &usecases.LoadSettings{Users: users, OAuthTokens: oauthTokens},
-		StartDiscogsConnect:    &usecases.StartDiscogsConnect{OAuth: d.DiscogsOAuth, Pending: pending},
-		CompleteDiscogsConnect: &usecases.CompleteDiscogsConnect{OAuth: d.DiscogsOAuth, Pending: pending, OAuthTokens: oauthTokens, IdentityURL: d.IdentityURL},
-		DisconnectDiscogs:      &usecases.DisconnectDiscogs{OAuthTokens: oauthTokens},
-	}}
+	pendingOAuthReqsUseCase := &usecases.PendingOAuthRequests{}
+
+	return &Module{
+		handler: &handlers.Handler{
+			LoadSettingsUseCase: &usecases.LoadSettings{
+				UsersRepo:       usersRepo,
+				OAuthTokensRepo: oauthTokensRepo,
+			},
+			StartDiscogsConnectUseCase: &usecases.StartDiscogsConnect{
+				OAuth:   d.DiscogsOAuthConfig,
+				Pending: pendingOAuthReqsUseCase,
+			},
+			CompleteDiscogsConnectUseCase: &usecases.CompleteDiscogsConnect{
+				OAuth:           d.DiscogsOAuthConfig,
+				Pending:         pendingOAuthReqsUseCase,
+				OAuthTokensRepo: oauthTokensRepo,
+				IdentityURL:     d.IdentityURL,
+			},
+			DisconnectDiscogsUseCase: &usecases.DisconnectDiscogs{
+				OAuthTokensRepo: oauthTokensRepo,
+			},
+		}}
 }
 
 func (m *Module) Routes(r chi.Router) {

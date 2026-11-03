@@ -9,7 +9,12 @@ import (
 func (h *Handler) LogoutSubmit(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie(SessionCookieName)
 	if err == nil {
-		h.Logout.Execute(r.Context(), usecases.LogoutInput{SessionToken: cookie.Value})
+		h.LogoutUseCase.Execute(
+			r.Context(),
+			usecases.LogoutInput{
+				SessionToken: cookie.Value,
+			},
+		)
 	}
 
 	http.SetCookie(w, &http.Cookie{

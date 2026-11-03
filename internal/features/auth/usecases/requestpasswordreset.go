@@ -9,26 +9,32 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 )
 
-type RequestPasswordResetInput struct {
-	Email string
-}
+type (
+	RequestPasswordResetInput struct {
+		Email string
+	}
 
-type RequestPasswordResetOutput struct{}
+	RequestPasswordResetOutput struct{}
 
-type RequestPasswordReset struct {
-	Users       domain.UserRepository
-	ResetTokens domain.PasswordResetTokenRepository
-	Mailer      mailer.Mailer
-	BaseURL     string
-}
+	RequestPasswordReset struct {
+		UsersRepo       domain.UserRepository
+		ResetTokensRepo domain.PasswordResetTokenRepository
+		Mailer          mailer.Mailer
+		BaseURL         string
+	}
+)
 
-func (uc *RequestPasswordReset) Execute(ctx context.Context, in RequestPasswordResetInput) (RequestPasswordResetOutput, error) {
+func (uc *RequestPasswordReset) Execute(
+	ctx context.Context,
+	in RequestPasswordResetInput,
+) (RequestPasswordResetOutput, error) {
 	email := domain.NormalizeEmail(in.Email)
 
-	user, err := uc.Users.FindByEmail(ctx, email)
+	user, err := uc.UsersRepo.FindByEmail(ctx, email)
 	if errors.Is(err, domain.ErrNotFound) {
 		return RequestPasswordResetOutput{}, nil
 	}
+
 	if err != nil {
 		return RequestPasswordResetOutput{}, err
 	}
@@ -38,17 +44,24 @@ func (uc *RequestPasswordReset) Execute(ctx context.Context, in RequestPasswordR
 		return RequestPasswordResetOutput{}, err
 	}
 
-	if err := uc.ResetTokens.MarkAllUsedForUser(ctx, user.ID); err != nil {
+	if err := uc.ResetTokensRepo.MarkAllUsedForUser(ctx, user.ID); err != nil {
 		return RequestPasswordResetOutput{}, err
 	}
 
-	tokenHash := domain.HashToken(rawToken)
-	if err := uc.ResetTokens.Save(ctx, domain.NewPasswordResetToken(user.ID, tokenHash)); err != nil {
+	token := domain.NewPasswordResetToken(user.ID, domain.HashToken(rawToken))
+	if err := uc.ResetTokensRepo.Save(ctx, token); err != nil {
 		return RequestPasswordResetOutput{}, err
 	}
 
 	resetLink := uc.BaseURL + "/auth/reset-password?token=" + rawToken
-	body := i18n.T(ctx, "Click the link below to reset your password:<br><a href=\"%s\">%s</a><br>This link expires in 1 hour.", resetLink, resetLink)
+
+	body := i18n.T(
+		ctx,
+		"Click the link below to reset your password:<br><a href=\"%s\">%s</a><br>This link expires in 1 hour.",
+		resetLink,
+		resetLink,
+	)
+
 	if err := uc.Mailer.Send(user.Email, i18n.T(ctx, "Reset your password"), body); err != nil {
 		return RequestPasswordResetOutput{}, err
 	}

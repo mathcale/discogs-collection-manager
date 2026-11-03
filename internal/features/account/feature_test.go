@@ -90,9 +90,9 @@ func (s *DiscogsOAuthSuite) buildRouter(oauthCfg *oauth1.Config) http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(auth.New(auth.Deps{DB: s.db}).RequireAuth)
 		account.New(account.Deps{
-			DB:           s.db,
-			DiscogsOAuth: oauthCfg,
-			IdentityURL:  s.mockDiscogs.URL + "/oauth/identity",
+			DB:                 s.db,
+			DiscogsOAuthConfig: oauthCfg,
+			IdentityURL:        s.mockDiscogs.URL + "/oauth/identity",
 		}).Routes(r)
 	})
 

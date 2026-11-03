@@ -9,14 +9,22 @@ import (
 
 const ResetTokenExpiry = time.Hour
 
-type PasswordResetToken struct {
-	ID        string
-	UserID    string
-	TokenHash string
-	ExpiresAt time.Time
-	UsedAt    *time.Time
-	CreatedAt time.Time
-}
+type (
+	PasswordResetTokenRepository interface {
+		FindByTokenHash(ctx context.Context, tokenHash string) (*PasswordResetToken, error)
+		Save(ctx context.Context, token *PasswordResetToken) error
+		MarkAllUsedForUser(ctx context.Context, userID string) error
+	}
+
+	PasswordResetToken struct {
+		ID        string
+		UserID    string
+		TokenHash string
+		ExpiresAt time.Time
+		UsedAt    *time.Time
+		CreatedAt time.Time
+	}
+)
 
 func NewPasswordResetToken(userID, tokenHash string) *PasswordResetToken {
 	now := time.Now().UTC()
@@ -32,10 +40,4 @@ func NewPasswordResetToken(userID, tokenHash string) *PasswordResetToken {
 
 func (t *PasswordResetToken) IsUsable() bool {
 	return t.UsedAt == nil && !time.Now().After(t.ExpiresAt)
-}
-
-type PasswordResetTokenRepository interface {
-	Save(ctx context.Context, token *PasswordResetToken) error
-	FindByTokenHash(ctx context.Context, tokenHash string) (*PasswordResetToken, error)
-	MarkAllUsedForUser(ctx context.Context, userID string) error
 }

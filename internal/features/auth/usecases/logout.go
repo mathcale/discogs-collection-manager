@@ -6,16 +6,18 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
 
-type LogoutInput struct {
-	SessionToken string
-}
+type (
+	LogoutInput struct {
+		SessionToken string
+	}
 
-type LogoutOutput struct{}
+	LogoutOutput struct{}
 
-type Logout struct {
-	Sessions domain.SessionRepository
-}
+	Logout struct {
+		SessionsRepo domain.SessionRepository
+	}
+)
 
 func (uc *Logout) Execute(ctx context.Context, in LogoutInput) (LogoutOutput, error) {
-	return LogoutOutput{}, uc.Sessions.Delete(ctx, in.SessionToken)
+	return LogoutOutput{}, uc.SessionsRepo.Delete(ctx, in.SessionToken)
 }

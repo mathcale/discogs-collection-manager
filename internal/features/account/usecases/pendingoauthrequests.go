@@ -2,17 +2,24 @@ package usecases
 
 import "sync"
 
-type pendingOAuthRequest struct {
-	secret string
-	userID string
-}
+type (
+	pendingOAuthRequest struct {
+		secret string
+		userID string
+	}
 
-type PendingOAuthRequests struct {
-	m sync.Map
-}
+	PendingOAuthRequests struct {
+		m sync.Map
+	}
+)
 
 func (p *PendingOAuthRequests) Store(requestToken, secret, userID string) {
-	p.m.Store(requestToken, pendingOAuthRequest{secret: secret, userID: userID})
+	req := pendingOAuthRequest{
+		secret: secret,
+		userID: userID,
+	}
+
+	p.m.Store(requestToken, req)
 }
 
 func (p *PendingOAuthRequests) Delete(requestToken string) {

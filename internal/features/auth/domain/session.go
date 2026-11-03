@@ -12,21 +12,23 @@ const (
 	longSessionExpiry  = 30 * 24 * time.Hour
 )
 
-func sessionExpiry(persistent bool) time.Duration {
-	if persistent {
-		return longSessionExpiry
+type (
+	SessionRepository interface {
+		FindByToken(ctx context.Context, token string) (*Session, error)
+		Save(ctx context.Context, session *Session) error
+		Delete(ctx context.Context, token string) error
+		DeleteAllForUser(ctx context.Context, userID string) error
 	}
-	return shortSessionExpiry
-}
 
-type Session struct {
-	ID         string
-	UserID     string
-	Token      string
-	ExpiresAt  time.Time
-	Persistent bool
-	CreatedAt  time.Time
-}
+	Session struct {
+		ID         string
+		UserID     string
+		Token      string
+		ExpiresAt  time.Time
+		Persistent bool
+		CreatedAt  time.Time
+	}
+)
 
 func NewSession(userID string, persistent bool) (*Session, error) {
 	token, err := GenerateToken()
@@ -50,9 +52,10 @@ func (s *Session) IsExpired() bool {
 	return time.Now().After(s.ExpiresAt)
 }
 
-type SessionRepository interface {
-	Save(ctx context.Context, session *Session) error
-	FindByToken(ctx context.Context, token string) (*Session, error)
-	Delete(ctx context.Context, token string) error
-	DeleteAllForUser(ctx context.Context, userID string) error
+func sessionExpiry(persistent bool) time.Duration {
+	if persistent {
+		return longSessionExpiry
+	}
+
+	return shortSessionExpiry
 }

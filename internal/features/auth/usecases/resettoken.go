@@ -7,16 +7,22 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 )
 
-func findUsableResetToken(ctx context.Context, resetTokens domain.PasswordResetTokenRepository, rawToken string) (*domain.PasswordResetToken, error) {
+func findUsableResetToken(
+	ctx context.Context,
+	resetTokens domain.PasswordResetTokenRepository,
+	rawToken string,
+) (*domain.PasswordResetToken, error) {
 	record, err := resetTokens.FindByTokenHash(ctx, domain.HashToken(rawToken))
-	if errors.Is(err, domain.ErrNotFound) {
-		return nil, ErrResetTokenInvalid
-	}
 	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			return nil, domain.ErrResetTokenInvalid
+		}
+
 		return nil, err
 	}
+
 	if !record.IsUsable() {
-		return nil, ErrResetTokenInvalid
+		return nil, domain.ErrResetTokenInvalid
 	}
 
 	return record, nil

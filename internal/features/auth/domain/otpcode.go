@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"time"
 
@@ -14,21 +13,23 @@ const (
 	MaxOTPFailedAttempts = 5
 )
 
-type OTPCode struct {
-	ID        string
-	UserID    string
-	CodeHash  string
-	ExpiresAt time.Time
-	UsedAt    *time.Time
-	CreatedAt time.Time
+type (
+	OTPRepository interface {
+		FindPendingByUserID(ctx context.Context, userID string) (*OTPCode, error)
+		Save(ctx context.Context, otp *OTPCode) error
+	}
 
-	FailedAttempts int
-	Version        int
-}
+	OTPCode struct {
+		ID        string
+		UserID    string
+		CodeHash  string
+		ExpiresAt time.Time
+		UsedAt    *time.Time
+		CreatedAt time.Time
 
-var (
-	ErrOTPNotPending    = errors.New("otp code is not pending")
-	ErrConcurrentUpdate = errors.New("concurrent update")
+		FailedAttempts int
+		Version        int
+	}
 )
 
 func NewOTPCode(userID, codeHash string) *OTPCode {
@@ -84,9 +85,4 @@ func digitsOnly(value string) string {
 
 		return -1
 	}, value)
-}
-
-type OTPRepository interface {
-	Save(ctx context.Context, otp *OTPCode) error
-	FindPendingByUserID(ctx context.Context, userID string) (*OTPCode, error)
 }

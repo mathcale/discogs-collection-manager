@@ -1,0 +1,15 @@
+package views
+
+import "github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
+
+templ ScanErrorPartial(message string) {
+	<div class="z-modal-body stack">
+		<div class="z-alert z-alert-danger" role="alert">
+			<p>{ message }</p>
+		</div>
+
+		<a href="/app/scanner" class="z-button z-button-secondary">
+			{ i18n.T(ctx, "Try again") }
+		</a>
+	</div>
+}

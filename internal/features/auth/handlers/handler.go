@@ -13,19 +13,25 @@ const (
 )
 
 type Handler struct {
-	Register             *usecases.Register
-	Login                *usecases.Login
-	VerifyOTP            *usecases.VerifyOTP
-	Logout               *usecases.Logout
-	RequestPasswordReset *usecases.RequestPasswordReset
-	ValidateResetToken   *usecases.ValidateResetToken
-	ResetPassword        *usecases.ResetPassword
-	AuthenticateSession  *usecases.AuthenticateSession
+	RegisterUseCase             *usecases.Register
+	LoginUseCase                *usecases.Login
+	VerifyOTPUseCase            *usecases.VerifyOTP
+	LogoutUseCase               *usecases.Logout
+	RequestPasswordResetUseCase *usecases.RequestPasswordReset
+	ValidateResetTokenUseCase   *usecases.ValidateResetToken
+	ResetPasswordUseCase        *usecases.ResetPassword
+	AuthenticateSessionUseCase  *usecases.AuthenticateSession
 
 	SignupsEnabled bool
 }
 
-func startSession(w http.ResponseWriter, r *http.Request, token string, expiresAt time.Time, persistent bool) {
+func startSession(
+	w http.ResponseWriter,
+	r *http.Request,
+	token string,
+	expiresAt time.Time,
+	persistent bool,
+) {
 	cookie := &http.Cookie{
 		Name:     SessionCookieName,
 		Value:    token,
@@ -33,6 +39,7 @@ func startSession(w http.ResponseWriter, r *http.Request, token string, expiresA
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	}
+
 	if persistent {
 		cookie.Expires = expiresAt
 	}

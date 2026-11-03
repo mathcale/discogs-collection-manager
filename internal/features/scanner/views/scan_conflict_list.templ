@@ -1,0 +1,91 @@
+package views
+
+import (
+	"strconv"
+
+	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
+)
+
+templ ScanConflictListPartial(releases []discogs.Release) {
+	<form
+		hx-post="/app/scan/confirm"
+		hx-target="#scan-result"
+		hx-swap="innerHTML"
+		hx-disabled-elt="find button[type='submit']"
+	>
+		<div class="z-modal-header">
+			<h2 class="z-modal-title">{ i18n.T(ctx, "Multiple releases found") }</h2>
+			<p class="muted">{ i18n.T(ctx, "Select the correct pressing:") }</p>
+		</div>
+
+		<div class="z-modal-body" data-z-overflow-auto>
+			<ul class="scan-conflict-list">
+				for _, r := range releases {
+					<li class="scan-conflict-item">
+						<label class="scan-conflict-label">
+							<input
+								type="radio"
+								name="release_id"
+								value={ strconv.Itoa(r.ID) }
+								class="z-radio"
+							/>
+
+							if r.Thumb != "" {
+								<img src={ r.Thumb } alt={ r.Title } class="scan-conflict-thumb"/>
+							}
+
+							<span class="scan-conflict-info">
+								<strong>{ r.Title }</strong>
+
+								<span class="scan-conflict-meta">
+									if r.Country != "" {
+										<span>{ r.Country }</span>
+									}
+
+									if r.Year != "" {
+										<span>{ r.Year }</span>
+									}
+
+									if r.Label() != "" {
+										<span>{ r.Label() }</span>
+									}
+								</span>
+
+								<span class="scan-conflict-detail">
+									if r.Catno != "" {
+										<span class="scan-conflict-catno">{ r.Catno }</span>
+									}
+
+									if r.FormatSummary() != "" {
+										<span>{ r.FormatSummary() }</span>
+									}
+
+									if r.Variant() != "" {
+										<span class="scan-conflict-variant">{ r.Variant() }</span>
+									}
+								</span>
+
+								<a href={ templ.SafeURL(r.URL()) } target="_blank" rel="noopener noreferrer">
+									{ i18n.T(ctx, "View on Discogs") } ↗
+								</a>
+							</span>
+						</label>
+					</li>
+				}
+			</ul>
+		</div>
+
+		<div class="z-modal-footer scan-actions">
+			<button type="submit" class="z-button z-button-primary">
+				@components.Spinner()
+				{ i18n.T(ctx, "Confirm") }
+			</button>
+
+			<a href="/app/scanner" class="z-button z-button-secondary">
+				{ i18n.T(ctx, "Cancel") }
+			</a>
+		</div>
+	</form>
+}

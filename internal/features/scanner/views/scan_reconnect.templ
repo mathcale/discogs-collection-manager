@@ -1,0 +1,15 @@
+package views
+
+import "github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
+
+templ ScanReconnectPartial() {
+	<div class="z-modal-body stack">
+		<div class="z-alert z-alert-danger" role="alert">
+			<p>{ i18n.T(ctx, "Your Discogs account is no longer connected. Please reconnect to continue.") }</p>
+		</div>
+
+		<a href="/discogs/connect" class="z-button z-button-primary">
+			{ i18n.T(ctx, "Reconnect Discogs") }
+		</a>
+	</div>
+}

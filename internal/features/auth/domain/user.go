@@ -9,24 +9,20 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type User struct {
-	ID           string
-	Email        string
-	PasswordHash string
-	CreatedAt    time.Time
-}
-
-func NormalizeEmail(email string) string {
-	return strings.ToLower(strings.TrimSpace(email))
-}
-
-func hashPassword(password string) (string, error) {
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		return "", err
+type (
+	UserRepository interface {
+		FindByEmail(ctx context.Context, email string) (*User, error)
+		FindByID(ctx context.Context, id string) (*User, error)
+		Save(ctx context.Context, user *User) error
 	}
-	return string(hash), nil
-}
+
+	User struct {
+		ID           string
+		Email        string
+		PasswordHash string
+		CreatedAt    time.Time
+	}
+)
 
 func NewUser(email, password string) (*User, error) {
 	hash, err := hashPassword(password)
@@ -57,8 +53,15 @@ func (u *User) CheckPassword(password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(password)) == nil
 }
 
-type UserRepository interface {
-	Save(ctx context.Context, user *User) error
-	FindByEmail(ctx context.Context, email string) (*User, error)
-	FindByID(ctx context.Context, id string) (*User, error)
+func NormalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
+func hashPassword(password string) (string, error) {
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+
+	return string(hash), nil
 }

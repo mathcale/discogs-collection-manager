@@ -18,7 +18,10 @@ func NewPasswordResetTokenRepository(db *sql.DB) domain.PasswordResetTokenReposi
 	}
 }
 
-func (r *passwordResetTokenRepository) Save(ctx context.Context, token *domain.PasswordResetToken) error {
+func (r *passwordResetTokenRepository) Save(
+	ctx context.Context,
+	token *domain.PasswordResetToken,
+) error {
 	var usedAt any
 	if token.UsedAt != nil {
 		usedAt = token.UsedAt.UTC().Format(time.DateTime)
@@ -63,7 +66,10 @@ func (r *passwordResetTokenRepository) FindByTokenHash(
 	return &t, nil
 }
 
-func (r *passwordResetTokenRepository) MarkAllUsedForUser(ctx context.Context, userID string) error {
+func (r *passwordResetTokenRepository) MarkAllUsedForUser(
+	ctx context.Context,
+	userID string,
+) error {
 	_, err := r.db.ExecContext(ctx,
 		`UPDATE password_reset_tokens SET used_at = ? WHERE user_id = ? AND used_at IS NULL`,
 		time.Now().UTC().Format(time.DateTime), userID,

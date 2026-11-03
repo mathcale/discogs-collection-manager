@@ -12,7 +12,7 @@ When filing issues, referencing work, or picking up tasks, always use that Linea
 
 ## Branching
 
-- All implementation work must happen on a feature branch — never commit directly to `main`.
+- All implementation work must happen on a feature branch - never commit directly to `main`.
 - Branch naming: `feat/<short-description>` for features, `fix/<short-description>` for bug fixes, `chore/<short-description>` for maintenance tasks.
 - On finishing implementing a task, open a PR to `main` and assign it to the task in Linear. The PR title should match the Linear issue title.
 
@@ -41,8 +41,8 @@ When filing issues, referencing work, or picking up tasks, always use that Linea
 
 ## Code Style
 
-- **No comments** — names must be self-explanatory. Only add a comment when logic is genuinely non-obvious and cannot be clarified by renaming. Never add docstrings, type-description comments, or function-summary comments.
-- **No over-engineering** — only implement what is directly asked for. No speculative abstractions, helpers for one-off operations, or extra error handling for impossible cases.
+- **No comments** - names must be self-explanatory. Only add a comment when logic is genuinely non-obvious and cannot be clarified by renaming. Never add docstrings, type-description comments, or function-summary comments.
+- **No over-engineering** - only implement what is directly asked for. No speculative abstractions, helpers for one-off operations, or extra error handling for impossible cases.
 
 ## Package Structure
 
@@ -98,7 +98,7 @@ Hard rules:
 
 - Handlers handle HTTP only (parsing, cookies, redirects, rendering). Business flows live in use cases; domain rules (password hashing, token generation, expiry checks) live in `domain`.
 - All database access is behind repository interfaces declared in `domain` (for example `UserRepository`, `SessionRepository`, `OAuthTokenRepository`), implemented in the feature's `store` package. Each feature builds its repositories from the injected `*sql.DB` in its `feature.go`. Use cases, handlers and views never import a `store`.
-- The Discogs HTTP client is hidden behind a `DiscogsClient` interface. Inject it — never instantiate it inside handlers or use cases.
+- The Discogs HTTP client is hidden behind a `DiscogsClient` interface. Inject it - never instantiate it inside handlers or use cases.
 - All email sending goes through a `Mailer` interface. Never call Resend directly from business logic.
 - Tests use the HTTP handler boundary as the primary seam: each feature tests its `Module.Routes` with an in-memory SQLite DB and mock `DiscogsClient` + `Mailer`. Full-tree tests live in `core/web`.
 
@@ -110,4 +110,4 @@ Hard rules:
 - Each use case lives in its own file with its input, output, sentinel errors, unexported local interfaces for dependencies owned by other features, the use case struct with exported dependency fields, and an `Execute` method. Use cases know nothing about HTTP and never call each other; shared logic goes in an unexported helper in a non-use-case file.
 - Unexpected errors are returned as-is and handlers turn unrecognised ones into `500 internal error`. Discogs client errors must stay reachable with `errors.As`; when a use case needs to name the failed step, wrap with both the sentinel and the original error.
 - Handler structs hold concrete use-case pointers named after the use case. Handler methods keep their action names; when a method name collides with a use-case field, the method gets a `Submit` suffix.
-- No specific file paths or code snippets in issue descriptions — they go stale.
+- No specific file paths or code snippets in issue descriptions - they go stale.

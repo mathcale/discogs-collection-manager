@@ -28,7 +28,8 @@ func (r *oauthTokenRepository) Save(ctx context.Context, token *domain.OAuthToke
 			access_token_secret = excluded.access_token_secret,
 			discogs_username = excluded.discogs_username,
 			created_at = excluded.created_at`,
-		token.ID, token.UserID, token.AccessToken, token.AccessTokenSecret, token.DiscogsUsername, token.CreatedAt.Format(time.DateTime),
+		token.ID, token.UserID, token.AccessToken, token.AccessTokenSecret,
+		token.DiscogsUsername, token.CreatedAt.Format(time.DateTime),
 	)
 
 	return err

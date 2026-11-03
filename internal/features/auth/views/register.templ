@@ -7,10 +7,11 @@ import (
 )
 
 templ RegisterPage(errorMsg string) {
-	@layouts.BaseLayout(i18n.T(ctx, "Register") + " — Discogs Collection Manager") {
+	@layouts.BaseLayout(i18n.T(ctx, "Register") + " - Discogs Collection Manager") {
 		<main class="page-center">
 			<div class="page-panel">
 				<h1 class="page-title">{ i18n.T(ctx, "Create account") }</h1>
+
 				<div class="z-card">
 					<div class="z-card-body">
 						<div role="alert" aria-live="polite">
@@ -18,6 +19,7 @@ templ RegisterPage(errorMsg string) {
 								@components.AlertError(errorMsg)
 							}
 						</div>
+
 						<form
 							method="POST"
 							action="/auth/register"
@@ -27,13 +29,36 @@ templ RegisterPage(errorMsg string) {
 						>
 							<div class="stack">
 								<div>
-									<label class="z-form-label" for="email">{ i18n.T(ctx, "Email") }</label>
-									<input class="z-input" type="email" id="email" name="email" required autocomplete="email"/>
+									<label class="z-form-label" for="email">
+										{ i18n.T(ctx, "Email") }
+									</label>
+
+									<input
+										class="z-input"
+										type="email"
+										id="email"
+										name="email"
+										required
+										autocomplete="email"
+									/>
 								</div>
+
 								<div>
-									<label class="z-form-label" for="password">{ i18n.T(ctx, "Password") }</label>
-									<input class="z-input" type="password" id="password" name="password" required minlength="8" autocomplete="new-password"/>
+									<label class="z-form-label" for="password">
+										{ i18n.T(ctx, "Password") }
+									</label>
+
+									<input
+										class="z-input"
+										type="password"
+										id="password"
+										name="password"
+										required
+										minlength="8"
+										autocomplete="new-password"
+									/>
 								</div>
+
 								<button type="submit" class="z-button z-button-primary">
 									@components.Spinner()
 									{ i18n.T(ctx, "Register") }
@@ -42,6 +67,7 @@ templ RegisterPage(errorMsg string) {
 						</form>
 					</div>
 				</div>
+
 				<div class="page-links">
 					<a href="/auth/login">{ i18n.T(ctx, "Already have an account? Log in") }</a>
 				</div>

@@ -1,34 +1,35 @@
 package views
 
 import (
-	"strconv"
-
-	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
 	"github.com/mathcale/discogs-collection-manager/internal/ui/layouts"
 )
 
 templ ScannerPage() {
-	@layouts.AppLayout(i18n.T(ctx, "Scanner") + " — Discogs Collection Manager", "scanner") {
+	@layouts.AppLayout(i18n.T(ctx, "Scanner") + " - Discogs Collection Manager", "scanner") {
 		<div class="scanner-shell">
 			<div class="scanner-viewport">
 				<div id="reader"></div>
+
 				<div id="camera-error" class="scan-camera-error" role="alert" hidden>
 					<svg class="scan-camera-error-icon" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 						<path d="M1 1l22 22"></path>
 						<path d="M21 21H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h3m3-3h6l2 3h4a2 2 0 0 1 2 2v9.34m-7.72-2.06a4 4 0 1 1-5.56-5.56"></path>
 					</svg>
+
 					<p id="camera-error-title" class="scan-camera-error-title"></p>
 					<p id="camera-error-message" class="scan-camera-error-message"></p>
 				</div>
 			</div>
+
 			<div class="scanner-bar" role="toolbar" aria-label={ i18n.T(ctx, "Scanner controls") }>
 				<button id="manual-btn" type="button" class="z-button z-button-large z-button-secondary scanner-bar-btn">
 					{ i18n.T(ctx, "Enter manually") }
 				</button>
 			</div>
 		</div>
+
 		<div
 			id="result-modal"
 			class="z-modal"
@@ -39,6 +40,7 @@ templ ScannerPage() {
 		>
 			<div id="scan-result" class="z-modal-dialog scan-dialog-narrow" aria-live="polite" aria-atomic="true"></div>
 		</div>
+
 		<div
 			id="conflict-modal"
 			class="z-modal"
@@ -49,6 +51,7 @@ templ ScannerPage() {
 		>
 			<div id="scan-conflict" class="z-modal-dialog" aria-live="polite" aria-atomic="true"></div>
 		</div>
+
 		<div
 			id="manual-modal"
 			class="z-modal"
@@ -62,6 +65,7 @@ templ ScannerPage() {
 					<div class="z-modal-header">
 						<h2 class="z-modal-title">{ i18n.T(ctx, "Enter barcode") }</h2>
 					</div>
+
 					<div class="z-modal-body">
 						<input
 							type="text"
@@ -77,13 +81,20 @@ templ ScannerPage() {
 							aria-label={ i18n.T(ctx, "Barcode") }
 						/>
 					</div>
+
 					<div class="z-modal-footer scan-dialog-actions">
-						<button type="submit" class="z-button z-button-primary">{ i18n.T(ctx, "Search") }</button>
-						<button type="button" id="manual-close-btn" class="z-button z-button-secondary">{ i18n.T(ctx, "Cancel") }</button>
+						<button type="submit" class="z-button z-button-primary">
+							{ i18n.T(ctx, "Search") }
+						</button>
+
+						<button type="button" id="manual-close-btn" class="z-button z-button-secondary">
+							{ i18n.T(ctx, "Cancel") }
+						</button>
 					</div>
 				</form>
 			</div>
 		</div>
+
 		<div
 			id="cancel-modal"
 			class="z-modal"
@@ -96,21 +107,30 @@ templ ScannerPage() {
 				<div class="z-modal-header">
 					<h2 class="z-modal-title">{ i18n.T(ctx, "Cancel this scan?") }</h2>
 				</div>
+
 				<div class="z-modal-body">
 					<p class="muted">{ i18n.T(ctx, "Your scan result will be discarded.") }</p>
 				</div>
+
 				<div class="z-modal-footer scan-dialog-actions">
-					<button type="button" id="keep-btn" class="z-button z-button-secondary">{ i18n.T(ctx, "Keep reviewing") }</button>
-					<button type="button" id="confirm-cancel-btn" class="z-button z-button-primary">{ i18n.T(ctx, "Yes, cancel") }</button>
+					<button type="button" id="keep-btn" class="z-button z-button-secondary">
+						{ i18n.T(ctx, "Keep reviewing") }
+					</button>
+
+					<button type="button" id="confirm-cancel-btn" class="z-button z-button-primary">
+						{ i18n.T(ctx, "Yes, cancel") }
+					</button>
 				</div>
 			</div>
 		</div>
+
 		<template id="scan-loading-template">
 			<div class="scan-loading">
 				@components.Spinner()
 				<span>{ i18n.T(ctx, "Searching…") }</span>
 			</div>
 		</template>
+
 		<script>
 			function initScanner() {
 				var submitted = false;
@@ -152,6 +172,7 @@ templ ScannerPage() {
 
 				function stopScanner() {
 					if (scanner.getState() === Html5QrcodeScannerState.NOT_STARTED) return;
+
 					scanner.stop().catch(function () {});
 				}
 
@@ -166,7 +187,9 @@ templ ScannerPage() {
 				function showCameraError(err) {
 					var text = String(err && err.name ? err.name + ' ' + (err.message || '') : err);
 					var key = Object.keys(cameraErrors).find(function (name) { return text.indexOf(name) !== -1; });
+
 					var copy = cameraErrors[key] || [{{ i18n.T(ctx, "Could not start the camera") }}, {{ i18n.T(ctx, "Something went wrong while starting the camera. Reload the page or enter the barcode manually.") }}];
+
 					cameraErrorTitle.textContent = copy[0];
 					cameraErrorMessage.textContent = copy[1];
 					cameraError.hidden = false;
@@ -190,14 +213,17 @@ templ ScannerPage() {
 				function resetScan() {
 					hideModal(resultModal);
 					hideModal(conflictModal);
+
 					scanResult.innerHTML = '';
 					scanConflict.innerHTML = '';
 					submitted = false;
+
 					startScanner();
 				}
 
 				function postBarcode(barcode) {
 					if (submitted) return;
+
 					submitted = true;
 
 					scanResult.replaceChildren(loadingTemplate.content.cloneNode(true));
@@ -210,8 +236,10 @@ templ ScannerPage() {
 					}).then(function () {
 						if (scanResult.querySelector('.scan-loading')) {
 							submitted = false;
+
 							hideModal(resultModal);
 							startScanner();
+
 							return;
 						}
 
@@ -219,6 +247,7 @@ templ ScannerPage() {
 							while (scanResult.firstChild) {
 								scanConflict.appendChild(scanResult.firstChild);
 							}
+
 							hideModal(resultModal);
 							showModal(conflictModal);
 						}
@@ -236,6 +265,7 @@ templ ScannerPage() {
 
 				document.addEventListener('click', function (e) {
 					var link = e.target.closest('a[href="/app/scanner"]');
+
 					if (link && (isOpen(resultModal) || isOpen(conflictModal))) {
 						e.preventDefault();
 						showModal(cancelModal);
@@ -288,224 +318,12 @@ templ ScannerPage() {
 				initScanner();
 			} else {
 				var libraryScript = document.createElement('script');
+
 				libraryScript.src = '/static/html5-qrcode.min.js';
 				libraryScript.onload = initScanner;
+
 				document.head.appendChild(libraryScript);
 			}
 		</script>
 	}
-}
-
-templ ScanConfirmPartial(release discogs.Release) {
-	<div class="z-modal-header">
-		<h2 class="z-modal-title">{ release.Title }</h2>
-	</div>
-	<div class="z-modal-body" data-z-overflow-auto>
-		if release.Thumb != "" {
-			<img src={ release.Thumb } alt={ release.Title } class="scan-result-thumb"/>
-		}
-		<dl class="scan-result-meta">
-			if release.Country != "" {
-				<dt>{ i18n.T(ctx, "Country") }</dt>
-				<dd>{ release.Country }</dd>
-			}
-			if release.Year != "" {
-				<dt>{ i18n.T(ctx, "Year") }</dt>
-				<dd>{ release.Year }</dd>
-			}
-			if release.Label() != "" {
-				<dt>{ i18n.T(ctx, "Label") }</dt>
-				<dd>{ release.Label() }</dd>
-			}
-			if release.Catno != "" {
-				<dt>{ i18n.T(ctx, "Cat. no.") }</dt>
-				<dd class="scan-result-catno">{ release.Catno }</dd>
-			}
-			if release.FormatSummary() != "" {
-				<dt>{ i18n.T(ctx, "Format") }</dt>
-				<dd>{ release.FormatSummary() }</dd>
-			}
-			if release.Variant() != "" {
-				<dt>{ i18n.T(ctx, "Variant") }</dt>
-				<dd>{ release.Variant() }</dd>
-			}
-		</dl>
-		<a
-			href={ templ.SafeURL(release.URL()) }
-			target="_blank"
-			rel="noopener noreferrer"
-		>
-			{ i18n.T(ctx, "View on Discogs") } ↗
-		</a>
-	</div>
-	<div class="z-modal-footer scan-actions">
-		<form
-			hx-post="/app/scan/confirm"
-			hx-target="#scan-result"
-			hx-swap="innerHTML"
-			hx-disabled-elt="find button[type='submit']"
-		>
-			<input type="hidden" name="release_id" value={ strconv.Itoa(release.ID) }/>
-			<button type="submit" class="z-button z-button-primary">
-				@components.Spinner()
-				{ i18n.T(ctx, "Add to Collection") }
-			</button>
-		</form>
-		<a href="/app/scanner" class="z-button z-button-secondary">{ i18n.T(ctx, "Cancel") }</a>
-	</div>
-}
-
-templ ScanConflictListPartial(releases []discogs.Release) {
-	<form
-		hx-post="/app/scan/confirm"
-		hx-target="#scan-result"
-		hx-swap="innerHTML"
-		hx-disabled-elt="find button[type='submit']"
-	>
-		<div class="z-modal-header">
-			<h2 class="z-modal-title">{ i18n.T(ctx, "Multiple releases found") }</h2>
-			<p class="muted">{ i18n.T(ctx, "Select the correct pressing:") }</p>
-		</div>
-		<div class="z-modal-body" data-z-overflow-auto>
-			<ul class="scan-conflict-list">
-				for _, r := range releases {
-					<li class="scan-conflict-item">
-						<label class="scan-conflict-label">
-							<input type="radio" name="release_id" value={ strconv.Itoa(r.ID) } class="z-radio"/>
-							if r.Thumb != "" {
-								<img src={ r.Thumb } alt={ r.Title } class="scan-conflict-thumb"/>
-							}
-							<span class="scan-conflict-info">
-								<strong>{ r.Title }</strong>
-								<span class="scan-conflict-meta">
-									if r.Country != "" {
-										<span>{ r.Country }</span>
-									}
-									if r.Year != "" {
-										<span>{ r.Year }</span>
-									}
-									if r.Label() != "" {
-										<span>{ r.Label() }</span>
-									}
-								</span>
-								<span class="scan-conflict-detail">
-									if r.Catno != "" {
-										<span class="scan-conflict-catno">{ r.Catno }</span>
-									}
-									if r.FormatSummary() != "" {
-										<span>{ r.FormatSummary() }</span>
-									}
-									if r.Variant() != "" {
-										<span class="scan-conflict-variant">{ r.Variant() }</span>
-									}
-								</span>
-								<a href={ templ.SafeURL(r.URL()) } target="_blank" rel="noopener noreferrer">
-									{ i18n.T(ctx, "View on Discogs") } ↗
-								</a>
-							</span>
-						</label>
-					</li>
-				}
-			</ul>
-		</div>
-		<div class="z-modal-footer scan-actions">
-			<button type="submit" class="z-button z-button-primary">
-				@components.Spinner()
-				{ i18n.T(ctx, "Confirm") }
-			</button>
-			<a href="/app/scanner" class="z-button z-button-secondary">{ i18n.T(ctx, "Cancel") }</a>
-		</div>
-	</form>
-}
-
-templ ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) {
-	<div class="scan-owned-warning">
-		<div class="z-modal-header">
-			<h2 class="z-modal-title">
-				if len(matches.Exact) > 0 {
-					{ i18n.T(ctx, "Already in your collection") }
-				} else {
-					{ i18n.T(ctx, "You own another edition") }
-				}
-			</h2>
-		</div>
-		<div class="z-modal-body" data-z-overflow-auto>
-			if len(matches.Exact) > 0 {
-				<p class="muted">{ i18n.T(ctx, "This exact release is already in your collection:") }</p>
-				@ownedReleaseList(matches.Exact)
-			}
-			if len(matches.Similar) > 0 {
-				<p class="muted">{ i18n.T(ctx, "Other editions of this album you own:") }</p>
-				@ownedReleaseList(matches.Similar)
-			}
-		</div>
-		<div class="z-modal-footer scan-actions">
-			<form
-				hx-post="/app/scan/confirm"
-				hx-target="#scan-result"
-				hx-swap="innerHTML"
-				hx-disabled-elt="find button[type='submit']"
-			>
-				<input type="hidden" name="release_id" value={ strconv.Itoa(releaseID) }/>
-				<input type="hidden" name="acknowledged" value="1"/>
-				<button type="submit" class="z-button z-button-primary">
-					@components.Spinner()
-					{ i18n.T(ctx, "Add anyway") }
-				</button>
-			</form>
-			<a href="/app/scanner" class="z-button z-button-secondary">{ i18n.T(ctx, "Cancel") }</a>
-		</div>
-	</div>
-}
-
-templ ownedReleaseList(owned []discogs.OwnedRelease) {
-	<ul class="scan-conflict-list">
-		for _, o := range owned {
-			<li class="scan-conflict-item scan-owned-item">
-				if o.Thumb != "" {
-					<img src={ o.Thumb } alt={ o.Title } class="scan-conflict-thumb"/>
-				}
-				<span class="scan-conflict-info">
-					<strong>{ o.PrimaryArtist() } — { o.Title }</strong>
-					<span class="scan-conflict-meta">
-						if o.Year != 0 {
-							<span>{ strconv.Itoa(o.Year) }</span>
-						}
-						if o.Label() != "" {
-							<span>{ o.Label() }</span>
-						}
-					</span>
-					<span class="scan-conflict-detail">
-						if o.FormatSummary() != "" {
-							<span>{ o.FormatSummary() }</span>
-						}
-						if o.Variant() != "" {
-							<span class="scan-conflict-variant">{ o.Variant() }</span>
-						}
-					</span>
-				</span>
-			</li>
-		}
-	</ul>
-}
-
-templ ScanSuccessPartial() {
-}
-
-templ ScanErrorPartial(message string) {
-	<div class="z-modal-body stack">
-		<div class="z-alert z-alert-danger" role="alert">
-			<p>{ message }</p>
-		</div>
-		<a href="/app/scanner" class="z-button z-button-secondary">{ i18n.T(ctx, "Try again") }</a>
-	</div>
-}
-
-templ ScanReconnectPartial() {
-	<div class="z-modal-body stack">
-		<div class="z-alert z-alert-danger" role="alert">
-			<p>{ i18n.T(ctx, "Your Discogs account is no longer connected. Please reconnect to continue.") }</p>
-		</div>
-		<a href="/discogs/connect" class="z-button z-button-primary">{ i18n.T(ctx, "Reconnect Discogs") }</a>
-	</div>
 }

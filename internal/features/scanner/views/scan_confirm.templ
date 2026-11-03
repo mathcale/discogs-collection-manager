@@ -1,0 +1,81 @@
+package views
+
+import (
+	"strconv"
+
+	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
+)
+
+templ ScanConfirmPartial(release discogs.Release) {
+	<div class="z-modal-header">
+		<h2 class="z-modal-title">{ release.Title }</h2>
+	</div>
+
+	<div class="z-modal-body" data-z-overflow-auto>
+		if release.Thumb != "" {
+			<img src={ release.Thumb } alt={ release.Title } class="scan-result-thumb"/>
+		}
+
+		<dl class="scan-result-meta">
+			if release.Country != "" {
+				<dt>{ i18n.T(ctx, "Country") }</dt>
+				<dd>{ release.Country }</dd>
+			}
+
+			if release.Year != "" {
+				<dt>{ i18n.T(ctx, "Year") }</dt>
+				<dd>{ release.Year }</dd>
+			}
+
+			if release.Label() != "" {
+				<dt>{ i18n.T(ctx, "Label") }</dt>
+				<dd>{ release.Label() }</dd>
+			}
+
+			if release.Catno != "" {
+				<dt>{ i18n.T(ctx, "Cat. no.") }</dt>
+				<dd class="scan-result-catno">{ release.Catno }</dd>
+			}
+
+			if release.FormatSummary() != "" {
+				<dt>{ i18n.T(ctx, "Format") }</dt>
+				<dd>{ release.FormatSummary() }</dd>
+			}
+
+			if release.Variant() != "" {
+				<dt>{ i18n.T(ctx, "Variant") }</dt>
+				<dd>{ release.Variant() }</dd>
+			}
+		</dl>
+
+		<a
+			href={ templ.SafeURL(release.URL()) }
+			target="_blank"
+			rel="noopener noreferrer"
+		>
+			{ i18n.T(ctx, "View on Discogs") } ↗
+		</a>
+	</div>
+
+	<div class="z-modal-footer scan-actions">
+		<form
+			hx-post="/app/scan/confirm"
+			hx-target="#scan-result"
+			hx-swap="innerHTML"
+			hx-disabled-elt="find button[type='submit']"
+		>
+			<input type="hidden" name="release_id" value={ strconv.Itoa(release.ID) }/>
+
+			<button type="submit" class="z-button z-button-primary">
+				@components.Spinner()
+				{ i18n.T(ctx, "Add to Collection") }
+			</button>
+		</form>
+
+		<a href="/app/scanner" class="z-button z-button-secondary">
+			{ i18n.T(ctx, "Cancel") }
+		</a>
+	</div>
+}

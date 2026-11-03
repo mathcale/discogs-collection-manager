@@ -15,27 +15,32 @@ import (
 
 const defaultDiscogsIdentityURL = "https://api.discogs.com/oauth/identity"
 
-type CompleteDiscogsConnectInput struct {
-	UserID       string
-	RequestToken string
-	Verifier     string
-}
-
-type CompleteDiscogsConnectOutput struct{}
-
 var (
 	ErrPendingRequestNotFound = errors.New("pending oauth request not found")
 	ErrAccessTokenFailed      = errors.New("discogs access token failed")
 )
 
-type CompleteDiscogsConnect struct {
-	OAuth       *oauth1.Config
-	Pending     *PendingOAuthRequests
-	OAuthTokens domain.OAuthTokenRepository
-	IdentityURL string
-}
+type (
+	CompleteDiscogsConnectInput struct {
+		UserID       string
+		RequestToken string
+		Verifier     string
+	}
 
-func (uc *CompleteDiscogsConnect) Execute(ctx context.Context, in CompleteDiscogsConnectInput) (CompleteDiscogsConnectOutput, error) {
+	CompleteDiscogsConnectOutput struct{}
+
+	CompleteDiscogsConnect struct {
+		OAuth           *oauth1.Config
+		Pending         *PendingOAuthRequests
+		OAuthTokensRepo domain.OAuthTokenRepository
+		IdentityURL     string
+	}
+)
+
+func (uc *CompleteDiscogsConnect) Execute(
+	ctx context.Context,
+	in CompleteDiscogsConnectInput,
+) (CompleteDiscogsConnectOutput, error) {
 	secret, pendingUserID, ok := uc.Pending.Take(in.RequestToken)
 	if !ok || pendingUserID != in.UserID {
 		return CompleteDiscogsConnectOutput{}, ErrPendingRequestNotFound
@@ -49,14 +54,18 @@ func (uc *CompleteDiscogsConnect) Execute(ctx context.Context, in CompleteDiscog
 	discogsUsername := uc.fetchDiscogsUsername(ctx, accessToken, accessSecret)
 
 	token := domain.NewOAuthToken(in.UserID, accessToken, accessSecret, discogsUsername)
-	if err := uc.OAuthTokens.Save(ctx, token); err != nil {
+
+	if err := uc.OAuthTokensRepo.Save(ctx, token); err != nil {
 		return CompleteDiscogsConnectOutput{}, err
 	}
 
 	return CompleteDiscogsConnectOutput{}, nil
 }
 
-func (uc *CompleteDiscogsConnect) fetchDiscogsUsername(ctx context.Context, accessToken, accessSecret string) string {
+func (uc *CompleteDiscogsConnect) fetchDiscogsUsername(
+	ctx context.Context,
+	accessToken, accessSecret string,
+) string {
 	token := oauth1.NewToken(accessToken, accessSecret)
 	httpClient := uc.OAuth.Client(ctx, token)
 
@@ -64,6 +73,7 @@ func (uc *CompleteDiscogsConnect) fetchDiscogsUsername(ctx context.Context, acce
 	if err != nil {
 		return ""
 	}
+
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
@@ -73,6 +83,7 @@ func (uc *CompleteDiscogsConnect) fetchDiscogsUsername(ctx context.Context, acce
 	var identity struct {
 		Username string `json:"username"`
 	}
+
 	if err := json.NewDecoder(resp.Body).Decode(&identity); err != nil {
 		return ""
 	}

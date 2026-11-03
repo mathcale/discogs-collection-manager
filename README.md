@@ -17,7 +17,7 @@ A web app for managing your Discogs record collection, with barcode scanning to 
 - `make`
 - Node.js (only needed to rebuild the vendored 0build kit with `make 0build`)
 - `curl`
-- [`mkcert`](https://github.com/FiloSottile/mkcert) (only needed for HTTPS / camera scanning — see below)
+- [`mkcert`](https://github.com/FiloSottile/mkcert) (only needed for HTTPS / camera scanning - see below)
 
 ## Local Development
 

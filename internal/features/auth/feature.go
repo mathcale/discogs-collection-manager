@@ -13,17 +13,19 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/usecases"
 )
 
-type Deps struct {
-	DB                 *sql.DB
-	Mailer             mailer.Mailer
-	BaseURL            string
-	TwoStepAuthEnabled bool
-	SignupsEnabled     bool
-}
+type (
+	Deps struct {
+		DB                 *sql.DB
+		Mailer             mailer.Mailer
+		BaseURL            string
+		TwoStepAuthEnabled bool
+		SignupsEnabled     bool
+	}
 
-type Module struct {
-	handler *handlers.Handler
-}
+	Module struct {
+		handler *handlers.Handler
+	}
+)
 
 func New(d Deps) *Module {
 	users := store.NewUserRepository(d.DB)
@@ -32,17 +34,45 @@ func New(d Deps) *Module {
 	resetTokens := store.NewPasswordResetTokenRepository(d.DB)
 	oauthTokens := accountstore.NewOAuthTokenRepository(d.DB)
 
-	return &Module{handler: &handlers.Handler{
-		Register:             &usecases.Register{Users: users},
-		Login:                &usecases.Login{Users: users, Sessions: sessions, OTPCodes: otpCodes, Mailer: d.Mailer, TwoStepAuthEnabled: d.TwoStepAuthEnabled},
-		VerifyOTP:            &usecases.VerifyOTP{OTPCodes: otpCodes, Sessions: sessions},
-		Logout:               &usecases.Logout{Sessions: sessions},
-		RequestPasswordReset: &usecases.RequestPasswordReset{Users: users, ResetTokens: resetTokens, Mailer: d.Mailer, BaseURL: d.BaseURL},
-		ValidateResetToken:   &usecases.ValidateResetToken{ResetTokens: resetTokens},
-		ResetPassword:        &usecases.ResetPassword{Users: users, ResetTokens: resetTokens, Sessions: sessions, OAuthTokens: oauthTokens},
-		AuthenticateSession:  &usecases.AuthenticateSession{Sessions: sessions},
-		SignupsEnabled:       d.SignupsEnabled,
-	}}
+	return &Module{
+		handler: &handlers.Handler{
+			RegisterUseCase: &usecases.Register{
+				Users: users,
+			},
+			LoginUseCase: &usecases.Login{
+				UsersRepo:          users,
+				SessionsRepo:       sessions,
+				OTPCodesRepo:       otpCodes,
+				Mailer:             d.Mailer,
+				TwoStepAuthEnabled: d.TwoStepAuthEnabled,
+			},
+			VerifyOTPUseCase: &usecases.VerifyOTP{
+				OTPCodesRepo: otpCodes,
+				SessionsRepo: sessions,
+			},
+			LogoutUseCase: &usecases.Logout{
+				SessionsRepo: sessions,
+			},
+			RequestPasswordResetUseCase: &usecases.RequestPasswordReset{
+				UsersRepo:       users,
+				ResetTokensRepo: resetTokens,
+				Mailer:          d.Mailer,
+				BaseURL:         d.BaseURL,
+			},
+			ValidateResetTokenUseCase: &usecases.ValidateResetToken{
+				ResetTokensRepo: resetTokens,
+			},
+			ResetPasswordUseCase: &usecases.ResetPassword{
+				UsersRepo:       users,
+				ResetTokensRepo: resetTokens,
+				SessionsRepo:    sessions,
+				OAuthTokensRepo: oauthTokens,
+			},
+			AuthenticateSessionUseCase: &usecases.AuthenticateSession{
+				SessionsRepo: sessions,
+			},
+			SignupsEnabled: d.SignupsEnabled,
+		}}
 }
 
 func (m *Module) Routes(r chi.Router) {

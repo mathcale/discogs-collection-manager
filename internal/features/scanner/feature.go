@@ -11,22 +11,31 @@ import (
 	"github.com/mathcale/discogs-collection-manager/internal/features/scanner/usecases"
 )
 
-type Deps struct {
-	DB      *sql.DB
-	Discogs discogs.DiscogsClient
-}
+type (
+	Deps struct {
+		DB            *sql.DB
+		DiscogsClient discogs.DiscogsClient
+	}
 
-type Module struct {
-	handler *handlers.Handler
-}
+	Module struct {
+		handler *handlers.Handler
+	}
+)
 
 func New(d Deps) *Module {
-	oauthTokens := accountstore.NewOAuthTokenRepository(d.DB)
+	oauthTokensRepo := accountstore.NewOAuthTokenRepository(d.DB)
 
-	return &Module{handler: &handlers.Handler{
-		LookupBarcode:   &usecases.LookupBarcode{Discogs: d.Discogs, OAuthTokens: oauthTokens},
-		AddToCollection: &usecases.AddToCollection{Discogs: d.Discogs, OAuthTokens: oauthTokens},
-	}}
+	return &Module{
+		handler: &handlers.Handler{
+			LookupBarcodeUseCase: &usecases.LookupBarcode{
+				DiscogsClient:   d.DiscogsClient,
+				OAuthTokensRepo: oauthTokensRepo,
+			},
+			AddToCollectionUseCase: &usecases.AddToCollection{
+				DiscogsClient:   d.DiscogsClient,
+				OAuthTokensRepo: oauthTokensRepo,
+			},
+		}}
 }
 
 func (m *Module) Routes(r chi.Router) {
