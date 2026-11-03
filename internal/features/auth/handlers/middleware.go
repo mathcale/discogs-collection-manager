@@ -16,13 +16,18 @@ func (h *Handler) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 
-		out, err := h.AuthenticateSession.Execute(r.Context(), usecases.AuthenticateSessionInput{Token: cookie.Value})
+		input := usecases.AuthenticateSessionInput{
+			Token: cookie.Value,
+		}
+
+		out, err := h.AuthenticateSessionUseCase.Execute(r.Context(), input)
 		if err != nil {
 			http.Redirect(w, r, "/auth/login", http.StatusFound)
 			return
 		}
 
 		ctx := context.WithValue(r.Context(), ctxkey.UserID, out.UserID)
+
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
@@ -40,7 +45,11 @@ func (h *Handler) RedirectIfAuthenticated(next http.Handler) http.Handler {
 			return
 		}
 
-		if _, err := h.AuthenticateSession.Execute(r.Context(), usecases.AuthenticateSessionInput{Token: cookie.Value}); err != nil {
+		input := usecases.AuthenticateSessionInput{
+			Token: cookie.Value,
+		}
+
+		if _, err := h.AuthenticateSessionUseCase.Execute(r.Context(), input); err != nil {
 			next.ServeHTTP(w, r)
 			return
 		}

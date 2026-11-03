@@ -7,14 +7,16 @@ import (
 )
 
 templ SettingsPage(email string, discogsUsername string, selectedLang string) {
-	@layouts.AppLayout(i18n.T(ctx, "Settings") + " — Discogs Collection Manager", "settings") {
+	@layouts.AppLayout(i18n.T(ctx, "Settings") + " - Discogs Collection Manager", "settings") {
 		<main class="page-settings">
 			<h1 class="page-title">{ i18n.T(ctx, "Settings") }</h1>
+
 			<div class="stack">
 				<section class="z-card">
 					<div class="z-card-header">
 						<h2 class="z-card-title">{ i18n.T(ctx, "Account") }</h2>
 					</div>
+
 					<div class="z-card-body">
 						<dl class="detail">
 							<dt>{ i18n.T(ctx, "Email") }</dt>
@@ -22,15 +24,24 @@ templ SettingsPage(email string, discogsUsername string, selectedLang string) {
 						</dl>
 					</div>
 				</section>
+
 				<section class="z-card">
 					<div class="z-card-header">
 						<h2 class="z-card-title">{ i18n.T(ctx, "Language") }</h2>
 					</div>
+
 					<div class="z-card-body">
-						<form method="POST" action="/app/settings/language" class="z-form-stacked">
+						<form
+							method="POST"
+							action="/app/settings/language"
+							class="z-form-stacked"
+						>
 							<div class="stack">
 								<div>
-									<label class="z-form-label" for="lang-button">{ i18n.T(ctx, "Display language") }</label>
+									<label class="z-form-label" for="lang-button">
+										{ i18n.T(ctx, "Display language") }
+									</label>
+
 									<z-select
 										id="lang"
 										name="lang"
@@ -41,6 +52,7 @@ templ SettingsPage(email string, discogsUsername string, selectedLang string) {
 									>
 										<select data-fn="data-source" hidden>
 											<option value="">{ i18n.T(ctx, "System default") }</option>
+
 											for _, language := range i18n.Supported {
 												<option value={ language.Tag }>{ language.Name }</option>
 											}
@@ -51,22 +63,29 @@ templ SettingsPage(email string, discogsUsername string, selectedLang string) {
 						</form>
 					</div>
 				</section>
+
 				<section class="z-card">
 					<div class="z-card-header">
 						<h2 class="z-card-title">{ i18n.T(ctx, "Discogs Connection") }</h2>
 					</div>
+
 					<div class="z-card-body">
 						<div id="discogs-status" role="status" aria-live="polite">
-							<div id="discogs-disconnect-error" class="z-alert z-alert-danger" hidden>{ i18n.T(ctx, "Disconnection failed. Please try again.") }</div>
+							<div id="discogs-disconnect-error" class="z-alert z-alert-danger" hidden>
+								{ i18n.T(ctx, "Disconnection failed. Please try again.") }
+							</div>
 						</div>
+
 						if discogsUsername != "" {
 							<div class="stack">
 								<div class="status-row">
 									<span class="status-dot status-dot-connected" aria-hidden="true"></span>
+
 									<p>
 										{ i18n.T(ctx, "Connected as") } <strong>{ discogsUsername }</strong>
 									</p>
 								</div>
+
 								<form
 									method="POST"
 									action="/discogs/disconnect"
@@ -86,19 +105,29 @@ templ SettingsPage(email string, discogsUsername string, selectedLang string) {
 									<span class="status-dot" aria-hidden="true"></span>
 									<p class="muted">{ i18n.T(ctx, "Not connected") }</p>
 								</div>
+
 								<div>
-									<a href="/discogs/connect" class="z-button z-button-primary">{ i18n.T(ctx, "Connect Discogs account") }</a>
+									<a href="/discogs/connect" class="z-button z-button-primary">
+										{ i18n.T(ctx, "Connect Discogs account") }
+									</a>
 								</div>
 							</div>
 						}
 					</div>
 				</section>
+
 				<section class="z-card">
 					<div class="z-card-header">
 						<h2 class="z-card-title">{ i18n.T(ctx, "Session") }</h2>
 					</div>
+
 					<div class="z-card-body">
-						<form method="POST" action="/auth/logout" hx-boost="true" hx-disabled-elt="find button[type='submit']">
+						<form
+							method="POST"
+							action="/auth/logout"
+							hx-boost="true"
+							hx-disabled-elt="find button[type='submit']"
+						>
 							<button type="submit" class="z-button z-button-secondary">
 								@components.Spinner()
 								{ i18n.T(ctx, "Log out") }
@@ -112,17 +141,24 @@ templ SettingsPage(email string, discogsUsername string, selectedLang string) {
 }
 
 templ DiscogsConnectError(message string) {
-	@layouts.BaseLayout(i18n.T(ctx, "Discogs Connection") + " — Discogs Collection Manager") {
+	@layouts.BaseLayout(i18n.T(ctx, "Discogs Connection") + " - Discogs Collection Manager") {
 		<main class="page-center">
 			<div class="page-panel">
 				<h1 class="page-title">{ i18n.T(ctx, "Connection Failed") }</h1>
+
 				<div class="z-card">
 					<div class="z-card-body stack">
 						<div role="alert" aria-live="assertive">
 							<div class="z-alert z-alert-danger">{ message }</div>
 						</div>
-						<a href="/discogs/connect" class="z-button z-button-primary">{ i18n.T(ctx, "Try reconnecting") }</a>
-						<a href="/app/settings" class="z-button z-button-secondary">{ i18n.T(ctx, "Back to Settings") }</a>
+
+						<a href="/discogs/connect" class="z-button z-button-primary">
+							{ i18n.T(ctx, "Try reconnecting") }
+						</a>
+
+						<a href="/app/settings" class="z-button z-button-secondary">
+							{ i18n.T(ctx, "Back to Settings") }
+						</a>
 					</div>
 				</div>
 			</div>

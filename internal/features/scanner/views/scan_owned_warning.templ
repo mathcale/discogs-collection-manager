@@ -1,0 +1,97 @@
+package views
+
+import (
+	"strconv"
+
+	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
+	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
+	"github.com/mathcale/discogs-collection-manager/internal/ui/components"
+)
+
+templ ScanOwnedWarningPartial(releaseID int, matches discogs.OwnedMatches) {
+	<div class="scan-owned-warning">
+		<div class="z-modal-header">
+			<h2 class="z-modal-title">
+				if len(matches.Exact) > 0 {
+					{ i18n.T(ctx, "Already in your collection") }
+				} else {
+					{ i18n.T(ctx, "You own another edition") }
+				}
+			</h2>
+		</div>
+
+		<div class="z-modal-body" data-z-overflow-auto>
+			if len(matches.Exact) > 0 {
+				<p class="muted">
+					{ i18n.T(ctx, "This exact release is already in your collection:") }
+				</p>
+
+				@ownedReleaseList(matches.Exact)
+			}
+			if len(matches.Similar) > 0 {
+				<p class="muted">
+					{ i18n.T(ctx, "Other editions of this album you own:") }
+				</p>
+
+				@ownedReleaseList(matches.Similar)
+			}
+		</div>
+
+		<div class="z-modal-footer scan-actions">
+			<form
+				hx-post="/app/scan/confirm"
+				hx-target="#scan-result"
+				hx-swap="innerHTML"
+				hx-disabled-elt="find button[type='submit']"
+			>
+				<input type="hidden" name="release_id" value={ strconv.Itoa(releaseID) }/>
+				<input type="hidden" name="acknowledged" value="1"/>
+
+				<button type="submit" class="z-button z-button-primary">
+					@components.Spinner()
+					{ i18n.T(ctx, "Add anyway") }
+				</button>
+			</form>
+
+			<a href="/app/scanner" class="z-button z-button-secondary">
+				{ i18n.T(ctx, "Cancel") }
+			</a>
+		</div>
+	</div>
+}
+
+templ ownedReleaseList(owned []discogs.OwnedRelease) {
+	<ul class="scan-conflict-list">
+		for _, o := range owned {
+			<li class="scan-conflict-item scan-owned-item">
+				if o.Thumb != "" {
+					<img src={ o.Thumb } alt={ o.Title } class="scan-conflict-thumb"/>
+				}
+
+				<span class="scan-conflict-info">
+					<strong>{ o.PrimaryArtist() } - { o.Title }</strong>
+
+					<span class="scan-conflict-meta">
+						if o.Year != 0 {
+							<span>{ strconv.Itoa(o.Year) }</span>
+						}
+
+						if o.Label() != "" {
+							<span>{ o.Label() }</span>
+						}
+					</span>
+
+					<span class="scan-conflict-detail">
+						if o.FormatSummary() != "" {
+							<span>{ o.FormatSummary() }</span>
+						}
+
+						if o.Variant() != "" {
+							<span class="scan-conflict-variant">{ o.Variant() }</span>
+						}
+					</span>
+				</span>
+			</li>
+		}
+	</ul>
+}

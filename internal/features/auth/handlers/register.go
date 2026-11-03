@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/usecases"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth/views"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
@@ -30,13 +31,18 @@ func (h *Handler) RegisterSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := h.Register.Execute(r.Context(), usecases.RegisterInput{
+	input := usecases.RegisterInput{
 		Email:    r.FormValue("email"),
 		Password: r.FormValue("password"),
-	})
+	}
+
+	_, err := h.RegisterUseCase.Execute(r.Context(), input)
 	if err != nil {
-		if errors.Is(err, usecases.ErrEmailTaken) {
-			ui.Render(w, r, http.StatusUnprocessableEntity, views.RegisterPage(i18n.T(r.Context(), "This email is already registered.")))
+		if errors.Is(err, domain.ErrEmailTaken) {
+			ui.Render(w, r, http.StatusUnprocessableEntity, views.RegisterPage(
+				i18n.T(r.Context(), "This email is already registered.")),
+			)
+
 			return
 		}
 

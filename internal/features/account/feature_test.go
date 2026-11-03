@@ -20,9 +20,11 @@ import (
 	"github.com/dghubble/oauth1"
 
 	"github.com/mathcale/discogs-collection-manager/internal/features/account"
-	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	accountdomain "github.com/mathcale/discogs-collection-manager/internal/features/account/domain"
+	accountstore "github.com/mathcale/discogs-collection-manager/internal/features/account/store"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth"
-	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	authdomain "github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
+	authstore "github.com/mathcale/discogs-collection-manager/internal/features/auth/store"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
 
@@ -30,9 +32,9 @@ type DiscogsOAuthSuite struct {
 	suite.Suite
 	db          *sql.DB
 	dbPath      string
-	users       authmodels.UserRepository
-	sessions    authmodels.SessionRepository
-	oauthTokens accountmodels.OAuthTokenRepository
+	users       authdomain.UserRepository
+	sessions    authdomain.SessionRepository
+	oauthTokens accountdomain.OAuthTokenRepository
 	router      http.Handler
 	mockDiscogs *httptest.Server
 }
@@ -53,9 +55,9 @@ func (s *DiscogsOAuthSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.db = db
 
-	s.users = authmodels.NewUserRepository(db)
-	s.sessions = authmodels.NewSessionRepository(db)
-	s.oauthTokens = accountmodels.NewOAuthTokenRepository(db)
+	s.users = authstore.NewUserRepository(db)
+	s.sessions = authstore.NewSessionRepository(db)
+	s.oauthTokens = accountstore.NewOAuthTokenRepository(db)
 }
 
 func (s *DiscogsOAuthSuite) SetupTest() {
@@ -88,9 +90,9 @@ func (s *DiscogsOAuthSuite) buildRouter(oauthCfg *oauth1.Config) http.Handler {
 	r.Group(func(r chi.Router) {
 		r.Use(auth.New(auth.Deps{DB: s.db}).RequireAuth)
 		account.New(account.Deps{
-			DB:           s.db,
-			DiscogsOAuth: oauthCfg,
-			IdentityURL:  s.mockDiscogs.URL + "/oauth/identity",
+			DB:                 s.db,
+			DiscogsOAuthConfig: oauthCfg,
+			IdentityURL:        s.mockDiscogs.URL + "/oauth/identity",
 		}).Routes(r)
 	})
 
@@ -172,6 +174,36 @@ func (s *DiscogsOAuthSuite) TestCallback_StoresAccessToken() {
 	s.Equal("testdiscogsuser", stored.DiscogsUsername)
 }
 
+func (s *DiscogsOAuthSuite) TestCallback_TwiceForSameUser_LeavesOneConnectionWithLatestCredentials() {
+	user := s.createUser("twice@example.com")
+	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
+	s.Require().NoError(s.saveOAuthToken(user.ID, "stale-access", "stale-secret", "staleuser"))
+
+	connectReq := httptest.NewRequest(http.MethodGet, "/discogs/connect", nil)
+	connectReq.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
+	s.router.ServeHTTP(httptest.NewRecorder(), connectReq)
+
+	callbackReq := httptest.NewRequest(http.MethodGet, "/discogs/callback?oauth_token=mock-request-token&oauth_verifier=mock-verifier", nil)
+	callbackReq.AddCookie(&http.Cookie{Name: "session_token", Value: sessionToken})
+	rr := httptest.NewRecorder()
+	s.router.ServeHTTP(rr, callbackReq)
+	s.Equal(http.StatusFound, rr.Code)
+
+	var count int
+	s.Require().NoError(s.db.QueryRow(`SELECT COUNT(*) FROM oauth_tokens WHERE user_id = ?`, user.ID).Scan(&count))
+	s.Equal(1, count)
+
+	stored, err := s.oauthTokens.FindByUserID(context.Background(), user.ID)
+	s.Require().NoError(err)
+	s.Equal("mock-access-token", stored.AccessToken)
+	s.Equal("mock-access-secret", stored.AccessTokenSecret)
+	s.Equal("testdiscogsuser", stored.DiscogsUsername)
+}
+
+func (s *DiscogsOAuthSuite) saveOAuthToken(userID, accessToken, accessSecret, username string) error {
+	return s.oauthTokens.Save(context.Background(), accountdomain.NewOAuthToken(userID, accessToken, accessSecret, username))
+}
+
 func (s *DiscogsOAuthSuite) TestCallback_FromDifferentUser_IsRejected() {
 	attacker := s.createUser("attacker@example.com")
 	attackerSession := s.createSession(attacker.ID, time.Now().Add(6*time.Hour))
@@ -191,7 +223,7 @@ func (s *DiscogsOAuthSuite) TestCallback_FromDifferentUser_IsRejected() {
 	s.Equal(http.StatusBadRequest, rr.Code)
 
 	stored, err := s.oauthTokens.FindByUserID(context.Background(), victim.ID)
-	s.Require().NoError(err)
+	s.Require().ErrorIs(err, accountdomain.ErrNotFound)
 	s.Nil(stored)
 }
 
@@ -199,7 +231,7 @@ func (s *DiscogsOAuthSuite) TestDisconnect_RemovesToken() {
 	user := s.createUser("disconnect@example.com")
 	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
 
-	_, err := s.oauthTokens.Upsert(context.Background(), user.ID, "tok", "sec", "discogsman")
+	err := s.saveOAuthToken(user.ID, "tok", "sec", "discogsman")
 	s.Require().NoError(err)
 
 	req := httptest.NewRequest(http.MethodPost, "/discogs/disconnect", nil)
@@ -212,7 +244,7 @@ func (s *DiscogsOAuthSuite) TestDisconnect_RemovesToken() {
 	s.Equal("/app/settings", rr.Header().Get("Location"))
 
 	stored, err := s.oauthTokens.FindByUserID(context.Background(), user.ID)
-	s.Require().NoError(err)
+	s.Require().ErrorIs(err, accountdomain.ErrNotFound)
 	s.Nil(stored)
 }
 
@@ -263,7 +295,7 @@ func (s *DiscogsOAuthSuite) TestCallback_401FromDiscogs_ShowsReconnectPrompt() {
 func (s *DiscogsOAuthSuite) TestSettingsPage_ShowsConnectedStatus() {
 	user := s.createUser("settings@example.com")
 	sessionToken := s.createSession(user.ID, time.Now().Add(6*time.Hour))
-	_, err := s.oauthTokens.Upsert(context.Background(), user.ID, "tok", "sec", "myDiscogsUser")
+	err := s.saveOAuthToken(user.ID, "tok", "sec", "myDiscogsUser")
 	s.Require().NoError(err)
 
 	req := httptest.NewRequest(http.MethodGet, "/app/settings", nil)
@@ -372,17 +404,16 @@ func (s *DiscogsOAuthSuite) TestSettingsPage_PreselectsLanguageFromCookie() {
 	s.Contains(rr.Body.String(), `name="lang" value="pt-BR"`)
 }
 
-func (s *DiscogsOAuthSuite) createUser(email string) *authmodels.User {
-	form := url.Values{"email": {email}, "password": {"password123"}}
-	user, err := s.users.Create(context.Background(), email, "hashed")
+func (s *DiscogsOAuthSuite) createUser(email string) *authdomain.User {
+	user, err := authdomain.NewUser(email, "password123")
 	s.Require().NoError(err)
-	_ = form
+	s.Require().NoError(s.users.Save(context.Background(), user))
 	return user
 }
 
 func (s *DiscogsOAuthSuite) createSession(userID string, expiresAt time.Time) string {
 	token := "discogs-test-token-" + userID
-	_, err := s.sessions.Create(context.Background(), userID, token, expiresAt, false)
+	err := s.sessions.Save(context.Background(), &authdomain.Session{ID: "session-" + token, UserID: userID, Token: token, ExpiresAt: expiresAt, Persistent: false, CreatedAt: time.Now().UTC()})
 	s.Require().NoError(err)
 	return token
 }

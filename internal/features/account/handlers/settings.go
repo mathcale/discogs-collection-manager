@@ -11,30 +11,17 @@ import (
 )
 
 func (h *Handler) SettingsPage(w http.ResponseWriter, r *http.Request) {
-	out, err := h.LoadSettings.Execute(r.Context(), usecases.LoadSettingsInput{UserID: ctxkey.UserIDFrom(r.Context())})
+	input := usecases.LoadSettingsInput{
+		UserID: ctxkey.UserIDFrom(r.Context()),
+	}
+
+	out, err := h.LoadSettingsUseCase.Execute(r.Context(), input)
 	if err != nil {
 		http.Error(w, "internal error", http.StatusInternalServerError)
 		return
 	}
 
-	ui.Render(w, r, http.StatusOK, views.SettingsPage(out.Email, out.DiscogsUsername, i18n.CookieLang(r)))
-}
+	view := views.SettingsPage(out.Email, out.DiscogsUsername, i18n.CookieLang(r))
 
-func (h *Handler) LanguageSubmit(w http.ResponseWriter, r *http.Request) {
-	if err := r.ParseForm(); err != nil {
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
-	}
-
-	switch lang := r.FormValue("lang"); {
-	case lang == "":
-		i18n.ClearCookie(w)
-	case i18n.IsSupported(lang):
-		i18n.SetCookie(w, r, lang)
-	default:
-		http.Error(w, "bad request", http.StatusBadRequest)
-		return
-	}
-
-	http.Redirect(w, r, "/app/settings", http.StatusSeeOther)
+	ui.Render(w, r, http.StatusOK, view)
 }

@@ -16,9 +16,11 @@ import (
 	"github.com/stretchr/testify/suite"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/discogs"
-	accountmodels "github.com/mathcale/discogs-collection-manager/internal/features/account/models"
+	accountdomain "github.com/mathcale/discogs-collection-manager/internal/features/account/domain"
+	accountstore "github.com/mathcale/discogs-collection-manager/internal/features/account/store"
 	"github.com/mathcale/discogs-collection-manager/internal/features/auth"
-	authmodels "github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	authdomain "github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
+	authstore "github.com/mathcale/discogs-collection-manager/internal/features/auth/store"
 	"github.com/mathcale/discogs-collection-manager/internal/features/scanner"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/migrate"
 )
@@ -53,8 +55,8 @@ type ScanSuite struct {
 	suite.Suite
 	db          *sql.DB
 	dbPath      string
-	sessions    authmodels.SessionRepository
-	oauthTokens accountmodels.OAuthTokenRepository
+	sessions    authdomain.SessionRepository
+	oauthTokens accountdomain.OAuthTokenRepository
 	router      http.Handler
 	mockDiscogs *mockDiscogsClient
 }
@@ -75,8 +77,8 @@ func (s *ScanSuite) SetupSuite() {
 	s.Require().NoError(err)
 	s.db = db
 
-	s.sessions = authmodels.NewSessionRepository(db)
-	s.oauthTokens = accountmodels.NewOAuthTokenRepository(db)
+	s.sessions = authstore.NewSessionRepository(db)
+	s.oauthTokens = accountstore.NewOAuthTokenRepository(db)
 }
 
 func (s *ScanSuite) SetupTest() {
@@ -88,7 +90,7 @@ func (s *ScanSuite) SetupTest() {
 	r := chi.NewRouter()
 	r.Group(func(r chi.Router) {
 		r.Use(auth.New(auth.Deps{DB: s.db}).RequireAuth)
-		scanner.New(scanner.Deps{DB: s.db, Discogs: s.mockDiscogs}).Routes(r)
+		scanner.New(scanner.Deps{DB: s.db, DiscogsClient: s.mockDiscogs}).Routes(r)
 	})
 
 	s.router = r
@@ -399,12 +401,12 @@ func (s *ScanSuite) TestScanPage_ShowsNavigation() {
 
 func (s *ScanSuite) createSession(userID string, expiresAt time.Time) string {
 	token := "scan-test-token-" + userID
-	_, err := s.sessions.Create(context.Background(), userID, token, expiresAt, false)
+	err := s.sessions.Save(context.Background(), &authdomain.Session{ID: "session-" + token, UserID: userID, Token: token, ExpiresAt: expiresAt, Persistent: false, CreatedAt: time.Now().UTC()})
 	s.Require().NoError(err)
 	return token
 }
 
 func (s *ScanSuite) createOAuthToken(userID, discogsUsername string) {
-	_, err := s.oauthTokens.Upsert(context.Background(), userID, "access-token", "access-secret", discogsUsername)
+	err := s.oauthTokens.Save(context.Background(), accountdomain.NewOAuthToken(userID, "access-token", "access-secret", discogsUsername))
 	s.Require().NoError(err)
 }

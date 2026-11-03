@@ -6,67 +6,84 @@ import (
 	"time"
 
 	"github.com/mathcale/discogs-collection-manager/internal/core/clients/mailer"
-	"github.com/mathcale/discogs-collection-manager/internal/features/auth/models"
+	"github.com/mathcale/discogs-collection-manager/internal/features/auth/domain"
 	"github.com/mathcale/discogs-collection-manager/internal/pkg/i18n"
 )
 
-type LoginInput struct {
-	Email        string
-	Password     string
-	StayLoggedIn bool
-}
+type (
+	LoginInput struct {
+		Email        string
+		Password     string
+		StayLoggedIn bool
+	}
 
-type LoginOutput struct {
-	UserID           string
-	OTPRequired      bool
-	SessionToken     string
-	SessionExpiresAt time.Time
-	OTPExpiresIn     time.Duration
-}
+	LoginOutput struct {
+		UserID           string
+		OTPRequired      bool
+		SessionToken     string
+		SessionExpiresAt time.Time
+		OTPExpiresIn     time.Duration
+	}
 
-var ErrInvalidCredentials = errors.New("invalid credentials")
-
-type Login struct {
-	Users              models.UserRepository
-	Sessions           models.SessionRepository
-	OTPCodes           models.OTPRepository
-	Mailer             mailer.Mailer
-	TwoStepAuthEnabled bool
-}
+	Login struct {
+		UsersRepo          domain.UserRepository
+		SessionsRepo       domain.SessionRepository
+		OTPCodesRepo       domain.OTPRepository
+		Mailer             mailer.Mailer
+		TwoStepAuthEnabled bool
+	}
+)
 
 func (uc *Login) Execute(ctx context.Context, in LoginInput) (LoginOutput, error) {
-	email := models.NormalizeEmail(in.Email)
+	email := domain.NormalizeEmail(in.Email)
 
-	user, err := uc.Users.FindByEmail(ctx, email)
+	user, err := uc.UsersRepo.FindByEmail(ctx, email)
+	if errors.Is(err, domain.ErrNotFound) {
+		return LoginOutput{}, domain.ErrInvalidCredentials
+	}
+
 	if err != nil {
 		return LoginOutput{}, err
 	}
-	if user == nil || !user.CheckPassword(in.Password) {
-		return LoginOutput{}, ErrInvalidCredentials
+
+	if !user.CheckPassword(in.Password) {
+		return LoginOutput{}, domain.ErrInvalidCredentials
 	}
 
 	if !uc.TwoStepAuthEnabled {
-		token, expiresAt, err := createSession(ctx, uc.Sessions, user.ID, in.StayLoggedIn)
+		token, expiresAt, err := createSession(ctx, uc.SessionsRepo, user.ID, in.StayLoggedIn)
 		if err != nil {
 			return LoginOutput{}, err
 		}
 
-		return LoginOutput{UserID: user.ID, SessionToken: token, SessionExpiresAt: expiresAt}, nil
+		return LoginOutput{
+			UserID:           user.ID,
+			SessionToken:     token,
+			SessionExpiresAt: expiresAt,
+		}, nil
 	}
 
-	code, err := models.GenerateOTPCode()
+	code, err := domain.GenerateOTPCode()
 	if err != nil {
 		return LoginOutput{}, err
 	}
 
-	codeHash := models.HashToken(code)
-	if _, err := uc.OTPCodes.Create(ctx, user.ID, codeHash, time.Now().Add(models.OTPExpiry)); err != nil {
+	codeHash := domain.HashToken(code)
+	if err := uc.OTPCodesRepo.Save(ctx, domain.NewOTPCode(user.ID, codeHash)); err != nil {
 		return LoginOutput{}, err
 	}
 
-	if err := uc.Mailer.Send(user.Email, i18n.T(ctx, "Your login code"), i18n.T(ctx, "Your verification code is: <strong>%s</strong>. It expires in 10 minutes.", code)); err != nil {
+	if err := uc.Mailer.Send(
+		user.Email,
+		i18n.T(ctx, "Your login code"),
+		i18n.T(ctx, "Your verification code is: <strong>%s</strong>. It expires in 10 minutes.", code),
+	); err != nil {
 		return LoginOutput{}, err
 	}
 
-	return LoginOutput{UserID: user.ID, OTPRequired: true, OTPExpiresIn: models.OTPExpiry}, nil
+	return LoginOutput{
+		UserID:       user.ID,
+		OTPRequired:  true,
+		OTPExpiresIn: domain.OTPExpiry,
+	}, nil
 }

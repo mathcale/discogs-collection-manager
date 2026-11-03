@@ -7,13 +7,15 @@ import (
 )
 
 templ OTPPage(errorMsg string) {
-	@layouts.BaseLayout(i18n.T(ctx, "Verify code") + " — Discogs Collection Manager") {
+	@layouts.BaseLayout(i18n.T(ctx, "Verify code") + " - Discogs Collection Manager") {
 		<main class="page-center">
 			<div class="page-panel">
 				<h1 class="page-title">{ i18n.T(ctx, "Check your email") }</h1>
+
 				<p class="page-subtitle">
 					{ i18n.T(ctx, "We sent a 6-digit code to your email address. Enter it below to continue.") }
 				</p>
+
 				<div class="z-card">
 					<div class="z-card-body">
 						<div role="alert" aria-live="polite">
@@ -21,6 +23,7 @@ templ OTPPage(errorMsg string) {
 								@components.AlertError(errorMsg)
 							}
 						</div>
+
 						<form
 							method="POST"
 							action="/auth/login/otp"
@@ -30,15 +33,20 @@ templ OTPPage(errorMsg string) {
 						>
 							<div class="stack">
 								<div class="z-text-center">
-									<span class="z-form-label">{ i18n.T(ctx, "Verification code") }</span>
+									<span class="z-form-label">
+										{ i18n.T(ctx, "Verification code") }
+									</span>
+
 									<z-input-pin name="code" length="6" input-mode="numeric" autofocus></z-input-pin>
 								</div>
+
 								<button type="submit" class="z-button z-button-primary">
 									@components.Spinner()
 									{ i18n.T(ctx, "Verify") }
 								</button>
 							</div>
 						</form>
+
 						<script>
 							(function () {
 								var form = document.currentScript.closest('.z-card').querySelector('form');
@@ -57,6 +65,7 @@ templ OTPPage(errorMsg string) {
 								customElements.whenDefined('z-input-pin').then(function () {
 									return pin.updateComplete;
 								}).then(focusFirstEmptyCell);
+
 								pin.addEventListener('click', focusFirstEmptyCell);
 
 								pin.addEventListener('beforeinput', function (event) {
@@ -78,6 +87,7 @@ templ OTPPage(errorMsg string) {
 
 									var transfer = new DataTransfer();
 									transfer.setData('text', digits);
+
 									event.target.dispatchEvent(new ClipboardEvent('paste', {
 										clipboardData: transfer,
 										bubbles: true,

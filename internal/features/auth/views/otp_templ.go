@@ -67,7 +67,7 @@ func OTPPage(errorMsg string) templ.Component {
 			var templ_7745c5c3_Var4 string
 			templ_7745c5c3_Var4, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "We sent a 6-digit code to your email address. Enter it below to continue."))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/auth/views/otp.templ`, Line: 15, Col: 95}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/auth/views/otp.templ`, Line: 16, Col: 95}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var4))
 			if templ_7745c5c3_Err != nil {
@@ -90,7 +90,7 @@ func OTPPage(errorMsg string) templ.Component {
 			var templ_7745c5c3_Var5 string
 			templ_7745c5c3_Var5, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "Verification code"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/auth/views/otp.templ`, Line: 33, Col: 70}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/auth/views/otp.templ`, Line: 37, Col: 44}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var5))
 			if templ_7745c5c3_Err != nil {
@@ -107,19 +107,19 @@ func OTPPage(errorMsg string) templ.Component {
 			var templ_7745c5c3_Var6 string
 			templ_7745c5c3_Var6, templ_7745c5c3_Err = templ.JoinStringErrs(i18n.T(ctx, "Verify"))
 			if templ_7745c5c3_Err != nil {
-				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/auth/views/otp.templ`, Line: 38, Col: 32}
+				return templ.Error{Err: templ_7745c5c3_Err, FileName: `internal/features/auth/views/otp.templ`, Line: 45, Col: 32}
 			}
 			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(templ_7745c5c3_Var6))
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</button></div></form><script>\n\t\t\t\t\t\t\t(function () {\n\t\t\t\t\t\t\t\tvar form = document.currentScript.closest('.z-card').querySelector('form');\n\t\t\t\t\t\t\t\tvar pin = form.querySelector('z-input-pin');\n\n\t\t\t\t\t\t\t\tfunction focusFirstEmptyCell() {\n\t\t\t\t\t\t\t\t\tvar empty = Array.from(pin.querySelectorAll('input')).find(function (cell) {\n\t\t\t\t\t\t\t\t\t\treturn !cell.value;\n\t\t\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t\t\t\tif (empty) {\n\t\t\t\t\t\t\t\t\t\tempty.focus();\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\tcustomElements.whenDefined('z-input-pin').then(function () {\n\t\t\t\t\t\t\t\t\treturn pin.updateComplete;\n\t\t\t\t\t\t\t\t}).then(focusFirstEmptyCell);\n\t\t\t\t\t\t\t\tpin.addEventListener('click', focusFirstEmptyCell);\n\n\t\t\t\t\t\t\t\tpin.addEventListener('beforeinput', function (event) {\n\t\t\t\t\t\t\t\t\tif (event.data && /\\D/.test(event.data)) {\n\t\t\t\t\t\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}, true);\n\n\t\t\t\t\t\t\t\tpin.addEventListener('paste', function (event) {\n\t\t\t\t\t\t\t\t\tvar text = event.clipboardData.getData('text');\n\t\t\t\t\t\t\t\t\tvar digits = text.replace(/\\D/g, '');\n\n\t\t\t\t\t\t\t\t\tif (digits === text) {\n\t\t\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\t\t\t\t\tevent.stopPropagation();\n\n\t\t\t\t\t\t\t\t\tvar transfer = new DataTransfer();\n\t\t\t\t\t\t\t\t\ttransfer.setData('text', digits);\n\t\t\t\t\t\t\t\t\tevent.target.dispatchEvent(new ClipboardEvent('paste', {\n\t\t\t\t\t\t\t\t\t\tclipboardData: transfer,\n\t\t\t\t\t\t\t\t\t\tbubbles: true,\n\t\t\t\t\t\t\t\t\t\tcancelable: true,\n\t\t\t\t\t\t\t\t\t}));\n\t\t\t\t\t\t\t\t}, true);\n\n\t\t\t\t\t\t\t\tpin.addEventListener('z-input-pin:change', function (event) {\n\t\t\t\t\t\t\t\t\tif (event.detail.value.length === 6) {\n\t\t\t\t\t\t\t\t\t\tpin.updateComplete.then(function () {\n\t\t\t\t\t\t\t\t\t\t\tform.requestSubmit();\n\t\t\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t})();\n\t\t\t\t\t\t</script></div></div></div></main>")
+			templ_7745c5c3_Err = templruntime.WriteString(templ_7745c5c3_Buffer, 6, "</button></div></form><script>\n\t\t\t\t\t\t\t(function () {\n\t\t\t\t\t\t\t\tvar form = document.currentScript.closest('.z-card').querySelector('form');\n\t\t\t\t\t\t\t\tvar pin = form.querySelector('z-input-pin');\n\n\t\t\t\t\t\t\t\tfunction focusFirstEmptyCell() {\n\t\t\t\t\t\t\t\t\tvar empty = Array.from(pin.querySelectorAll('input')).find(function (cell) {\n\t\t\t\t\t\t\t\t\t\treturn !cell.value;\n\t\t\t\t\t\t\t\t\t});\n\n\t\t\t\t\t\t\t\t\tif (empty) {\n\t\t\t\t\t\t\t\t\t\tempty.focus();\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\tcustomElements.whenDefined('z-input-pin').then(function () {\n\t\t\t\t\t\t\t\t\treturn pin.updateComplete;\n\t\t\t\t\t\t\t\t}).then(focusFirstEmptyCell);\n\n\t\t\t\t\t\t\t\tpin.addEventListener('click', focusFirstEmptyCell);\n\n\t\t\t\t\t\t\t\tpin.addEventListener('beforeinput', function (event) {\n\t\t\t\t\t\t\t\t\tif (event.data && /\\D/.test(event.data)) {\n\t\t\t\t\t\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}, true);\n\n\t\t\t\t\t\t\t\tpin.addEventListener('paste', function (event) {\n\t\t\t\t\t\t\t\t\tvar text = event.clipboardData.getData('text');\n\t\t\t\t\t\t\t\t\tvar digits = text.replace(/\\D/g, '');\n\n\t\t\t\t\t\t\t\t\tif (digits === text) {\n\t\t\t\t\t\t\t\t\t\treturn;\n\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\tevent.preventDefault();\n\t\t\t\t\t\t\t\t\tevent.stopPropagation();\n\n\t\t\t\t\t\t\t\t\tvar transfer = new DataTransfer();\n\t\t\t\t\t\t\t\t\ttransfer.setData('text', digits);\n\n\t\t\t\t\t\t\t\t\tevent.target.dispatchEvent(new ClipboardEvent('paste', {\n\t\t\t\t\t\t\t\t\t\tclipboardData: transfer,\n\t\t\t\t\t\t\t\t\t\tbubbles: true,\n\t\t\t\t\t\t\t\t\t\tcancelable: true,\n\t\t\t\t\t\t\t\t\t}));\n\t\t\t\t\t\t\t\t}, true);\n\n\t\t\t\t\t\t\t\tpin.addEventListener('z-input-pin:change', function (event) {\n\t\t\t\t\t\t\t\t\tif (event.detail.value.length === 6) {\n\t\t\t\t\t\t\t\t\t\tpin.updateComplete.then(function () {\n\t\t\t\t\t\t\t\t\t\t\tform.requestSubmit();\n\t\t\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t});\n\t\t\t\t\t\t\t})();\n\t\t\t\t\t\t</script></div></div></div></main>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
 			return nil
 		})
-		templ_7745c5c3_Err = layouts.BaseLayout(i18n.T(ctx, "Verify code")+" — Discogs Collection Manager").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.BaseLayout(i18n.T(ctx, "Verify code")+" - Discogs Collection Manager").Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}
